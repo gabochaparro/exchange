@@ -19,3 +19,8 @@ bingx_api_secret = 'mAJanNvM1A6iqstBTZ43yPuoD9iBaO95DpSn4zFlWeuyFB9RCwftsFlxhlXg
 okx_api_key = '7ff4849c-60f8-43f9-bc31-885791b3508a'
 okx_api_secret = 'C20A4CAE73109A57F40895512A5FB50E'
 okx_api_passphrase = "Dios741236$"
+
+# Inserta tus claves de API de KUCOIN futuros aquí
+kucoin_api_key = '6665d635e607490001c2cf35'
+kucoin_api_secret = '592da144-7df5-4a92-9efc-5d2bdfabe068'
+kucoin_api_passphrase = "dios741236"

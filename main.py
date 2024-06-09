@@ -6,6 +6,7 @@ from binance.client import Client
 from pybit.unified_trading import HTTP
 import pybitget
 import okx
+import kucoin_futures.client
 import json
 import time
 
@@ -47,6 +48,13 @@ accountAPI = okx.Account.AccountAPI(credenciales.okx_api_key,
                               "0"
                               )
 
+# Definir la API de KuCoin
+kucoin_client = kucoin_futures.client.Trade(
+                                            key=credenciales.kucoin_api_key, 
+                                            secret=credenciales.kucoin_api_secret, 
+                                            passphrase=credenciales.kucoin_api_passphrase
+                                            )
+
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
 # ----------------------------------------------
@@ -68,6 +76,9 @@ def definir_symbol(exchange, symbol):
         if exchange == "OKX":
             symbol = symbol + "-USDT-SWAP"
         
+        if exchange == "KUCOIN":
+            symbol = symbol + "USDTM"
+ 
         return symbol
     
     except Exception as e:
@@ -305,6 +316,43 @@ def okx_nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("")
 # ---------------------------------------------
 
+# FUNCIÓN DE OKX NUEVA ORDEN 'LIMIT' O 'MARKET'
+# ---------------------------------------------
+def kucoin_nueva_orden(symbol, order_type, quantity, price, side, leverage):
+    try:
+        
+        # Definir la cantidad en lotes para poder colocar la orden
+        lote = kucoin_futures.client.Market().get_contract_detail(symbol="PEOPLEUSDTM")['multiplier']
+        quantity = quantity/lote
+        
+        # Colocar la orden segun el tipo
+        side = side.lower()
+        if order_type == "LIMIT":
+            order = kucoin_client.create_limit_order(
+                                                        symbol=symbol,
+                                                        side=side,
+                                                        lever=leverage,
+                                                        size=quantity,
+                                                        price=price,
+                                                    )
+            
+        if order_type == "MARKET":
+            order = kucoin_client.create_market_order(
+                                                        symbol=symbol,
+                                                        side=side,
+                                                        lever=leverage,
+                                                        size=quantity,
+                                                    )
+    
+        print(f"Orden colocada en {price}. ID:", order["orderId"])
+        print("")
+
+    except Exception as e:
+        print("ERROR COLOCANDO LA ORDEN EN KUCOIN")
+        print(e)
+        print("")
+# ---------------------------------------------
+
 # FUNCIÓN QUE CREA UNA ORDEN LIMITI Ó MARKET
 #-------------------------------------------
 def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
@@ -338,10 +386,15 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         if exchange == "OKX":
             okx_nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
+        # KUCOIN
+        if exchange == "KUCOIN":
+            kucoin_nueva_orden(symbol, order_type, quantity, price, side, leverage)
+
     except Exception as e:
         print("ERROR CREANDO LA ORDEN")
         print(e)
         print("")
 #-------------------------------------------
 
-nueva_orden("OKX","ordi","LIMIT", 1, 60, "buy", 45)
+#nueva_orden("kucoin","people","LIMIT", 87, 0.12147, "buy", 10)
+
