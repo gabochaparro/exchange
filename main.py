@@ -7,9 +7,9 @@ from pybit.unified_trading import HTTP
 import pybitget
 import okx
 import kucoin_futures.client
+from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder, DeliveryApi
 import json
 import time
-
 
 
 # Definir el cliente para Binance
@@ -55,6 +55,16 @@ kucoin_client = kucoin_futures.client.Trade(
                                             passphrase=credenciales.kucoin_api_passphrase
                                             )
 
+# Definir la API de GATE.io
+# Configuración
+config = Configuration(
+    key=credenciales.gateio_api_key,  # Reemplaza con tu API key
+    secret=credenciales.gateio_api_secret  # Reemplaza con tu API secret
+)
+# Creación del cliente
+with ApiClient(config) as api_client:
+    futures_api = FuturesApi(api_client)
+
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
 # ----------------------------------------------
@@ -78,6 +88,9 @@ def definir_symbol(exchange, symbol):
         
         if exchange == "KUCOIN":
             symbol = symbol + "USDTM"
+        
+        if exchange == "GATEIO":
+            symbol = symbol + "_USDT"
  
         return symbol
     
@@ -178,8 +191,8 @@ def bybit_nueva_orden(symbol, order_type, quantity, price, side, leverage):
 # ------------------------------------------------
 def bitget_nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
-        
-        # Definir el ladp
+
+        # Definir el lado
         if side == "BUY":
             side = "OPEN_LONG"
         if side == "SELL":
@@ -316,7 +329,7 @@ def okx_nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("")
 # ---------------------------------------------
 
-# FUNCIÓN DE OKX NUEVA ORDEN 'LIMIT' O 'MARKET'
+# FUNCIÓN DE KUCOIN NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------
 def kucoin_nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
@@ -353,6 +366,46 @@ def kucoin_nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("")
 # ---------------------------------------------
 
+# FUNCIÓN DE GATEIO NUEVA ORDEN 'LIMIT' O 'MARKET'
+# ------------------------------------------------
+def gateio_nueva_orden(symbol, order_type, quantity, price, side, leverage):
+    try:
+        
+        # Modificar el apalancamiento
+        futures_api.update_dual_mode_position_leverage('usdt', symbol, leverage)
+
+        # Definir el lado
+        if side == "SELL":
+            quantity = -quantity
+        
+        tif = "gtc"
+        if order_type == "MARKET":
+            price = 0
+            tif = "ioc"
+
+        # Detalles de la orden LIMIT
+        order = FuturesOrder(
+            contract=symbol,    # Contrato de futuros, por ejemplo, BTC/USDT
+            size=quantity,      # Cantidad de contratos a comprar/vender
+            price=str(price),   # Precio límite
+            tif=tif,            # 'gtc' para limit y 'ioc' para market
+            reduce_only=False,  # Indica si es una orden de solo reducción
+            is_close=False      # Indica si es una orden de cierre
+        )
+        
+        # Colocar la orden LIMIT
+        response = futures_api.create_futures_order('usdt', order)
+        #print(response)
+        
+        print(f"Orden colocada en {response.price}. ID:", response.id)
+        print("")
+    
+    except Exception as e:
+        print("ERROR COLOCANDO LA ORDEN EN GATEIO")
+        print(e)
+        print("")
+# ------------------------------------------------
+
 # FUNCIÓN QUE CREA UNA ORDEN LIMITI Ó MARKET
 #-------------------------------------------
 def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
@@ -363,7 +416,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         order_type = order_type.upper()
         side = side.upper()
 
-        # Definir el Símbolo
+        # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
         
         # BINANCE
@@ -390,11 +443,15 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         if exchange == "KUCOIN":
             kucoin_nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
+        # GATEIO
+        if exchange == "GATEIO":
+            gateio_nueva_orden(symbol, order_type, quantity, price, side, leverage)
+
     except Exception as e:
         print("ERROR CREANDO LA ORDEN")
         print(e)
         print("")
 #-------------------------------------------
 
-#nueva_orden("kucoin","people","LIMIT", 87, 0.12147, "buy", 10)
+#nueva_orden("gateio", "bnx", "LIMIT", 10, 1.2426, "buy", 3)
 
