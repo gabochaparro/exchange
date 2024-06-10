@@ -7,7 +7,7 @@ from pybit.unified_trading import HTTP
 import pybitget
 import okx
 import kucoin_futures.client
-from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder, DeliveryApi
+from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder
 import json
 import time
 
@@ -19,7 +19,7 @@ binance_client = Client(
                             tld="com"
                         )
 
-# Definir session para Bybit
+# Definir la session para Bybit
 bybit_session = HTTP(
                     testnet=False,
                     api_key=credenciales.bybit_api_key,
@@ -192,6 +192,9 @@ def bybit_nueva_orden(symbol, order_type, quantity, price, side, leverage):
 def bitget_nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
 
+        # Modificar apalancamiento
+        bitget_client.mix_adjust_leverage(symbol=symbol, marginCoin="USDT", leverage=leverage, holdSide=None)
+
         # Definir el lado
         if side == "BUY":
             side = "OPEN_LONG"
@@ -235,6 +238,21 @@ def bingx_nueva_orden(symbol, order_type, quantity, price, side, leverage):
         APIKEY = credenciales.bingx_api_key
         SECRETKEY = credenciales.bingx_api_secret
 
+        # Modificar el apalancamiento
+        def apalancamiento():
+            payload = {}
+            path = '/openApi/swap/v2/trade/leverage'
+            method = "POST"
+            paramsMap = {
+            "leverage": leverage,
+            "side": positionSide,
+            "symbol": symbol,
+            "timestamp": int(time.time()*1000)
+        }
+            paramsStr = parseParam(paramsMap)
+            return send_request(method, path, paramsStr, payload)
+        
+        # Coloacar la orden
         def demo():
             payload = {}
             path = '/openApi/swap/v2/trade/order'
@@ -273,6 +291,8 @@ def bingx_nueva_orden(symbol, order_type, quantity, price, side, leverage):
             else:
                 return paramsStr+"timestamp="+str(int(time.time() * 1000))
         
+        print(int(time.time()*1000))
+        print(apalancamiento())
         order = json.loads(demo())
         print(f"Orden colocada en {order['data']['order']['price']}. ID:", order['data']['order']['orderId'])
         print("")
@@ -406,8 +426,8 @@ def gateio_nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("")
 # ------------------------------------------------
 
-# FUNCIÓN QUE CREA UNA ORDEN LIMITI Ó MARKET
-#-------------------------------------------
+# FUNCIÓN UNIVERSAL QUE CREA UNA ORDEN LIMITI Ó MARKET
+#-----------------------------------------------------
 def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
     try:
 
@@ -451,7 +471,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         print("ERROR CREANDO LA ORDEN")
         print(e)
         print("")
-#-------------------------------------------
+#-----------------------------------------------------
 
-#nueva_orden("gateio", "bnx", "LIMIT", 10, 1.2426, "buy", 3)
+#nueva_orden(exchange="bitget", symbol="ordi", order_type="LIMIT", quantity=0.5, price=57.2, side="buy", leverage=9)
 
