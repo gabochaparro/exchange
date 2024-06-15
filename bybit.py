@@ -12,6 +12,22 @@ bybit_session = HTTP(
                 )
 
 
+# FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
+#--------------------------------------------------------
+def precio_actual_activo(symbol):
+    try:
+        
+        # Precio actual en BYBIT
+        precio = float(bybit_session.get_public_trade_history(category="linear",symbol=symbol,limit=1,)['result']['list'][0]['price'])
+        return precio
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BYBIT")
+        print(e)
+        print("")
+        return 0
+#--------------------------------------------------------
+
 # FUNCIÓN DE BYBIT NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
@@ -57,4 +73,4 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("ERROR COLOCANDO LA ORDEN EN BYBIT")
         print(e)
         print("")
-# ---------------------------------------------------
+# --------------------------------------------------- 

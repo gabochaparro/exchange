@@ -12,6 +12,23 @@ binance_client = Client(
                             tld="com"
                         )
 
+
+# FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
+#--------------------------------------------------------
+def precio_actual_activo(symbol):
+    try:
+        # Precio actual para BINANCE
+        info = binance_client.futures_ticker(symbol=symbol) #Busca la info de una moneda
+        return float(info["lastPrice"])
+        
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BINANCE")
+        print(e)
+        print("")
+        return 0
+#--------------------------------------------------------
+
 # FUNCIÓN DE BINANCE NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):

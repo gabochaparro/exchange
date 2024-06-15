@@ -1,5 +1,5 @@
 import credenciales
-from okx import Trade, Account, PublicData
+from okx import Trade, Account, PublicData, MarketData
 import json
 import time
 
@@ -17,6 +17,20 @@ accountAPI = Account.AccountAPI(credenciales.okx_api_key,
                               "0"
                               )
 
+
+# FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
+#--------------------------------------------------------
+def precio_actual_activo(symbol):
+    try:
+        precio = MarketData.MarketAPI(flag="0").get_ticker(instId=symbol)['data'][0]['last']
+        return float(precio)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN OKX")
+        print(e)
+        print("")
+        return 0
+#--------------------------------------------------------
 
 # FUNCIÓN DE OKX NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------

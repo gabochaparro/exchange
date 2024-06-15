@@ -12,6 +12,20 @@ bitget_client = pybitget.Client(
                             use_server_time=False,
                         )
 
+# FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
+#--------------------------------------------------------
+def precio_actual_activo(symbol):
+    try:
+        precio = bitget_client.mix_get_single_symbol_ticker(symbol=symbol)['data']['last']
+        return float(precio)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BITGET")
+        print(e)
+        print("")
+        return 0
+#--------------------------------------------------------
+
 # FUNCIÓN DE BITGET NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):

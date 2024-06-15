@@ -15,6 +15,20 @@ with ApiClient(config) as api_client:
     futures_api = FuturesApi(api_client)
 
 
+# FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
+#--------------------------------------------------------
+def precio_actual_activo(symbol):
+    try:
+        precio = futures_api.get_futures_contract(settle="usdt", contract=symbol).last_price
+        return float(precio)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN GATEIO")
+        print(e)
+        print("")
+        return 0
+#--------------------------------------------------------
+
 # FUNCIÓN DE GATEIO NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
