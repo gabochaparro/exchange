@@ -1,10 +1,10 @@
-import future.binance_ as binance_
-import bybit
-import bitget
-import bingx
-import okx_
-import kucoin
-import gateio
+import future.binance as binance
+import future.bybit as bybit
+import future.bitget as bitget
+import future.bingx as bingx
+import future.okx as okx
+import future.kucoin as kucoin
+import future.gateio as gateio
 import json
 import time
 
@@ -58,7 +58,7 @@ def precio_actual_activo(exchange, symbol):
         
         # BINANCE
         if exchange == "BINANCE":
-            precio = binance_.precio_actual_activo(symbol)
+            precio = binance.precio_actual_activo(symbol)
 
         # BYBIT
         if exchange == "BYBIT":
@@ -74,7 +74,7 @@ def precio_actual_activo(exchange, symbol):
 
         # OKX
         if exchange == "OKX":
-            precio = okx_.precio_actual_activo(symbol)
+            precio = okx.precio_actual_activo(symbol)
 
         # KUCOIN
         if exchange == "KUCOIN":
@@ -113,7 +113,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            binance.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BYBIT
         if exchange == "BYBIT":
@@ -129,7 +129,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # OKX
         if exchange == "OKX":
-            okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            okx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # KUCOIN
         if exchange == "KUCOIN":
@@ -158,7 +158,7 @@ def cancelar_ordenes(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.cancelar_ordenes(symbol=symbol)
+            binance.cancelar_ordenes(symbol=symbol)
         
         # ByBit
         if exchange == "BYBIT":
@@ -182,7 +182,7 @@ def obtener_ordenes(exchange, symbol):
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
 
         if exchange == "BINANCE":
-            return binance_.obtener_ordenes(symbol=symbol)
+            return binance.obtener_ordenes(symbol=symbol)
     
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES")
@@ -202,7 +202,7 @@ def cancelar_orden(exchange, symbol, id):
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
 
         if exchange == "BINANCE":
-            binance_.cancelar_orden(symbol=symbol, id=id)
+            binance.cancelar_orden(symbol=symbol, id=id)
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE {exchange}")
@@ -222,7 +222,7 @@ def obtener_posicion(exchange, symbol):
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
 
         if exchange == "BINANCE":
-            return binance_.obtener_posicion(symbol)
+            return binance.obtener_posicion(symbol)
 
     except Exception as e:
         print(f"ERROR OBTENIENDO INFO DE LAS POSICIONES DE {exchange}")
@@ -247,7 +247,7 @@ def cerrar_posicion(exchange, symbol, positionSide):
 
         # BINANCE
         if exchange == "BINANCE":
-            return binance_.cerrar_posicion(symbol, positionSide)
+            return binance.cerrar_posicion(symbol, positionSide)
 
     except Exception as e:
         print(f"ERROR CERRANDO POSICION EN {exchange}")
