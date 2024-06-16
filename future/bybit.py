@@ -74,3 +74,24 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print(e)
         print("")
 # --------------------------------------------------- 
+
+# FUNCIÓN QUE CANCELA TODAS LAS ORDENES ABIERTAS
+# ----------------------------------------------
+def cancelar_ordenes(symbol):
+    try:
+        print("Cancelando ordenes...")
+        
+        # Obtener las ordenes abiertas
+        ordenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol)["result"]['list']
+        
+        # Cancelar todas las ordenes abiertas
+        if len(ordenes_abiertas) > 0:
+            bybit_session.cancel_all_orders(category="linear", symbol=symbol)
+            print("Se cancelaron todas las ordenes")
+            print("")
+    
+    except Exception as e:
+        print("ERROR CANCELANDO TODAS LAS ORDENES DE BINANCE")
+        print(e)
+        print("")
+# ----------------------------------------------

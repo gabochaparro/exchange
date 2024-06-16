@@ -1,4 +1,4 @@
-import binance_
+import future.binance_ as binance_
 import bybit
 import bitget
 import bingx
@@ -37,6 +37,9 @@ def definir_symbol(exchange, symbol):
         if exchange == "GATEIO":
             symbol = symbol + "_USDT"
  
+        print("")
+        print( exchange, "-", symbol)
+        print("")
         return symbol
     
     except Exception as e:
@@ -52,9 +55,6 @@ def precio_actual_activo(exchange, symbol):
 
         # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
-        print("")
-        print( exchange, "-", symbol)
-        print("")
         
         # BINANCE
         if exchange == "BINANCE":
@@ -106,6 +106,11 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
         
+        # Mensaje
+        print(f"Colocando orden {side}-{order_type} de {symbol} en {exchange}...")
+        print(f"cantidad: {quantity}, precio: {price}, apalancamiento {leverage}")
+        print("")
+
         # BINANCE
         if exchange == "BINANCE":
             binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
@@ -140,5 +145,120 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
         print("")
 #-----------------------------------------------------
 
+# FUNCIÓN QUE CANCELA TODAS LAS ORDENES ABIERTAS
+# ----------------------------------------------
+def cancelar_ordenes(exchange, symbol):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # BINANCE
+        if exchange == "BINANCE":
+            binance_.cancelar_ordenes(symbol=symbol)
+        
+        # ByBit
+        if exchange == "BYBIT":
+            pass
+        
+    except Exception as e:
+        print("ERROR CANCELANDO TODAS LAS ORDENES")
+        print(e)
+        print("")
+# ----------------------------------------------
+
+# FUNCIÓN QUE BUSCA LA INFO DE TODAS LAS ORDENES ABIERTAS
+# -------------------------------------------------------
+def obtener_ordenes(exchange, symbol):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        if exchange == "BINANCE":
+            return binance_.obtener_ordenes(symbol=symbol)
+    
+    except Exception as e:
+        print("ERROR CANCELANDO TODAS LAS ORDENES")
+        print(e)
+        print("")
+# -------------------------------------------------------
+
+# FUNCIÓN QUE CANCELA UNA ORDEN
+# -----------------------------
+def cancelar_orden(exchange, symbol, id):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        if exchange == "BINANCE":
+            binance_.cancelar_orden(symbol=symbol, id=id)
+    
+    except Exception as e:
+        print(f"ERROR CANCELANDO LA ORDEN {id} DE {exchange}")
+        print(e)
+        print("")
+# -----------------------------
+
+# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
+# ---------------------------------------------
+def obtener_posicion(exchange, symbol):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        if exchange == "BINANCE":
+            return binance_.obtener_posicion(symbol)
+
+    except Exception as e:
+        print(f"ERROR OBTENIENDO INFO DE LAS POSICIONES DE {exchange}")
+        print(e)
+        print("")
+# ---------------------------------------------
+
+# FUNCIÓN QUE CIERRA UNA POSICION
+# -------------------------------
+def cerrar_posicion(exchange, symbol, positionSide):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # Mensaje
+        print(f"Cerrando posición {positionSide} de {symbol} en {exchange}")
+        print("")
+
+        # BINANCE
+        if exchange == "BINANCE":
+            return binance_.cerrar_posicion(symbol, positionSide)
+
+    except Exception as e:
+        print(f"ERROR CERRANDO POSICION EN {exchange}")
+        print(e)
+        print("")
+# -------------------------------
+
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
+#nueva_orden(exchange="binance", symbol="high", order_type="market", quantity=2, price=30, side="sell", leverage=25)
+#cancelar_ordenes(exchange="binance", symbol="ordi")
+#print(json.dumps(obtener_ordenes(exchange="binance", symbol="btc"), indent=2))
+#cancelar_orden(exchange="BINANCE", symbol="BTC", id=354238208686)
+#print(cerrar_posicion("binance", "high", "short"))
 print("")
