@@ -79,19 +79,97 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
 # ----------------------------------------------
 def cancelar_ordenes(symbol):
     try:
+        
         print("Cancelando ordenes...")
-        
-        # Obtener las ordenes abiertas
         ordenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol)["result"]['list']
-        
-        # Cancelar todas las ordenes abiertas
         if len(ordenes_abiertas) > 0:
             bybit_session.cancel_all_orders(category="linear", symbol=symbol)
             print("Se cancelaron todas las ordenes")
             print("")
     
     except Exception as e:
-        print("ERROR CANCELANDO TODAS LAS ORDENES DE BINANCE")
+        print("ERROR CANCELANDO TODAS LAS ORDENES DE BYBIT")
         print(e)
         print("")
 # ----------------------------------------------
+
+# FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES ABIERTAS
+# ----------------------------------------------------
+def obtener_ordenes(symbol):
+    try:
+
+        print("Buscando ordenes...")
+        oredenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol)["result"]['list']
+        print(f"{len(oredenes_abiertas)} ordenes encontradas")
+        return oredenes_abiertas
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN QUE CANCELA UNA ORDEN
+# -----------------------------
+def cancelar_orden(symbol, id):
+    try:
+        
+        print(f"Eliminando orden {id}...")
+        bybit_session.cancel_order(category="linear",symbol=symbol,orderId=id)
+        print(f"Eliminada la orden {id} de {symbol}.")
+        print("")
+    
+    except Exception as e:
+        print(f"ERROR CANCELANDO LA ORDEN {id} DE BYBIT")
+        print(e)
+        print("")
+# -----------------------------
+
+# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
+# ---------------------------------------------
+def obtener_posicion(symbol):
+    try:
+
+        return bybit_session.get_positions(category="linear",symbol=symbol)["result"]["list"]
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS POSICIONES DE BYBIT")
+        print(e)
+        print("")
+# ---------------------------------------------
+
+# FUNCIÓN QUE CIERRA UNA POSICION
+# -------------------------------
+def cerrar_posicion(symbol, positionSide):
+    try:
+        
+        # Definir el lado segun la posición
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            side = "Sell"
+            positionIdx = 1
+        if positionSide == "SHORT":
+            side = "Buy"
+            positionIdx = 2
+            
+        # Cerrar posición
+        print("Cerrando posición...")
+        print(json.dumps(bybit_session.place_order(
+                                    category="linear",
+                                    symbol= symbol,
+                                    side=side,
+                                    orderType="Market",
+                                    qty="0",
+                                    reduceOnly=True,
+                                    closeOnTrigger=True,
+                                    positionIdx=positionIdx
+                            ),indent=2))
+        
+        print(f"Posición {positionSide} Cerrada")
+        print("")
+
+    except Exception as e:
+        print("ERROR CERRANDO POSICION EN BYBIT")
+        print(e)
+        print("")
+# -------------------------------

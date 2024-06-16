@@ -75,8 +75,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
 # ----------------------------------------------
 def cancelar_ordenes(symbol):
     try:
+
         print("Cancelando ordenes...")
         print(binance_client.futures_cancel_all_open_orders(symbol=symbol, timestamp=time.time()))
+        print("")
     
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES DE BINANCE")
@@ -88,10 +90,12 @@ def cancelar_ordenes(symbol):
 # ----------------------------------------------------
 def obtener_ordenes(symbol):
     try:
+
         print("Buscando ordenes...")
         ordenes = binance_client.futures_get_open_orders(symbol=symbol)
         print(f"{len(ordenes)} ordenes encontradas.")
-        return json.dumps(ordenes,indent=2)
+        print("")
+        return ordenes
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS")
@@ -103,8 +107,11 @@ def obtener_ordenes(symbol):
 # -----------------------------
 def cancelar_orden(symbol, id):
     try:
+
+        print(f"Cancelando orden {id}")
         binance_client.futures_cancel_order(symbol=symbol, orderId=id)
         print(f"Eliminada la orden {id} de {symbol}.")
+        print("")
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE BINANCE")
@@ -116,6 +123,7 @@ def cancelar_orden(symbol, id):
 # ---------------------------------------------
 def obtener_posicion(symbol):
     try:
+
         return binance_client.futures_position_information(symbol=symbol)
 
     except Exception as e:
@@ -138,7 +146,8 @@ def cerrar_posicion(symbol, positionSide):
             side = "BUY"
             quantity = float(obtener_posicion(symbol)[1]['positionAmt'])*(-1)
             
-        # Cerrar posición   
+        # Cerrar posición
+        print("Cerrando posición...")
         print(json.dumps(binance_client.futures_create_order(
                                                             symbol=symbol, 
                                                             side=side, 
@@ -147,11 +156,11 @@ def cerrar_posicion(symbol, positionSide):
                                                             quantity=quantity, 
                                                             timestamp=time.time()
                                                             ),indent=2))
-        print("Posición Cerrada")
+        print(f"Posición {positionSide} Cerrada")
         print("")
 
     except Exception as e:
-        print("ERROR CERRANDO POSICION")
+        print("ERROR CERRANDO POSICION EN BINANCE")
         print(e)
         print("")
 # -------------------------------
