@@ -237,7 +237,7 @@ def obtener_ordenes(exchange, symbol):
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
-def cancelar_orden(exchange, symbol, id):
+def cancelar_orden(exchange, symbol, orderId):
     try:
 
         exchange = exchange.upper()
@@ -248,27 +248,31 @@ def cancelar_orden(exchange, symbol, id):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.cancelar_orden(symbol=symbol, id=id)
+            binance_.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.cancelar_orden(symbol=symbol, id=id)
+            bybit.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.cancelar_orden(symbol=symbol, id=id)
+            bitget.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # BINGX
         if exchange == "BINGX":
-            bingx.cancelar_orden(symbol=symbol, id=id)
+            bingx.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # OKX
         if exchange == "OKX":
-            okx_.cancelar_orden(symbol=symbol, id=id)
+            okx_.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.cancelar_orden(symbol=symbol, id=id)
+            kucoin.cancelar_orden(symbol=symbol, orderId=orderId)
+
+        # KUCOIN
+        if exchange == "GATEIO":
+            gateio.cancelar_orden(symbol=symbol, orderId=orderId)
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE {exchange}")
@@ -358,7 +362,7 @@ def cerrar_posicion(exchange, symbol, positionSide):
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.cerrar_posicion(symbol, positionSide)
+            return kucoin.cerrar_posicion(symbol)
 
         # GATEIO
         if exchange == "GATEIO":
@@ -371,10 +375,10 @@ def cerrar_posicion(exchange, symbol, positionSide):
 # -------------------------------
 
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
-nueva_orden(exchange="bitget", symbol="people", order_type="market", quantity=90, price=45.5, side="buy", leverage=20)
-#cancelar_ordenes(exchange="bitget", symbol="ordi")
-#print(json.dumps(obtener_ordenes(exchange="bitget", symbol="ordi"), indent=2))
-#cancelar_orden(exchange="bitget", symbol="ordi", id=1186169859264851971)
-#print(json.dumps(obtener_posicion(exchange="bitget", symbol="ordi"), indent=2))
-#print(cerrar_posicion("bitget", "people", "short"))
+#nueva_orden(exchange="gateio", symbol="ordi", order_type="market", quantity=0.6, price=43.8, side="sell", leverage=20)
+#cancelar_ordenes(exchange="gateio", symbol="ordi")
+#print(obtener_ordenes(exchange="gateio", symbol="ordi"))
+#cancelar_orden(exchange="gateio", symbol="ordi", orderId=487285852363)
+#print(obtener_posicion(exchange="gateio", symbol="ordi"))
+#cerrar_posicion("gateio", "ordi", "long")
 print("")

@@ -81,6 +81,7 @@ def precio_actual_activo(symbol):
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
 
+        # Definir el lado
         if side == "BUY":
             positionSide = "LONG"
         if side == "SELL":
@@ -95,7 +96,12 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                     "symbol": symbol,
                     "timestamp": int(time.time()*1000)
                     }
-        bingx_api(path=path, method=method, paramsMap=paramsMap)
+        
+        apalancamiento = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        if apalancamiento['code'] != 0:
+            print("ERROR MODIFICANDO EL APALANCAMIENTO")
+            print(apalancamiento)
+            print("")
 
         # Coloacar la orden
         path = '/openApi/swap/v2/trade/order'
@@ -123,3 +129,161 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print(e)
         print("")
 # ------------------------------------------------
+
+# FUNCIÓN QUE CANCELA TODAS LAS ORDENES ABIERTAS
+# ----------------------------------------------
+def cancelar_ordenes(symbol):
+    try:
+        
+        print("Cancelando ordenes...")
+        path = '/openApi/swap/v2/trade/allOpenOrders'
+        method = "DELETE"
+        paramsMap = {
+                    "symbol": symbol,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        ordenes = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        
+        if ordenes['code'] == 0:
+            if  ordenes['msg'] == "" and ordenes['data']['success'] != None:
+                print("Se cancelaron todas las ordenes")
+                print(ordenes)
+                print("")
+            else:
+                print("NO HAY ORDENES QUE CANCELAR")
+        else:
+            print("ERROR CANCELANDO TODAS LAS ORDENES DE BINGX")
+            print(ordenes)
+            print("")
+
+    except Exception as e:
+        print("ERROR CANCELANDO TODAS LAS ORDENES DE BINGX")
+        print(e)
+        print("")
+# ----------------------------------------------
+
+# FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES ABIERTAS
+# ----------------------------------------------------
+def obtener_ordenes(symbol):
+    try:
+
+        # Definir parametros
+        path = '/openApi/swap/v2/trade/openOrders'
+        method = "GET"
+        paramsMap = {
+                    "symbol": symbol,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Obtener las ordenes
+        print("Buscando ordenes...")
+        oredenes_abiertas = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        if oredenes_abiertas['code'] == 0:
+            oredenes_abiertas = oredenes_abiertas['data']['orders']
+            print(f"{len(oredenes_abiertas)} ordenes encontradas")
+            return oredenes_abiertas
+        else:
+            print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BINGX")
+            print(oredenes_abiertas)
+            print("")
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BINGX")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN QUE CANCELA UNA ORDEN
+# -----------------------------
+def cancelar_orden(symbol, orderId):
+    try:
+
+        # Definir parametros
+        path = '/openApi/swap/v2/trade/order'
+        method = "DELETE"
+        paramsMap = {
+                    "symbol": symbol,
+                    "orderId": orderId,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Cancelar la orden
+        print(f"Eliminando orden {orderId}...")
+        orden = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        if orden['code'] == 0:
+            print(f"Eliminada la orden {orderId} de {symbol}.")
+            print("")
+        else:
+            print(f"ERROR CANCELANDO LA ORDEN {orderId} DE BINGX")
+            print(orden)
+            print("")
+    
+    except Exception as e:
+        print(f"ERROR CANCELANDO LA ORDEN {orderId} DE BINGX")
+        print(e)
+        print("")
+# -----------------------------
+
+# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
+# ---------------------------------------------
+def obtener_posicion(symbol):
+    try:
+
+        # Definir parametros
+        path = ''
+        method = "GET"
+        paramsMap = {
+                    "symbol": symbol,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+
+        return "ESTA FUNCION NO ESTA DISPONIBLE POR EL MOMENTO"
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS POSICIONES DE BYBIT")
+        print(e)
+        print("")
+# ---------------------------------------------
+
+# FUNCIÓN QUE CIERRA UNA POSICION
+# -------------------------------
+def cerrar_posicion(symbol, positionSide):
+    try:
+
+        # Definir lado
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            side = "SELL"
+        if positionSide == "SHORT":
+            side = "BUY"
+
+        # Definir parametros
+        path = ''
+        method = "GET"
+        paramsMap = {
+                    "symbol": symbol,
+                    "type": "STOP_MARKET",
+                    "side": side,
+                    "positionSide": positionSide,
+                    "closePosition": "True",
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Cerrar posición
+        print("Cerrando posición...")
+        print(json.dumps(bingx_api(path=path, method=method, paramsMap=paramsMap)),indent=2)
+        
+        print(f"Posición {positionSide} Cerrada")
+        print("")
+
+    except Exception as e:
+        print("ERROR CERRANDO POSICION EN BYBIT")
+        print(e)
+        print("")
+# -------------------------------

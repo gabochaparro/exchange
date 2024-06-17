@@ -105,12 +105,12 @@ def obtener_ordenes(symbol):
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
-def cancelar_orden(symbol, id):
+def cancelar_orden(symbol, orderId):
     try:
 
-        print(f"Cancelando orden {id}")
-        binance_client.futures_cancel_order(symbol=symbol, orderId=id)
-        print(f"Eliminada la orden {id} de {symbol}.")
+        print(f"Cancelando orden {orderId}")
+        binance_client.futures_cancel_order(symbol=symbol, orderId=orderId)
+        print(f"Eliminada la orden {orderId} de {symbol}.")
         print("")
     
     except Exception as e:

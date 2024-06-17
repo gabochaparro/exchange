@@ -111,12 +111,12 @@ def obtener_ordenes(symbol):
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
-def cancelar_orden(symbol, id):
+def cancelar_orden(symbol, orderId):
     try:
         
-        print(f"Eliminando orden {id}...")
-        bybit_session.cancel_order(category="linear",symbol=symbol,orderId=id)
-        print(f"Eliminada la orden {id} de {symbol}.")
+        print(f"Eliminando orden {orderId}...")
+        bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
+        print(f"Eliminada la orden {orderId} de {symbol}.")
         print("")
     
     except Exception as e:

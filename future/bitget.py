@@ -100,12 +100,12 @@ def cancelar_ordenes(symbol):
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
-def cancelar_orden(symbol, id):
+def cancelar_orden(symbol, orderId):
     try:
         
-        print(f"Eliminando orden {id}...")
-        bitget_client.mix_cancel_order(symbol=symbol,marginCoin=marginCoin,orderId=str(id))
-        print(f"Eliminada la orden {id} de {symbol}.")
+        print(f"Eliminando orden {orderId}...")
+        bitget_client.mix_cancel_order(symbol=symbol,marginCoin=marginCoin,orderId=str(orderId))
+        print(f"Eliminada la orden {orderId} de {symbol}.")
         print("")
     
     except Exception as e:
