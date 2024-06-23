@@ -17,6 +17,7 @@ accountAPI = Account.AccountAPI(credenciales.okx_api_key,
                               "0"
                               )
 instType = "SWAP"
+tdMode = "cross"
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #--------------------------------------------------------
@@ -31,6 +32,24 @@ def precio_actual_activo(symbol):
         print("")
         return 0
 #--------------------------------------------------------
+
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Obtener el apalancamiento máximo
+        tickes = PublicData.PublicAPI(flag="0").get_instruments(instType=instType)['data']
+        for tick in tickes:
+            if tick['instId'] == symbol:
+                max_leverage = float(tick['lever'])
+        return int(max_leverage)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN OKX")
+        print(e)
+        print("")
+# ------------------------------------------------------
 
 # FUNCIÓN DE OKX NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------
@@ -51,18 +70,22 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             posSide = "short"
         
         # Ajustar el apalancamiento
+        max_leverage = apalancameinto_max(symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
+        
         print("")
         accountAPI.set_leverage(
                                     instId=symbol,
                                     lever=str(leverage),
-                                    mgnMode="cross"
+                                    mgnMode=tdMode
                                 )
         print("")
 
         # Colocar la orden
         order = tradeAPI.place_order(
                                         instId=symbol,
-                                        tdMode="cross",
+                                        tdMode=tdMode,
                                         side=side.lower(),
                                         posSide=posSide,
                                         ordType=order_type.lower(),
@@ -140,7 +163,7 @@ def cancelar_ordenes(symbol):
 def obtener_posicion(symbol):
     try:
 
-        return accountAPI.get_positions(instType=instType, instId=symbol)
+        return accountAPI.get_positions(instType=instType, instId=symbol)['data']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS POSICIONES DE BYBIT")
@@ -160,7 +183,7 @@ def cerrar_posicion(symbol, positionSide):
         print("Cerrando posición...")
         print(json.dumps(tradeAPI.close_positions(
                                                     instId=symbol,
-                                                    mgnMode="cross",
+                                                    mgnMode=tdMode,
                                                     posSide=positionSide,
                                                   ),indent=2))
         
@@ -172,3 +195,85 @@ def cerrar_posicion(symbol, positionSide):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS (Aun No Funciona Bien, Cierra la orden de inmediato)
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.lower()
+        if positionSide == "long":
+            side = "sell"
+        if positionSide == "short":
+            side = "buy"
+        
+        # determinar la cantidad
+        posiciones = obtener_posicion(symbol=symbol)
+        for posicion in posiciones:
+            if posicion['posSide'] == positionSide:
+                sz = posicion['pos']
+        
+        # Colocar la orden de Stop Loss
+        orden = tradeAPI.place_order(
+                                    instId=symbol,
+                                    tdMode=tdMode,
+                                    side=side,
+                                    ordType="market",
+                                    sz=sz,
+                                    posSide=positionSide,
+                                    slTriggerPx=stopPrice,
+                                    slOrdPx=stopPrice
+                                    )
+        print("")
+        print(f"Mensaje API: {orden['data'][0]['sMsg']}. ordId: {orden['data'][0]['ordId']}")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN OKX")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET (Solo funciona a limit)
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir parametros
+        type = type.lower()
+        positionSide = positionSide.lower()
+        if positionSide == "long":
+            side = "sell"
+        if positionSide == "short":
+            side = "buy"
+        
+        # determinar la cantidad
+        posiciones = obtener_posicion(symbol=symbol)
+        for posicion in posiciones:
+            if posicion['posSide'] == positionSide:
+                sz = posicion['pos']
+        
+        # Colocar la orden de Stop Loss
+        orden = tradeAPI.place_order(
+                                        instId=symbol,
+                                        tdMode=tdMode,
+                                        side=side,
+                                        posSide=positionSide,
+                                        ordType=type,
+                                        sz=sz,
+                                        tpTriggerPx=stopPrice,
+                                        tpOrdPx=stopPrice,
+                                        px=stopPrice
+                                    )
+        print("")
+        print(f"Mensaje API: {orden['data'][0]['sMsg']}. ordId: {orden['data'][0]['ordId']}")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------

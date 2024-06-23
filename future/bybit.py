@@ -28,17 +28,34 @@ def precio_actual_activo(symbol):
         return 0
 #--------------------------------------------------------
 
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Obtener el apalancamiento máximo
+        max_leverage = bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]['leverageFilter']['maxLeverage']
+        return int(float(max_leverage))
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE BYBIT NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
+        
         # Cambia el apalancamiento
+        max_leverage = apalancameinto_max(symbol=symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
         apalancamiento_actual = (bybit_session.get_positions(category="linear", symbol=symbol)["result"]["list"][0]["leverage"])
         #print("apalancamiento actual:", apalancamiento_actual)
         if apalancamiento_actual != str(leverage):
             bybit_session.set_leverage(category="linear", symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
-            apalancamiento_actual = (bybit_session.get_positions(category="linear", symbol=symbol)["result"]["list"][0]["leverage"])
-            #print("apalancamiento actual:", apalancamiento_actual)
 
         # Definir el lado para el modo hedge
         if side == "BUY":
@@ -173,3 +190,113 @@ def cerrar_posicion(symbol, positionSide):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            positionSide = 1
+        if positionSide == "SHORT":
+            positionSide = 2
+        
+        # Colocar la orden de Stop Loss
+        orden = bybit_session.set_trading_stop(
+                                    category="linear",
+                                    symbol=symbol,
+                                    stopLoss=str(stopPrice),
+                                    tpslMode="Full",
+                                    positionIdx=positionSide
+                                )
+        
+        print(f"Stop Loss Colocado en {stopPrice}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BYBIT")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            positionSide = 1
+            tpSize = obtener_posicion(symbol=symbol)[0]['size']
+        if positionSide == "SHORT":
+            positionSide = 2
+            tpSize = obtener_posicion(symbol=symbol)[1]['size']
+
+        # Colocar Take Profit Market
+        if type == "MARKET":
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpslMode="Full",
+                                        positionIdx=positionSide
+                                    )
+        
+        # Colocar Take Profit Limit
+        if type == "LIMIT":
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpLimitPrice=str(stopPrice),
+                                        tpslMode="Partial",
+                                        tpSize=tpSize,
+                                        tpOrderType="Limit",
+                                        positionIdx=positionSide
+                                        )
+        
+        print(f"Take Profit Colocado en {stopPrice}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------
+
+# FUNCIÓN QUE COLOCA UN TRAILING STOP
+# -----------------------------------
+def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            positionSide = 1
+        if positionSide == "SHORT":
+            positionSide = 2
+        
+        # Colocar la orden de Trailing Stop
+        orden = bybit_session.set_trading_stop(
+                                    category="linear",
+                                    symbol=symbol,
+                                    tpslMode="Full",
+                                    trailingStop=str(callbackRate*activationPrice/100),
+                                    activePrice=str(activationPrice),
+                                    positionIdx=positionSide,
+                                )
+        
+        print(f"Trailing Stop Colocado en {activationPrice}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BYBIT")
+        print(e)
+        print("")
+# -----------------------------------

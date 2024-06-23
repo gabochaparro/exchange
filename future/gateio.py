@@ -1,5 +1,5 @@
 import credenciales
-from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder
+from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder, FuturesPriceTriggeredOrder
 import json
 import time
 
@@ -29,12 +29,30 @@ def precio_actual_activo(symbol):
         return 0
 #--------------------------------------------------------
 
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Obtener el apalancamiento máximo
+        max_leverage = futures_api.get_futures_contract(settle=settle, contract=symbol).leverage_max
+        return int(max_leverage)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN KUCOIN")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE GATEIO NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
         
         # Modificar el apalancamiento
+        max_leverage = apalancameinto_max(symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
         futures_api.update_dual_mode_position_leverage(settle, symbol, leverage)
 
         # Definir la cantidad por lote
@@ -155,23 +173,16 @@ def cerrar_posicion(symbol, positionSide):
 
         # Detalles de la orden LIMIT
         order = FuturesOrder(
-                                id = 0,
-                                user = 0,
-                                create_time = 0,
-                                finish_time = 0,
                                 finish_as = "filled",
                                 status = "open",
                                 contract = symbol,
                                 size = size,
-                                iceberg = 0,
                                 price = "0",
                                 is_close = True,
                                 reduce_only = True,
                                 is_reduce_only = True,
                                 is_liq = True,
-                                tif = "ioc",
-                                left = 0,
-                                fill_price = "0"
+                                tif = "ioc"
                             ) 
 
         # Cerrar posición
@@ -185,3 +196,105 @@ def cerrar_posicion(symbol, positionSide):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+
+        # Obtener las posiciones
+        posiciones = obtener_posicion(symbol)
+        for posicion in posiciones:
+            if positionSide == "LONG":
+                auto_size = "close_long"
+                rule = 2
+                order_type = "close-long-position"
+            if positionSide == "SHORT":
+                auto_size = "close_short"
+                rule = 1
+                order_type = "close-short-position"
+        
+        # Detalles de la orden LIMIT
+        initial =  {
+                    "contract": symbol,
+                    "size": 0,
+                    "price": "0",
+                    "tif": "ioc",
+                    "reduce_only": True,
+                    "auto_size": auto_size
+                    }
+
+        trigger = {
+                    "strategy_type": 0,
+                    "price_type": 0,
+                    "price": str(stopPrice),
+                    "rule": rule,
+                    }
+        order = FuturesPriceTriggeredOrder(initial=initial,trigger=trigger, order_type=order_type)
+        
+        # Colocar la orden de Stop Loss
+        orden = futures_api.create_price_triggered_order(settle=settle, futures_price_triggered_order=order)
+        
+        print(f"Stop Loss Colocado. {orden}")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BYBIT")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+
+        # Obtener las posiciones
+        posiciones = obtener_posicion(symbol)
+        for posicion in posiciones:
+            if positionSide == "LONG":
+                auto_size = "close_long"
+                rule = 1
+                order_type = "close-long-position"
+            if positionSide == "SHORT":
+                auto_size = "close_short"
+                rule = 2
+                order_type = "close-short-position"
+        
+        # Detalles de la orden LIMIT
+        initial =  {
+                    "contract": symbol,
+                    "size": 0,
+                    "price": "0",
+                    "tif": "ioc",
+                    "reduce_only": True,
+                    "auto_size": auto_size
+                    }
+
+        trigger = {
+                    "strategy_type": 0,
+                    "price_type": 0,
+                    "price": str(stopPrice),
+                    "rule": rule,
+                    }
+        order = FuturesPriceTriggeredOrder(initial=initial,trigger=trigger, order_type=order_type)
+        
+        # Colocar la orden de Take Profit
+        orden = futures_api.create_price_triggered_order(settle=settle, futures_price_triggered_order=order)
+        
+        print(f"Take Profit Colocado. {stopPrice}")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------

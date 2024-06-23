@@ -76,6 +76,29 @@ def precio_actual_activo(symbol):
         return 0
 #--------------------------------------------------------
 
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Modificar el apalancamiento
+        path = '/openApi/swap/v2/trade/leverage'
+        method = "GET"
+        paramsMap = {
+                    "symbol": symbol,
+                    "timestamp": int(time.time()*1000)
+                    }
+
+        # Obtener el apalancamiento máximo
+        max_leverage = bingx_api(path, method, paramsMap)['data']['maxLongLeverage']
+        return int(max_leverage)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BINGX")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE BINGX NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
@@ -88,6 +111,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             positionSide = "SHORT"
 
         # Modificar el apalancamiento
+        max_leverage = apalancameinto_max(symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
+        
         path = '/openApi/swap/v2/trade/leverage'
         method = "POST"
         paramsMap = {
@@ -228,7 +255,7 @@ def cancelar_orden(symbol, orderId):
         print("")
 # -----------------------------
 
-# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
+# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES (No disponible por el momento)
 # ---------------------------------------------
 def obtener_posicion(symbol):
     try:
@@ -287,3 +314,125 @@ def cerrar_posicion(symbol, positionSide):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir lado
+        if positionSide == "LONG":
+            side = "SELL"
+        if positionSide == "SHORT":
+            side = "BUY"
+
+        # Definir parametros# Definir parametros
+        path = '/openApi/swap/v2/trade/order'
+        method = "POST"
+        paramsMap = {
+                    "symbol": symbol,
+                    "type": "STOP_MARKET",
+                    "stopLoss": "True",
+                    "side": side,
+                    "positionSide": positionSide,
+                    "closePosition": "True",
+                    "stopPrice": stopPrice,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Colocar la orden de Stop Loss
+        orden = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        
+        print(f"Stop Loss Colocado en {orden}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BINGX")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir lado
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            side = "SELL"
+        if positionSide == "SHORT":
+            side = "BUY"
+
+        # Definir parametros# Definir parametros
+        path = '/openApi/swap/v2/trade/order'
+        method = "POST"
+        paramsMap = {
+                    "symbol": symbol,
+                    "type": type.upper(),
+                    "side": side,
+                    "positionSide": positionSide,
+                    "closePosition": "True",
+                    "takeProfit": "True",
+                    "stopPrice": stopPrice,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Colocar la orden de Take Profit
+        orden = bingx_api(path=path, method=method, paramsMap=paramsMap)
+
+        print(f"Take Profit Colocado en {orden}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BINGX")
+        print(e)
+        print("")
+# ------------------------------------------------
+
+# FUNCIÓN QUE COLOCA UN TRAILING STOP
+# -----------------------------------
+def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
+    try:
+
+        # Definir lado
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            side = "SELL"
+        if positionSide == "SHORT":
+            side = "BUY"
+
+        # Definir el callbackRate
+        callbackRate = callbackRate/100
+        
+        # Definir parametros# Definir parametros
+        path = '/openApi/swap/v2/trade/order'
+        method = "POST"
+        paramsMap = {
+                    "symbol": symbol,
+                    "type": "TRAILING_STOP_MARKET",
+                    "side": side,
+                    "positionSide": positionSide,
+                    "closePosition": "True",
+                    "activationPrice": activationPrice,
+                    "priceRate": callbackRate,
+                    "recvWindow": 0,
+                    "timestamp": str(int(time.time()*1000)),
+                    }
+        
+        # Colocar la orden del Trailing Stop
+        orden = bingx_api(path=path, method=method, paramsMap=paramsMap)
+        
+        print(f"Trailing Stop Colocado en {orden}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BYBIT")
+        print(e)
+        print("")
+# -----------------------------------

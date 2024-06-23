@@ -30,12 +30,30 @@ def precio_actual_activo(symbol):
         return 0
 #--------------------------------------------------------
 
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Obtener el apalancamiento máximo
+        max_leverage = bitget_client.mix_get_leverage(symbol=symbol)['data']['maxLeverage']
+        return int(float(max_leverage))
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BITGET")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE BITGET NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
 
         # Modificar apalancamiento
+        max_leverage = apalancameinto_max(symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
         bitget_client.mix_adjust_leverage(symbol=symbol, marginCoin=marginCoin, leverage=leverage, holdSide=None)
 
         # Definir el lado
@@ -161,3 +179,99 @@ def cerrar_posicion(symbol, positionSide):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir parametros
+        holdSide = positionSide.lower()
+        
+        # Colocar la orden de Stop Loss
+        orden = orden = bitget_client.mix_place_stop_order(
+                                                        symbol=symbol,
+                                                        marginCoin=marginCoin,
+                                                        planType="loss_plan",
+                                                        triggerPrice=str(stopPrice),
+                                                        holdSide=holdSide
+                                                    )
+        
+        print(f"Stop Loss Colocado en {stopPrice}. ID: {orden['data']['orderId']}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BITGET")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir parametros
+        holdSide = positionSide.lower()
+
+        # Colocar Take Profit (Por ahora la API solo permite a market)
+        orden = orden = bitget_client.mix_place_stop_order(
+                                                        symbol=symbol,
+                                                        marginCoin=marginCoin,
+                                                        planType="profit_plan",
+                                                        triggerPrice=str(stopPrice),
+                                                        holdSide=holdSide
+                                                    )
+        
+        print(f"Take Profit Colocado en {stopPrice}. ID: {orden['data']['orderId']}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------
+
+# FUNCIÓN QUE COLOCA UN TRAILING STOP
+# -----------------------------------
+def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.upper()
+        if positionSide == "LONG":
+            side = "close_long"
+        if positionSide == "SHORT":
+            side = "close_short"
+        
+        # callbackRate no puede ser menor que 1%
+        if callbackRate < 1:
+            callbackRate = 1
+        
+        # Determinar la cantidad
+        posiciones = obtener_posicion(symbol=symbol)
+        for posicion in posiciones:
+            if posicion['holdSide'] == positionSide.lower():
+                size = posicion['available']
+
+        # Colocar la orden de Trailing Stop
+        orden = bitget_client.mix_place_trailing_stop_order(
+                                                            symbol=symbol,
+                                                            marginCoin=marginCoin,
+                                                            triggerPrice=str(activationPrice),
+                                                            side=side,
+                                                            size=size,
+                                                            rangeRate=str(callbackRate)
+                                                            )
+        
+        print(f"Trailing Stop Colocado en {activationPrice}. ID: {orden['data']['orderId']}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN BYBIT")
+        print(e)
+        print("")
+# -----------------------------------

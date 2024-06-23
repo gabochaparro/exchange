@@ -25,6 +25,21 @@ def precio_actual_activo(symbol):
         return 0
 #--------------------------------------------------------
 
+# FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
+# ------------------------------------------------------
+def apalancameinto_max(symbol):
+    try:
+
+        # Obtener el apalancamiento máximo
+        max_leverage = Market().get_contract_detail(symbol=symbol)['maxLeverage']
+        return int(max_leverage)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN KUCOIN")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE KUCOIN NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
@@ -33,6 +48,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         # Definir la cantidad en lotes para poder colocar la orden
         lote = Market().get_contract_detail(symbol=symbol)['multiplier']
         quantity = quantity/lote
+        
+        # Controlar el apalancamiento
+        max_leverage = apalancameinto_max(symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
         
         # Colocar la orden segun el tipo
         side = side.lower()
@@ -146,3 +166,78 @@ def cerrar_posicion(symbol):
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(symbol, positionSide, stopPrice):
+    try:
+
+        # Definir parametros
+        positionSide = positionSide.lower()
+        if positionSide == "long":
+            side = "sell"
+            stop="down"
+        if positionSide == "short":
+            side = "buy"
+            stop="up"
+        
+        # Colocar la orden de Stop Loss
+        orden = kucoin_trade_client.create_market_order(
+                                                        symbol=symbol,
+                                                        side=side,
+                                                        type="market",
+                                                        closeOrder=True,
+                                                        stopPrice=str(stopPrice),
+                                                        lever=0,
+                                                        stop=stop,
+                                                        stopPriceType="IP"
+                                                        )
+        
+        print(f"Stop Loss Colocado {orden}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS EN KUCOIN")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
+# ------------------------------------------------
+def take_profit(symbol, positionSide, stopPrice, type):
+    try:
+
+        # Definir parametros
+        type = type.lower()
+        positionSide = positionSide.lower()
+        if positionSide == "long":
+            side = "sell"
+            stop="up"
+        if positionSide == "short":
+            side = "buy"
+            stop="down"
+        
+        # Colocar la orden de Stop Loss
+        orden = kucoin_trade_client.create_limit_order(
+                                                        symbol=symbol,
+                                                        side=side,
+                                                        type=type,
+                                                        closeOrder=True,
+                                                        price=str(stopPrice),
+                                                        stopPrice=str(stopPrice),
+                                                        lever=0,
+                                                        stop=stop,
+                                                        stopPriceType="TP",
+                                                        size=0
+                                                        )
+        
+        print(f"Take Profit Colocado {orden}.")
+        print("")
+        return orden
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------

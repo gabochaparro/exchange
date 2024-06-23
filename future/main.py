@@ -374,11 +374,165 @@ def cerrar_posicion(exchange, symbol, positionSide):
         print("")
 # -------------------------------
 
+# FUNCIÓM QUE COLOCA UN STOP LOSS
+# -------------------------------
+def stop_loss(exchange, symbol, positionSide, stopPrice):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+        positionSide = positionSide.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # Mensaje
+        print(f"Colocando Stop Loss al {positionSide} de {symbol} en {exchange}")
+        print("")
+
+        # BINANCE
+        if exchange == "BINANCE":
+            binance_.stop_loss(symbol, positionSide, stopPrice)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            bybit.stop_loss(symbol, positionSide, stopPrice)
+
+        # BITGET
+        if exchange == "BITGET":
+            bitget.stop_loss(symbol, positionSide, stopPrice)
+
+        # BINGX
+        if exchange == "BINGX":
+            bingx.stop_loss(symbol, positionSide, stopPrice)
+
+        # OKX (NO FUNCIONA AUN)
+        if exchange == "OKX":
+            okx_.stop_loss(symbol, positionSide, stopPrice)
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            kucoin.stop_loss(symbol, positionSide, stopPrice)
+
+        # GATEIO
+        if exchange == "GATEIO":
+            gateio.stop_loss(symbol, positionSide, stopPrice)
+    
+    except Exception as e:
+        print("ERROR COLOCANDO STOP LOSS")
+        print(e)
+        print("")
+# -------------------------------
+
+# FUNCIÓM QUE COLOCA UN TAKE PROFIT
+# ---------------------------------
+def take_profit(exchange, symbol, positionSide, stopPrice, type):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+        positionSide = positionSide.upper()
+        type = type.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # Mensaje
+        print(f"Colocando Take Profit al {positionSide} de {symbol} en {exchange}")
+        print("")
+
+        # BINANCE
+        if exchange == "BINANCE":
+            binance_.take_profit(symbol, positionSide, stopPrice, type)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            bybit.take_profit(symbol, positionSide, stopPrice, type)
+
+        # BITGET (SOLO MARKET POR EL MOMENTO)
+        if exchange == "BITGET":
+            bitget.take_profit(symbol, positionSide, stopPrice, type)
+
+        # BINGX
+        if exchange == "BINGX":
+            bingx.take_profit(symbol, positionSide, stopPrice, type)
+
+        # OKX (SOLO LIMIT POR EL MOMENTO)
+        if exchange == "OKX":
+            okx_.take_profit(symbol, positionSide, stopPrice, type)
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            kucoin.take_profit(symbol, positionSide, stopPrice, type)
+
+        # GATEIO
+        if exchange == "GATEIO":
+            gateio.take_profit(symbol, positionSide, stopPrice, type)
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TAKE PROFIT")
+        print(e)
+        print("")
+# ---------------------------------
+
+# FUNCIÓM QUE COLOCA UN TRAINLING STOP
+# -------------------------------
+def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+        positionSide = positionSide.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # Mensaje
+        print(f"Colocando Trailing Stop al {positionSide} de {symbol} en {exchange}")
+        print("")
+
+        # BINANCE
+        if exchange == "BINANCE":
+            binance_.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            bybit.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # BITGET
+        if exchange == "BITGET":
+            bitget.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # BINGX
+        if exchange == "BINGX":
+            bingx.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # OKX
+        if exchange == "OKX":
+            okx_.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            kucoin.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+
+        # GATEIO
+        if exchange == "GATIO":
+            gateio.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TRAILING STOP")
+        print(e)
+        print("")
+# -------------------------------
+
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
-#nueva_orden(exchange="gateio", symbol="ordi", order_type="market", quantity=0.6, price=43.8, side="sell", leverage=20)
+#nueva_orden(exchange="gateio", symbol="rats", order_type="market", quantity=30000, price=0, side="buy", leverage=200)
 #cancelar_ordenes(exchange="gateio", symbol="ordi")
-#print(obtener_ordenes(exchange="gateio", symbol="ordi"))
+#print(json.dumps(obtener_ordenes(exchange="okx", symbol="not"), indent=2))
 #cancelar_orden(exchange="gateio", symbol="ordi", orderId=487285852363)
-#print(obtener_posicion(exchange="gateio", symbol="ordi"))
-#cerrar_posicion("gateio", "ordi", "long")
+#print(json.dumps(obtener_posicion(exchange="gateio", symbol="not"),indent=2))
+#cerrar_posicion("gateio", "rats", "long")
+#stop_loss(exchange="gateio", symbol="rats", positionSide="long", stopPrice=0.000105)
+#take_profit("gateio", "rats", "long", 0.000115, "limit")
+#trailing_stop(exchange="bitget", symbol="not", positionSide="short", activationPrice=0.015, callbackRate=1)
 print("")
