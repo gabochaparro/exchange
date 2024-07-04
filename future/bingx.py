@@ -42,7 +42,7 @@ def bingx_api(path, method, paramsMap):
             if paramsStr != "": 
                 return paramsStr+"&timestamp="+str(int(time.time() * 1000))
             else:
-                 paramsStr+"timestamp="+str(int(time.time() * 1000))
+                 return paramsStr+"timestamp="+str(int(time.time() * 1000))
 
         return json.loads(demo())
 

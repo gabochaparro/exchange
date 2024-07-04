@@ -219,11 +219,13 @@ def stop_loss(symbol, positionSide, stopPrice):
                                     instId=symbol,
                                     tdMode=tdMode,
                                     side=side,
-                                    ordType="market",
-                                    sz=sz,
                                     posSide=positionSide,
-                                    slTriggerPx=stopPrice,
-                                    slOrdPx=stopPrice
+                                    ordType="market",
+                                    sz= sz,
+                                    attachAlgoOrds={
+                                                    "slTriggerPx": stopPrice,
+                                                    "slOrdPx": stopPrice
+                                                    }
                                     )
         print("")
         print(f"Mensaje API: {orden['data'][0]['sMsg']}. ordId: {orden['data'][0]['ordId']}")

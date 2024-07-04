@@ -28,3 +28,7 @@ kucoin_api_passphrase = "dios741236"
 # Inserta tus claves de API de GATE.io futuros aquí
 gateio_api_key = '60e73f1c0b2b1cb131791f10537818c8'
 gateio_api_secret = '7ba3069a6b3608fb1fd6f6333fc95e869d64d074992cbb70d8682688ee9c8289'
+
+# Inserta tus claves de API de COINEX futuros aquí
+coinex_api_key = 'C04145FBE3D04CB3A5021E00458C9E93'
+coinex_api_secret = 'D5899D1B7EB7EFDE98DAE62B44E90BB0116D0265232FFDB0'
