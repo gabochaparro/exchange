@@ -1,4 +1,4 @@
-import future.main as future
+import future.future as future
 import time
 
 

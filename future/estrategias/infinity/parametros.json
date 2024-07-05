@@ -1,0 +1,10 @@
+{
+    "exchange": "bybit",
+    "activo": "btc",
+    "apalancamiento": 3,
+    "precio_minimo": 30000,
+    "ganancia_grid": 0.6,
+    "inversion": 2000,
+    "tp": "",
+    "sl": ""
+}

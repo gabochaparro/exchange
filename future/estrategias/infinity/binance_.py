@@ -308,6 +308,3 @@ def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
         print(e)
         print("")
 # -----------------------------------
-
-#prueba = precio_actual_activo("1000RATSUSDT")
-#print(json.dumps(prueba,indent=2))
