@@ -12,6 +12,7 @@ binance_client = Client(
                             tld="com"
                         )
 
+
 # FUNCIÓN QUE ENCUENTRA TODAS LAS MONEDAS EN EL PAR USDT
 #------------------------------------------------------
 def buscar_ticks():
@@ -32,8 +33,7 @@ def buscar_ticks():
         print(e)
         e = "error"
         print("")
-        ticks = []
-        return ticks
+        return []
 #-------------------------------------------------------------
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK

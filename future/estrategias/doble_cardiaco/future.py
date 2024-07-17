@@ -36,10 +36,7 @@ def definir_symbol(exchange, symbol):
         
         if exchange == "GATEIO":
             symbol = symbol + "_USDT"
- 
-        print("")
-        print( exchange, "-", symbol)
-        print("")
+            
         return symbol
     
     except Exception as e:
@@ -544,7 +541,7 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
 # -------------------------------
 
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
-#nueva_orden(exchange="bybit", symbol="ustc", order_type="limit", quantity=300, price=0.019, side="buy", leverage=200)
+#nueva_orden(exchange="gateio", symbol="rats", order_type="market", quantity=30000, price=0, side="buy", leverage=200)
 #cancelar_ordenes(exchange="gateio", symbol="ordi")
 #print(json.dumps(obtener_ordenes(exchange="okx", symbol="not"), indent=2))
 #cancelar_orden(exchange="gateio", symbol="ordi", orderId=487285852363)
@@ -553,4 +550,4 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
 #stop_loss(exchange="okx", symbol="ordi", positionSide="long", stopPrice=32)
 #take_profit("gateio", "rats", "long", 0.000115, "limit")
 #trailing_stop(exchange="bitget", symbol="not", positionSide="short", activationPrice=0.015, callbackRate=1)
-#print("")
+print("")
