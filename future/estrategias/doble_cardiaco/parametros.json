@@ -1,8 +1,8 @@
 {
     "exchange" : "binance",
     "symbol" : "",
-    "temporalidad" : "5m",
-    "cantidad_velas" : 12,
+    "temporalidad" : "1m",
+    "cantidad_velas" : 60,
     "rango": [1,9],
     "apalancamiento" : "",
     "take_profit" : "",

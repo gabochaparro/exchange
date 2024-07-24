@@ -100,7 +100,12 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         else:
             print("ERROR COLOCANDO LA ORDEN EN OKX, error_code = ",order["data"][0]["sCode"], ", Error_message = ", order["data"][0]["sMsg"])
             print("")
-    
+
+        return {
+                "orderId": order["data"][0]["ordId"],
+                "price": price
+                }
+
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN OKX")
         print(e)

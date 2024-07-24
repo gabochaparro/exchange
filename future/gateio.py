@@ -84,6 +84,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         
         print(f"Orden colocada en {response.price}. ID:", response.id)
         print("")
+
+        return {
+                "orderId": response.id,
+                "price": response.price
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN GATEIO")

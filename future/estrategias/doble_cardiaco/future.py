@@ -128,31 +128,33 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.nueva_orden(symbol, order_type, quantity, price, side, leverage)    
+            orden = orden = bitget.nueva_orden(symbol, order_type, quantity, price, side, leverage)    
 
         # BINGX
         if exchange == "BINGX":
-            bingx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bingx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # OKX
         if exchange == "OKX":
-            okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = kucoin.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # GATEIO
         if exchange == "GATEIO":
-            gateio.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = gateio.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+
+        return orden
 
     except Exception as e:
         print("ERROR CREANDO LA ORDEN")
@@ -541,7 +543,7 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
 # -------------------------------
 
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
-#nueva_orden(exchange="gateio", symbol="rats", order_type="market", quantity=30000, price=0, side="buy", leverage=200)
+#nueva_orden(exchange="bybit", symbol="ustc", order_type="limit", quantity=300, price=0.019, side="buy", leverage=200)
 #cancelar_ordenes(exchange="gateio", symbol="ordi")
 #print(json.dumps(obtener_ordenes(exchange="okx", symbol="not"), indent=2))
 #cancelar_orden(exchange="gateio", symbol="ordi", orderId=487285852363)
@@ -550,4 +552,4 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
 #stop_loss(exchange="okx", symbol="ordi", positionSide="long", stopPrice=32)
 #take_profit("gateio", "rats", "long", 0.000115, "limit")
 #trailing_stop(exchange="bitget", symbol="not", positionSide="short", activationPrice=0.015, callbackRate=1)
-print("")
+#print("")

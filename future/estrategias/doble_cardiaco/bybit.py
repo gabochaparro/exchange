@@ -87,7 +87,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print(f"Orden colocada en {price}. ID:", order["result"]["orderId"])
         print("")
 
-        return order
+        return {
+                "orderId": order["result"]["orderId"],
+                "price": price
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BYBIT")

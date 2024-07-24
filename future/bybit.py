@@ -87,7 +87,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print(f"Orden colocada en {price}. ID:", order["result"]["orderId"])
         print("")
 
-        return order
+        return {
+                "orderId": order["result"]["orderId"],
+                "price": price
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BYBIT")
@@ -115,11 +118,11 @@ def cancelar_ordenes(symbol):
 
 # FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES ABIERTAS
 # ----------------------------------------------------
-def obtener_ordenes(symbol):
+def obtener_ordenes(symbol, orderId=""):
     try:
 
         print("Buscando ordenes...")
-        oredenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol)["result"]['list']
+        oredenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol,orderId=orderId)["result"]['list']
         print(f"{len(oredenes_abiertas)} ordenes encontradas")
         return oredenes_abiertas
 
@@ -227,17 +230,19 @@ def stop_loss(symbol, positionSide, stopPrice):
 
 # FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
 # ------------------------------------------------
-def take_profit(symbol, positionSide, stopPrice, type):
+def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
     try:
 
         # Definir parametros
         positionSide = positionSide.upper()
         if positionSide == "LONG":
             positionSide = 1
-            tpSize = obtener_posicion(symbol=symbol)[0]['size']
+            if tpSize == "":
+                tpSize = obtener_posicion(symbol=symbol)[0]['size']
         if positionSide == "SHORT":
             positionSide = 2
-            tpSize = obtener_posicion(symbol=symbol)[1]['size']
+            if tpSize == "":
+                tpSize = obtener_posicion(symbol=symbol)[1]['size']
 
         # Colocar Take Profit Market
         if type == "MARKET":
@@ -264,7 +269,13 @@ def take_profit(symbol, positionSide, stopPrice, type):
         
         print(f"Take Profit Colocado en {stopPrice}.")
         print("")
-        return orden
+        ordenes = obtener_ordenes(symbol=symbol)
+        for orden in ordenes:
+            if orden['orderStatus'] == "Untriggered" and orden['price'] == str(stopPrice) and orden['reduceOnly'] == True:
+                return {
+                "orderId": orden["orderId"],
+                "price": orden['price']
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")

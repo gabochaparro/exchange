@@ -75,6 +75,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print(f"Orden colocada en {price}. ID:", order["data"]["orderId"])
         print("")
 
+        return {
+            "orderId": order["data"]["orderId"],
+            "price": price
+            }
+
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BITGET")
         print(e)

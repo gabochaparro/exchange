@@ -12,7 +12,6 @@ binance_client = Client(
                             tld="com"
                         )
 
-
 # FUNCIÓN QUE ENCUENTRA TODAS LAS MONEDAS EN EL PAR USDT
 #------------------------------------------------------
 def buscar_ticks():
@@ -33,7 +32,8 @@ def buscar_ticks():
         print(e)
         e = "error"
         print("")
-        return []
+        ticks = []
+        return ticks
 #-------------------------------------------------------------
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
@@ -105,7 +105,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             )
         print(f"Orden colocada en {order["price"]}. ID:", order["orderId"])
         print((""))
-        return order
+        
+        return {
+                "orderId": order["orderId"],
+                "price": order["price"]
+                }
 
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BINANCE")

@@ -131,31 +131,33 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = binance_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.nueva_orden(symbol, order_type, quantity, price, side, leverage)    
+            orden = orden = bitget.nueva_orden(symbol, order_type, quantity, price, side, leverage)    
 
         # BINGX
         if exchange == "BINGX":
-            bingx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bingx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # OKX
         if exchange == "OKX":
-            okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = kucoin.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # GATEIO
         if exchange == "GATEIO":
-            gateio.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = gateio.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+
+        return orden
 
     except Exception as e:
         print("ERROR CREANDO LA ORDEN")
@@ -210,7 +212,7 @@ def cancelar_ordenes(exchange, symbol):
 
 # FUNCIÓN QUE BUSCA LA INFO DE TODAS LAS ORDENES ABIERTAS
 # -------------------------------------------------------
-def obtener_ordenes(exchange, symbol):
+def obtener_ordenes(exchange, symbol, orderId=""):
     try:
 
         exchange = exchange.upper()
@@ -221,31 +223,31 @@ def obtener_ordenes(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
-            return binance_.obtener_ordenes(symbol=symbol)
+            return binance_.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # BYBIT
         if exchange == "BYBIT":
-            return bybit.obtener_ordenes(symbol=symbol)
+            return bybit.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.obtener_ordenes(symbol=symbol)
+            return bitget.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.obtener_ordenes(symbol=symbol)
+            return bingx.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # OKX
         if exchange == "OKX":
-            return okx_.obtener_ordenes(symbol=symbol)
+            return okx_.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.obtener_ordenes(symbol=symbol)
+            return kucoin.obtener_ordenes(symbol=symbol, orderId=orderId)
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.obtener_ordenes(symbol=symbol)
+            return gateio.obtener_ordenes(symbol=symbol, orderId=orderId)
     
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES")
@@ -444,7 +446,7 @@ def stop_loss(exchange, symbol, positionSide, stopPrice):
 
 # FUNCIÓM QUE COLOCA UN TAKE PROFIT
 # ---------------------------------
-def take_profit(exchange, symbol, positionSide, stopPrice, type):
+def take_profit(exchange, symbol, positionSide, stopPrice, type, tpSize=""):
     try:
 
         exchange = exchange.upper()
@@ -461,31 +463,31 @@ def take_profit(exchange, symbol, positionSide, stopPrice, type):
 
         # BINANCE
         if exchange == "BINANCE":
-            binance_.take_profit(symbol, positionSide, stopPrice, type)
+            return binance_.take_profit(symbol, positionSide, stopPrice, type)
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.take_profit(symbol, positionSide, stopPrice, type)
+            return bybit.take_profit(symbol, positionSide, stopPrice, type, tpSize=tpSize)
 
         # BITGET (SOLO MARKET POR EL MOMENTO)
         if exchange == "BITGET":
-            bitget.take_profit(symbol, positionSide, stopPrice, type)
+            return bitget.take_profit(symbol, positionSide, stopPrice, type)
 
         # BINGX
         if exchange == "BINGX":
-            bingx.take_profit(symbol, positionSide, stopPrice, type)
+            return bingx.take_profit(symbol, positionSide, stopPrice, type)
 
         # OKX (SOLO LIMIT POR EL MOMENTO)
         if exchange == "OKX":
-            okx_.take_profit(symbol, positionSide, stopPrice, type)
+            return okx_.take_profit(symbol, positionSide, stopPrice, type)
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.take_profit(symbol, positionSide, stopPrice, type)
+            return kucoin.take_profit(symbol, positionSide, stopPrice, type)
 
         # GATEIO
         if exchange == "GATEIO":
-            gateio.take_profit(symbol, positionSide, stopPrice, type)
+            return gateio.take_profit(symbol, positionSide, stopPrice, type)
     
     except Exception as e:
         print("ERROR COLOCANDO TAKE PROFIT")
@@ -493,7 +495,7 @@ def take_profit(exchange, symbol, positionSide, stopPrice, type):
         print("")
 # ---------------------------------
 
-# FUNCIÓM QUE COLOCA UN TRAINLING STOP
+# FUNCIÓN QUE COLOCA UN TRAINLING STOP
 # -------------------------------
 def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate):
     try:
@@ -542,6 +544,51 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
         print(e)
         print("")
 # -------------------------------
+
+# FUNCIÓN QUE OBTIENE EL APALANCAMIENTO MÁXIMO DE UN TICK
+# -------------------------------------------------------
+def apalancamiento_max(exchange, symbol):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # BINANCE
+        if exchange == "BINANCE":
+            return binance_.apalancameinto_max(symbol=symbol)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit.apalancameinto_max(symbol=symbol)
+
+        # BITGET
+        if exchange == "BITGET":
+            return bitget.apalancameinto_max(symbol=symbol)
+
+        # BINGX
+        if exchange == "BINGX":
+            return bingx.apalancameinto_max(symbol=symbol)
+
+        # OKX
+        if exchange == "OKX":
+            return okx_.apalancameinto_max(symbol=symbol)
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            return kucoin.apalancameinto_max(symbol=symbol)
+
+        # GATEIO
+        if exchange == "GATIO":
+            return gateio.apalancameinto_max(symbol=symbol)
+    
+    except Exception as e:
+        print("ERROR COLOCANDO TRAILING STOP")
+        print(e)
+        print("")
+# -------------------------------------------------------
 
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
 #nueva_orden(exchange="bybit", symbol="ustc", order_type="limit", quantity=300, price=0.019, side="buy", leverage=200)

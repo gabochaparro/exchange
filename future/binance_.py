@@ -105,7 +105,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             )
         print(f"Orden colocada en {order["price"]}. ID:", order["orderId"])
         print((""))
-        return order
+        
+        return {
+                "orderId": order["orderId"],
+                "price": order["price"]
+                }
 
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BINANCE")
@@ -132,11 +136,11 @@ def cancelar_ordenes(symbol):
 
 # FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES ABIERTAS
 # ----------------------------------------------------
-def obtener_ordenes(symbol):
+def obtener_ordenes(symbol, orderId=""):
     try:
 
         print("Buscando ordenes...")
-        ordenes = binance_client.futures_get_open_orders(symbol=symbol)
+        ordenes = binance_client.futures_get_open_orders(symbol=symbol, orderId=orderId)
         print(f"{len(ordenes)} ordenes encontradas.")
         print("")
         return ordenes

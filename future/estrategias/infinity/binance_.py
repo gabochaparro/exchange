@@ -12,6 +12,29 @@ binance_client = Client(
                             tld="com"
                         )
 
+# FUNCIÓN QUE ENCUENTRA TODAS LAS MONEDAS EN EL PAR USDT
+#------------------------------------------------------
+def buscar_ticks():
+    try:
+        i = 0
+        ticks =[]
+        lista_ticks = binance_client.futures_symbol_ticker() #Buscar todos los pares de monedas
+        #print ("Cantidad de Monedas encontradas en todos los pares:", len(lista_ticks))
+        for tick in lista_ticks:
+            i = i + 1
+            if "USDT" in str(tick["symbol"]):
+                #print(tick["symbol"], i)
+                ticks.append(str(tick["symbol"]))
+        #print ("Cantidad de Monedas encontradas en par USDT:", len(ticks))
+        return ticks
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN QUE ENCUENTRA TODAS LAS MONEDAS EN EL PAR USDT (buscar_ticks())")
+        print(e)
+        e = "error"
+        print("")
+        ticks = []
+        return ticks
+#-------------------------------------------------------------
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #--------------------------------------------------------
@@ -82,7 +105,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             )
         print(f"Orden colocada en {order["price"]}. ID:", order["orderId"])
         print((""))
-        return order
+        
+        return {
+                "orderId": order["orderId"],
+                "price": order["price"]
+                }
 
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BINANCE")
@@ -308,3 +335,6 @@ def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
         print(e)
         print("")
 # -----------------------------------
+
+#prueba = precio_actual_activo("1000RATSUSDT")
+#print(json.dumps(prueba,indent=2))

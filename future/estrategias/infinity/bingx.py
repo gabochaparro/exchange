@@ -150,6 +150,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             print(order)
         print("")
 
+        return {
+                "orderId": order['data']['order']['orderId'],
+                "price": order['data']['order']['price']
+                }
 
     except Exception as e:
         print("ERROR COLOCANDO LA ORDEN EN BINGX")
