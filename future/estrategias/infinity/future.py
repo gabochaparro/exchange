@@ -587,6 +587,88 @@ def apalancamiento_max(exchange, symbol):
         print("")
 # -------------------------------------------------------
 
+# FUNCIÓN QUE OBTIENE EL PATRIMONIO DE LA CUENTA
+# ----------------------------------------------------
+def patrimonio(exchange):
+    try:
+
+        exchange = exchange.upper()
+
+        # BINANCE
+        if exchange == "BINANCE":
+            return binance_.patrimonio()
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit.patrimonio()
+
+        # BITGET
+        if exchange == "BITGET":
+            return bitget.patrimonio()
+
+        # BINGX
+        if exchange == "BINGX":
+            return bingx.patrimonio()
+
+        # OKX
+        if exchange == "OKX":
+            return okx_.patrimonio()
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            return kucoin.patrimonio()
+
+        # GATEIO
+        if exchange == "GATIO":
+            return gateio.patrimonio()
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL PATRIMONIO DE LA CUENTA")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL MARGEN DISPONIBLE
+# ----------------------------------------
+def margen_disponible(exchange):
+    try:
+
+        exchange = exchange.upper()
+
+        # BINANCE
+        if exchange == "BINANCE":
+            return binance_.margen_disponible()
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit.margen_disponible()
+
+        # BITGET
+        if exchange == "BITGET":
+            return bitget.margen_disponible()
+
+        # BINGX
+        if exchange == "BINGX":
+            return bingx.margen_disponible()
+
+        # OKX
+        if exchange == "OKX":
+            return okx_.margen_disponible()
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            return kucoin.margen_disponible()
+
+        # GATEIO
+        if exchange == "GATIO":
+            return gateio.margen_disponible()
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
+        print(e)
+        print("")
+# ----------------------------------------
+
 
 #print(precio_actual_activo(exchange="okx", symbol="BTC"))
 #nueva_orden(exchange="bybit", symbol="ustc", order_type="limit", quantity=300, price=0.019, side="buy", leverage=200)

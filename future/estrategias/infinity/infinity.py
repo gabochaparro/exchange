@@ -9,20 +9,24 @@ import future_ws
 import json
 import time
 import threading
+from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
+
 
 # Abrir el archivo parametros.json y cargar su contenido
 parametros = json.load(open("future/estrategias/infinity/parametros.json", "r"))
 
 # PARAMETROS DE LA ESTRATEGIA
 # ---------------------------
-exchange = parametros['exchange']               # Exchange a utilizar
-activo = parametros['activo']                   # Activo a operar
-apalancamiento = parametros['apalancamiento']   # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
-precio_minimo = parametros['precio_minimo']     # Por debajo del precio mínimo se mantiene la posición sin cambios
-ganancia_grid = parametros['ganancia_grid']     # Distancia en porcentaje entre cada grilla
-cuenta = parametros['monto_cuenta']             # Inversión de la estrategia
-tp = parametros['tp']                           # Take profit para detener la estrategia por completo
-sl = parametros['sl']                           # Stop Loss para detener la estrategia por completo
+exchange = parametros['exchange']                      # Exchange a utilizar
+activo = parametros['activo']                          # Activo a operar
+apalancamiento = parametros['apalancamiento']          # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
+precio_minimo = parametros['precio_minimo']            # Por debajo del precio mínimo se mantiene la posición sin cambios
+ganancia_grid = parametros['ganancia_grid']+0.11       # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+cuenta = future.margen_disponible(exchange=exchange)   # Inversión de la estrategia
+tp = float(parametros['tp'])                           # Take profit para detener la estrategia por completo
+sl = float(parametros['sl'])                           # Stop Loss para detener la estrategia por completo
+tipo = "LONG"                                          # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
 # ---------------------------
 
 
@@ -34,6 +38,8 @@ def actualizar_grid():
         global precio_actual
 
         while True:
+            
+            # Iniciar la estrategia
             if iniciar_estrategia == True:
                 # Consultar precio actual
                 precio_actual = future_ws.precio_actual
@@ -100,14 +106,15 @@ def parametros():
         print("-----------------------------------------")
         print("Exchange:", exchange.upper())
         print( "Activo:", activo.upper())
+        print("Tipo:", tipo.upper())
         print("Inversión mínima:", inversion_minima, "USDT")
         print("Rango mínimo:", precio_minimo, "USDT")
         print("Rango máximo: INFINITO")
         print("Cantidad de grids:", len(grid))
         print("Cantidad de cada compra:", cantidad_usdt, "USDT")
         print(f"Ganancias por cada grid: {ganancia_grid}%")
-        print("Inversión inicial:", cuenta*apalancamiento, "USDT")
-        print("Cuenta:", cuenta, "USDT")
+        print("Inversión inicial:", round(cuenta*apalancamiento,2), "USDT")
+        print("Cuenta:", round(cuenta,2), "USDT")
         print(f"Apalancamiento: {apalancamiento}x")
         print("")
         print("Precio actual:", precio_actual, "USDT")
@@ -118,7 +125,7 @@ def parametros():
         print("")
 
         # Detener estrategia por fondos insuficientes
-        if cantidad_usdt <= 5 and cuenta*apalancamiento < inversion_minima:
+        if cantidad_usdt <= 5 or cuenta*apalancamiento < inversion_minima:
             print("FONDOS INSUFICIENTES!")
             print("")
             exit()
@@ -174,31 +181,68 @@ def prox_compra_venta(grid):
 # ----------------------------------------------------------------
 def actualizar_pareja(exchange, symbol):
     try:
-        for pareja in parejas_compra_venta:
-            # BYBIT
-            if exchange.upper() == "BYBIT":
-                # Obtener la orden de compra en BYBIT
-                ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['compra']['orderId'])
-                if ordenes != None:
-                    if ordenes[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
-                        pareja['compra']['ejecutada'] = True
-                        print("Grid Actual:")
-                        print(grid)
-                        print("Cantidad de grillas:", len(grid))
-                        print(json.dumps(parejas_compra_venta,indent=2))
-                        print("")
-                
-                # Obtener la orden de venta en BYBIT
-                if pareja['venta']['orderId'] != "":
-                    ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
+        # Mantener el margen disponible
+        margen()
+
+        # LONG
+        if tipo.upper() == "" or tipo.upper() == "LONG":
+            for pareja in parejas_compra_venta:
+                # BYBIT
+                if exchange.upper() == "BYBIT":
+                    # Obtener la orden de compra en BYBIT
+                    ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['compra']['orderId'])
                     if ordenes != None:
-                        if ordenes[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
-                            pareja['venta']['ejecutada'] = True
+                        if ordenes[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
+                            pareja['compra']['ejecutada'] = True
                             print("Grid Actual:")
                             print(grid)
                             print("Cantidad de grillas:", len(grid))
+                            mostrar_lista(parejas_compra_venta)
                             print(json.dumps(parejas_compra_venta,indent=2))
                             print("")
+                    
+                    # Obtener la orden de venta en BYBIT
+                    if pareja['venta']['orderId'] != "":
+                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
+                        if ordenes != None:
+                            if ordenes[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
+                                pareja['venta']['ejecutada'] = True
+                                print("Grid Actual:")
+                                print(grid)
+                                print("Cantidad de grillas:", len(grid))
+                                mostrar_lista(parejas_compra_venta)
+                                print(json.dumps(parejas_compra_venta,indent=2))
+                                print("")
+        
+        # SHORT
+        if tipo.upper() == "" or tipo.upper() == "SHORT":
+            for pareja in parejas_compra_venta_short:
+                # BYBIT
+                if exchange.upper() == "BYBIT":
+                    # Obtener la orden de compra en BYBIT
+                    ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['compra']['orderId'])
+                    if ordenes != None:
+                        if ordenes[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
+                            pareja['compra']['ejecutada'] = True
+                            print("Grid Actual:")
+                            print(grid)
+                            print("Cantidad de grillas:", len(grid))
+                            mostrar_lista(parejas_compra_venta_short)
+                            print(json.dumps(parejas_compra_venta_short,indent=2))
+                            print("")
+                    
+                    # Obtener la orden de venta en BYBIT
+                    if pareja['venta']['orderId'] != "":
+                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
+                        if ordenes != None:
+                            if ordenes[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
+                                pareja['venta']['ejecutada'] = True
+                                print("Grid Actual:")
+                                print(grid)
+                                print("Cantidad de grillas:", len(grid))
+                                mostrar_lista(parejas_compra_venta_short)
+                                print(json.dumps(parejas_compra_venta_short,indent=2))
+                                print("")
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja()")
@@ -206,113 +250,371 @@ def actualizar_pareja(exchange, symbol):
         print("")
 # ----------------------------------------------------------------
 
-# Función que coloca las ordenes de compra
-# -------------------------------------------
-def ordenes_compra(exchange, symbol, posicion_usdt, grid):
+# Función que coloca las ordenes de compra para LONG
+# --------------------------------------------------
+def ordenes_compra(exchange, symbol, cantidad_usdt, grid):
     try:
         while True:
-            # Consultar precio actual
-            precio_actual = future_ws.precio_actual
+            if tipo.upper() == "" or tipo.upper() == "LONG":
+                
+                # Consultar precio actual
+                precio_actual = future_ws.precio_actual
 
-            # Obtener el precio de la proxima compra y la proxima venta
-            prox_compra, prox_venta = prox_compra_venta(grid)
+                # Obtener el precio de la proxima compra y la proxima venta
+                prox_compra, prox_venta = prox_compra_venta(grid)
 
-            # Verificar si la pareja compra_venta esta activa
-            actualizar_pareja(exchange=exchange, symbol=symbol)
-            compra_activa = False
-            for compra_venta in parejas_compra_venta:
-                if compra_venta["compra"]['price'] == prox_compra and compra_venta["venta"]['ejecutada'] == False:
-                    compra_activa = True
-            
-            # Cantidad de cada compra
-            qty = round((posicion_usdt/precio_actual),decimales_moneda)
-            if multiplo >= 10:
-                qty = round(qty/multiplo)*multiplo
-            
-            # Colocar la orden de compra y crear la pareja de compra_veta
-            if not(compra_activa):
-                orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
-                if orden != None:
-                    parejas_compra_venta.append({
-                                                "compra": {
-                                                            "orderId": orden['orderId'],
-                                                            "price": prox_compra,
-                                                            "ejecutada": False,
-                                                            "fecha_ejecucion" : 0
-                                                            },
-                                                "venta": {
-                                                            "orderId": "",
-                                                            "price": prox_venta,
-                                                            "ejecutada": False,
-                                                            "fecha_ejecucion" : 0
-                                                }})
-                    print("Grid Actual:")
-                    print(grid)
-                    print("Cantidad de grillas:", len(grid))
-                    print(json.dumps(parejas_compra_venta,indent=2))
-                    print("")
+                # Verificar si la pareja compra_venta esta activa
+                actualizar_pareja(exchange=exchange, symbol=symbol)
+                orden_compra_puesta = False
+                for pareja in parejas_compra_venta:
+                    if pareja["compra"]['price'] == prox_compra and not(pareja["venta"]['ejecutada']):
+                        orden_compra_puesta = True
+                
+                # Cantidad de cada compra
+                qty = round((cantidad_usdt/precio_actual),decimales_moneda)
+                # Definir la cantidad según el múltiplo
+                if multiplo >= 1:
+                    qty = round(qty/multiplo)*multiplo
+                
+                # Colocar la orden de compra y crear la pareja de compra_veta
+                if not(orden_compra_puesta):
+                    if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
+                        orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
+                        if orden != None:
+                            parejas_compra_venta.append({
+                                                        "compra": {
+                                                                    "orderId": orden['orderId'],
+                                                                    "price": prox_compra,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : 0
+                                                                    },
+                                                        "venta": {
+                                                                    "orderId": "",
+                                                                    "price": prox_venta,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : 0
+                                                        }})
+                            print("Grid Actual:")
+                            print(grid)
+                            print("Cantidad de grillas:", len(grid))
+                            mostrar_lista(parejas_compra_venta)
+                            print(json.dumps(parejas_compra_venta,indent=2))
+                            print("")
 
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_compra()")
         print(e)
         print("")
-# -------------------------------------------
+# --------------------------------------------------
 
-# Funció que coloca lsa ordenes de venta
-# --------------------------------------
+# Funció que coloca lsa ordenes de venta para LONG
+# ------------------------------------------------
 def ordenes_venta(exchange, symbol, grid):
     try:
         while True:
-            
-            # Colocar la orden de compra y actualiza la pareja de compra_veta
-            actualizar_pareja(exchange=exchange, symbol=symbol)
-            for compra_venta in parejas_compra_venta:
-                if compra_venta["compra"]['ejecutada'] and not(compra_venta["venta"]['ejecutada']):
-                    
-                    # Obtener las ordenes abriertas
-                    ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol)
-                    orden_venta_puesta = False
-                    
-                    # Verificar si la orden de venta esta puesta
-                    for orden in ordenes:
-                        if (0.999*compra_venta['venta']['price'] <= float(orden['price']) <= 1.001*compra_venta['venta']['price']) and orden['reduceOnly']:
-                            orden_venta_puesta = True
-                    
-                    if not(orden_venta_puesta):
-                        # Consulta la orden compra para obtener la cantidad
-                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=compra_venta['compra']['orderId'])
-                        qty = ordenes[0]['qty']
+            if tipo.upper() == "" or tipo.upper() == "LONG":
+                
+                # Colocar la orden de compra y actualiza la pareja de compra_veta
+                actualizar_pareja(exchange=exchange, symbol=symbol)
+                for compra_venta in parejas_compra_venta:
+                    if compra_venta["compra"]['ejecutada'] and not(compra_venta["venta"]['ejecutada']):
                         
-                        # Actualizar la pareja de nuevo para asegurar que la venta no este ejecutada
-                        actualizar_pareja(exchange=exchange, symbol=symbol)
-                        if compra_venta["compra"]['ejecutada'] and not(compra_venta["venta"]['ejecutada']):
+                        # Obtener las ordenes abriertas
+                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol)
+                        orden_venta_puesta = False
+                        
+                        # Verificar si la orden de venta esta puesta
+                        for orden in ordenes:
+                            if (0.999*compra_venta['venta']['price'] <= float(orden['price']) <= 1.001*compra_venta['venta']['price']) and orden['reduceOnly']:
+                                orden_venta_puesta = True
+                        
+                        if not(orden_venta_puesta):
+                            # Consulta la orden compra para obtener la cantidad
+                            ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=compra_venta['compra']['orderId'])
+                            qty = ordenes[0]['qty']
                             
-                            # Colocar la orden de venta
-                            if precio_actual <= compra_venta["venta"]['price']:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=qty)
-                            else:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="MARKET",tpSize=qty)
-                            
-                            # Verificar que la respuesta sea válida antes de modificar la pareja
-                            if orden != None:
-                                actualizar_pareja(exchange=exchange, symbol=symbol)
-                                compra_venta["venta"]['orderId'] = orden['orderId']
-                                print("Grid Actual:")
-                                print(grid)
-                                print("Cantidad de grillas:", len(grid))
-                                print(json.dumps(parejas_compra_venta,indent=2))
-                                print("")
+                            # Actualizar la pareja de nuevo para asegurar que la venta no este ejecutada
+                            actualizar_pareja(exchange=exchange, symbol=symbol)
+                            if compra_venta["compra"]['ejecutada'] and not(compra_venta["venta"]['ejecutada']):
+                                
+                                # Colocar la orden de venta
+                                if precio_actual < compra_venta["venta"]['price']:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=qty)
+                                else:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="MARKET",tpSize=qty)
+                                
+                                # Verificar que la respuesta sea válida antes de modificar la pareja
+                                if orden != None:
+                                    actualizar_pareja(exchange=exchange, symbol=symbol)
+                                    compra_venta["venta"]['orderId'] = orden['orderId']
+                                    print("Grid Actual:")
+                                    print(grid)
+                                    print("Cantidad de grillas:", len(grid))
+                                    mostrar_lista(parejas_compra_venta)
+                                    print(json.dumps(parejas_compra_venta,indent=2))
+                                    print("")
     
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_venta()")
         print(e)
         print("")
-# --------------------------------------
+# ------------------------------------------------
 
-# Función que cierra todo en la estrategia
-# ----------------------------------------
-# ----------------------------------------
+# Función que coloca las ordenes de venta para SHORT
+# --------------------------------------------------
+def ordenes_venta_short(exchange, symbol, cantidad_usdt, grid):
+    try:
+        while True:
+            if tipo.upper() == "" or tipo.upper() == "SHORT":
+                # Consultar precio actual
+                precio_actual = future_ws.precio_actual
 
+                # Obtener el precio de la proxima compra y la proxima venta
+                prox_compra, prox_venta = prox_compra_venta(grid)
+
+                # Verificar si la pareja compra_venta esta activa
+                actualizar_pareja(exchange=exchange, symbol=symbol)
+                orden_venta_puesta = False
+                for pareja in parejas_compra_venta_short:
+                    if pareja["venta"]['price'] == prox_venta and not(pareja["compra"]['ejecutada']):
+                        orden_venta_puesta = True
+                
+                # Cantidad de cada compra
+                qty = round((cantidad_usdt/precio_actual),decimales_moneda)
+                # Definir la cantidad según el múltiplo
+                if multiplo >= 1:
+                    qty = round(qty/multiplo)*multiplo
+                
+                # Colocar la orden de compra y crear la pareja de compra_veta
+                if not(orden_venta_puesta):
+                    if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
+                        orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
+                        if orden != None:
+                            parejas_compra_venta_short.append({
+                                                        "compra": {
+                                                                    "orderId": "",
+                                                                    "price": prox_compra,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : 0
+                                                                    },
+                                                        "venta": {
+                                                                    "orderId": orden['orderId'],
+                                                                    "price": prox_venta,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : 0
+                                                        }})
+                            print("Grid Actual:")
+                            print(grid)
+                            print("Cantidad de grillas:", len(grid))
+                            mostrar_lista(parejas_compra_venta_short)
+                            print(json.dumps(parejas_compra_venta_short,indent=2))
+                            print("")
+
+    except Exception as e:
+        print("ERROR EN LA FUNCION ordenes_compra()")
+        print(e)
+        print("")
+# --------------------------------------------------
+
+# Funció que coloca lsa ordenes de compra para SHORT
+# --------------------------------------------------
+def ordenes_compra_short(exchange, symbol, grid):
+    try:
+        while True:
+            if tipo.upper() == "" or tipo.upper() == "SHORT":
+                
+                # Colocar la orden de compra y actualiza la pareja de compra_veta
+                actualizar_pareja(exchange=exchange, symbol=symbol)
+                for compra_venta in parejas_compra_venta_short:
+                    if compra_venta["venta"]['ejecutada'] and not(compra_venta["compra"]['ejecutada']):
+                        
+                        # Obtener las ordenes abriertas
+                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol)
+                        orden_compra_puesta = False
+                        
+                        # Verificar si la orden de compra esta puesta
+                        for orden in ordenes:
+                            if (0.999*compra_venta['compra']['price'] <= float(orden['price']) <= 1.001*compra_venta['compra']['price']) and orden['reduceOnly']:
+                                orden_compra_puesta = True
+                        
+                        if not(orden_compra_puesta):
+                            # Consulta la orden venta para obtener la cantidad
+                            ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=compra_venta['venta']['orderId'])
+                            qty = ordenes[0]['qty']
+                            
+                            # Actualizar la pareja de nuevo para asegurar que la compra no esté ejecutada
+                            actualizar_pareja(exchange=exchange, symbol=symbol)
+                            if compra_venta["venta"]['ejecutada'] and not(compra_venta["compra"]['ejecutada']):
+                                
+                                # Colocar la orden de compra
+                                if precio_actual > compra_venta["compra"]['price']:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=qty)
+                                else:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="MARKET",tpSize=qty)
+                                
+                                # Verificar que la respuesta sea válida antes de modificar la pareja
+                                if orden != None:
+                                    actualizar_pareja(exchange=exchange, symbol=symbol)
+                                    compra_venta["compra"]['orderId'] = orden['orderId']
+                                    print("Grid Actual:")
+                                    print(grid)
+                                    print("Cantidad de grillas:", len(grid))
+                                    mostrar_lista(parejas_compra_venta_short)
+                                    print(json.dumps(parejas_compra_venta_short,indent=2))
+                                    print("")
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCION ordenes_venta()")
+        print(e)
+        print("")
+# --------------------------------------------------
+
+# Función que mantiene la disponibilidad del margen
+# -------------------------------------------------
+def margen():
+    try:
+        # Verificar si no hay margen disponible para la compra
+        if future.margen_disponible(exchange)*apalancamiento < cantidad_usdt:
+            
+            # LONG
+            if tipo == "LONG":
+                mas_bajo = future_ws.precio_actual
+                for pareja in parejas_compra_venta:
+                    if pareja['compra']['orderId'] != "" and not(pareja['compra']['ejecutada']) and pareja['compra']['price'] < mas_bajo:
+                        mas_bajo = pareja['compra']['price']
+                        pareja_eliminar = pareja
+                
+                # Cancelar orden mas baja
+                future.cancelar_orden(exchange, activo, pareja_eliminar['compra']['orderId'])
+
+                # Remover la pareja mas baja
+                parejas_compra_venta.remove(pareja_eliminar)
+            
+            # SHORT
+            if tipo == "SHORT":
+                mas_alto = future_ws.precio_actual
+                for pareja in parejas_compra_venta:
+                    if pareja['venta']['orderId'] != "" and not(pareja['venta']['ejecutada']) and pareja['venta']['price'] > mas_alto:
+                        mas_alto = pareja['venta']['price']
+                        pareja_eliminar = pareja
+                
+                # Cancelar orden mas baja
+                future.cancelar_orden(exchange, activo, pareja_eliminar['venta']['orderId'])
+
+                # Remover la pareja mas baja
+                parejas_compra_venta.remove(pareja_eliminar)
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN margen()")
+        print(e)
+        print("")
+# -------------------------------------------------
+
+# Función que muestra una imagen de la lista de parejas
+# -----------------------------------------------------
+def mostrar_lista(data):
+    try:
+
+        # Crear una imagen en blanco
+        img_width, img_height = 300, 130 * len(data)
+        background_color = (35, 35, 40)
+        text_color = (200, 200, 200)
+        highlight_color = (0, 255, 0)
+        image = Image.new('RGB', (img_width, img_height), color=background_color)
+
+        # Configurar el objeto de dibujo y la fuente
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.load_default()  # Puedes cambiar esto por una fuente específica si lo deseas
+
+        # Dibujar los datos en la imagen
+        draw.text((10, 10), f"{datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")} {activo.upper()}", font=font, fill=text_color)
+        y_text = 30
+        for item in data:
+            compra = item['compra']
+            venta = item['venta']
+
+            draw.text((10, y_text), f"Compra Limit", font=font, fill=highlight_color)
+            draw.text((150, y_text), f"Venta Limit", font=font, fill=(255, 0, 0))
+            y_text += 20
+            draw.text((10, y_text), f"Precio: {compra['price']} USDT", font=font, fill=text_color)
+            draw.text((150, y_text), f"Precio: {venta['price']} USDT", font=font, fill=text_color)
+            y_text += 20
+            draw.text((10, y_text), f"{'Ejecutada' if compra['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
+            draw.text((150, y_text), f"{'Ejecutada' if venta['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
+            y_text += 20
+            draw.text((10, y_text), f"Tiempo: {compra['fecha_ejecucion']}", font=font, fill=text_color)
+            draw.text((150, y_text), f"Tiempo: {venta['fecha_ejecucion']}", font=font, fill=text_color)
+            y_text += 30  # Espacio entre bloques de datos
+
+        # Guardar la imagen
+        image.save('future/estrategias/infinity/output.png')
+
+        # Mostrar la imagen
+        #image.show()
+
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN mostrar_lista()")
+        print(e)
+        print("")
+# -----------------------------------------------------
+
+# Función que mide la ganancia actual (en porcentaje %)
+# -----------------------------------------------------
+def ganancia_actual():
+    try:
+        return 100*(future.patrimonio(exchange) - balance_inicial)/balance_inicial
+    
+    except Exception  as e:
+        print("ERROR EN LA FUNCIÓN ganancia_actual()")
+        print(e)
+        print("")
+# -----------------------------------------------------
+
+# Función que cierra todo
+# -----------------------
+def cerrar_todo():
+    try:
+        if tipo == "":
+            print("CERRANDO ESTRTATEGIA...")
+            future.cancelar_orden(exchange, activo, orderId="")
+            future.cerrar_posicion(exchange, activo, "LONG")
+            future.cerrar_posicion(exchange, activo, "SHORT")
+        else:
+            print("CERRANDO ESTRTATEGIA...")
+            future.cancelar_orden(exchange, activo, orderId="")
+            future.cerrar_posicion(exchange, activo, tipo)
+
+    except Exception as e:
+        print("ERROR CERRANDO TODO")
+        print(e)
+        print("")
+# -----------------------
+
+# Función que detiene la estrategia por TP/SL
+#--------------------------------------------
+def detener_estrategia():
+    try:
+        if 1.00369*ganancia_actual() > tp and tp > 0:
+            iniciar_estrategia == False
+            cerrar_todo()
+            print("ESTRATEGIA DETENIDA POR TP!!!")
+            exit()
+            
+        if ganancia_actual() <= (-1)*(sl) and sl > 0:
+            iniciar_estrategia == False
+            cerrar_todo()
+            print("ESTRATEGIA DETENIDA POR SL!!!")
+            exit()
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN detener_estrategia()")
+        print(e)
+        print("")
+#--------------------------------------------
+
+
+# Balance inicial
+balance_inicial = future.patrimonio(exchange)
 
 # Iniciar estrategia
 iniciar_estrategia = False
@@ -335,9 +637,11 @@ if precio_actual > 5000:
 
 # Definir el multiplo
 multiplo = 0
-if 0.1 < precio_actual < 1:
+if 0.1 < precio_actual < 0.5:
+    multiplo = 1
+if 0.05 < precio_actual < 0.1:
     multiplo = 10
-if 0.01 < precio_actual < 0.1:
+if 0.01 < precio_actual < 0.05:
     multiplo = 100
 if precio_actual < 0.01:
     multiplo = 1000
@@ -377,35 +681,69 @@ prox_compra, prox_venta = prox_compra_venta(grid)
 
 # Inicializar la lista de parejas
 parejas_compra_venta = []
-orden = future.nueva_orden(exchange=exchange, symbol=activo, order_type="LIMIT", quantity=cantidad_monedas, price=prox_compra, side="BUY", leverage=apalancamiento)
-if orden != None:
-    parejas_compra_venta.append({
-                        "compra": {
-                                    "orderId": orden['orderId'],
-                                    "price": prox_compra,
-                                    "ejecutada": False,
-                                    "fecha_ejecucion" : 0
-                                    },
-                        "venta": {
-                                    "orderId": "",
-                                    "price": prox_venta,
-                                    "ejecutada": False,
-                                    "fecha_ejecucion" : 0
-                        }})
-    print(json.dumps(parejas_compra_venta,indent=2))
-    print("")
+parejas_compra_venta_short = []
+if tipo.upper() == "" or tipo.upper() == "LONG":
+    orden = future.nueva_orden(exchange=exchange, symbol=activo, order_type="LIMIT", quantity=cantidad_monedas, price=prox_compra, side="BUY", leverage=apalancamiento)
+    if orden != None:
+        parejas_compra_venta.append({
+                            "compra": {
+                                        "orderId": orden['orderId'],
+                                        "price": prox_compra,
+                                        "ejecutada": False,
+                                        "fecha_ejecucion" : 0
+                                        },
+                            "venta": {
+                                        "orderId": "",
+                                        "price": prox_venta,
+                                        "ejecutada": False,
+                                        "fecha_ejecucion" : 0
+                            }})
+        mostrar_lista(parejas_compra_venta)
+        print(json.dumps(parejas_compra_venta,indent=2))
+        print("")
 
-# Iniciar Hilo de las ordenes compra
-hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo,cantidad_usdt,grid))
-hilo_ordenes_compra.daemon = True
-hilo_ordenes_compra.start()
+    # Iniciar Hilo de las ordenes compra
+    hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo,cantidad_usdt,grid))
+    hilo_ordenes_compra.daemon = True
+    hilo_ordenes_compra.start()
 
-# Iniciar Hilo de las ordenes venta
-hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo,grid))
-hilo_ordenes_venta.daemon = True
-hilo_ordenes_venta.start()
+    # Iniciar Hilo de las ordenes venta
+    hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo,grid))
+    hilo_ordenes_venta.daemon = True
+    hilo_ordenes_venta.start()
+if tipo.upper() == "" or tipo.upper() == "SHORT":
+    orden = future.nueva_orden(exchange=exchange, symbol=activo, order_type="LIMIT", quantity=cantidad_monedas, price=prox_venta, side="SELL", leverage=apalancamiento)
+    if orden != None:
+        parejas_compra_venta_short.append({
+                            "compra": {
+                                        "orderId": "",
+                                        "price": prox_compra,
+                                        "ejecutada": False,
+                                        "fecha_ejecucion" : 0
+                                        },
+                            "venta": {
+                                        "orderId": orden['orderId'],
+                                        "price": prox_venta,
+                                        "ejecutada": False,
+                                        "fecha_ejecucion" : 0
+                            }})
+        print(json.dumps(parejas_compra_venta_short,indent=2))
+        print("")
 
-while True:
+    # Iniciar Hilo de las ordenes compra
+    hilo_ordenes_venta_short = threading.Thread(target=ordenes_venta_short, args=(exchange,activo,cantidad_usdt,grid))
+    hilo_ordenes_venta_short.daemon = True
+    hilo_ordenes_venta_short.start()
+
+    # Iniciar Hilo de las ordenes venta
+    hilo_ordenes_compra_short = threading.Thread(target=ordenes_compra_short, args=(exchange,activo,grid))
+    hilo_ordenes_compra_short.daemon = True
+    hilo_ordenes_compra_short.start()
+
+while iniciar_estrategia:
+
+    # Detener la estrategia por TP/SL
+    detener_estrategia()
 
     # Verificar que el hilo del precio actual este activo
     if not(hilo_precio_actual.is_alive):
@@ -419,14 +757,30 @@ while True:
         hilo_actualizar_grid.daemon = True
         hilo_actualizar_grid.start()
     
-    # Verificar que el hilo de compras este activo
-    if not(hilo_ordenes_compra.is_alive()):
-        hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo,cantidad_usdt,grid))
-        hilo_ordenes_compra.daemon = True
-        hilo_ordenes_compra.start()
+    if tipo.upper() == "" or tipo.upper() == "LONG":
+        
+        # Verificar que el hilo de compras este activo
+        if not(hilo_ordenes_compra.is_alive()):
+            hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo,cantidad_usdt,grid))
+            hilo_ordenes_compra.daemon = True
+            hilo_ordenes_compra.start()
+        
+        # Verificar que el hilo de venta este activo
+        if not(hilo_ordenes_venta.is_alive()):
+            hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo,grid))
+            hilo_ordenes_venta.daemon = True
+            hilo_ordenes_venta.start()
     
-    # Verificar que el hilo de venta este activo
-    if not(hilo_ordenes_venta.is_alive()):
-        hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo,grid))
-        hilo_ordenes_venta.daemon = True
-        hilo_ordenes_venta.start()
+    if tipo.upper() == "" or tipo.upper() == "SHORT":
+        
+        # Verificar que el hilo de compras este activo
+        if not(hilo_ordenes_venta_short.is_alive()):
+            hilo_ordenes_venta_short = threading.Thread(target=ordenes_venta_short, args=(exchange,activo,cantidad_usdt,grid))
+            hilo_ordenes_venta_short.daemon = True
+            hilo_ordenes_venta_short.start()
+        
+        # Verificar que el hilo de venta este activo
+        if not(hilo_ordenes_compra_short.is_alive()):
+            hilo_ordenes_compra_short = threading.Thread(target=ordenes_compra_short, args=(exchange,activo,grid))
+            hilo_ordenes_compra_short.daemon = True
+            hilo_ordenes_compra_short.start()

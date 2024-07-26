@@ -132,11 +132,14 @@ def obtener_ordenes(symbol, orderId=""):
 # -----------------------------
 def cancelar_orden(symbol, orderId):
     try:
-        
-        print(f"Eliminando orden {orderId}...")
-        bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
-        print(f"Eliminada la orden {orderId} de {symbol}.")
-        print("")
+
+        if orderId == "":
+            bybit_session.cancel_all_orders(category="linear",symbol=symbol)
+        else:
+            print(f"Eliminando orden {orderId}...")
+            bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
+            print(f"Eliminada la orden {orderId} de {symbol}.")
+            print("")
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE BYBIT")
@@ -310,3 +313,27 @@ def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
         print(e)
         print("")
 # -----------------------------------
+
+# FUNCIÓN QUE OBTIENE EL MONTO DISPONIBLE DE LA CUENTA
+# ----------------------------------------------------
+def patrimonio():
+    try:
+        return float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalEquity'])
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL PATRIMONIO ACTUAL")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL MARGEN DISPONIBLE
+# ----------------------------------------
+def margen_disponible():
+    try:
+        return float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalAvailableBalance'])
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
+        print(e)
+        print("")
+# ----------------------------------------

@@ -1,10 +1,9 @@
 {
     "exchange": "bybit",
-    "activo": "avail",
-    "apalancamiento": 50,
-    "precio_minimo": 0.20316,
-    "ganancia_grid": 0.9,
-    "monto_cuenta": 1.3,
-    "tp": "",
-    "sl": ""
+    "activo": "1000rats",
+    "apalancamiento": 9,
+    "precio_minimo": 0.11553,
+    "ganancia_grid": 0.6,
+    "tp": 9,
+    "sl": 0
 }
