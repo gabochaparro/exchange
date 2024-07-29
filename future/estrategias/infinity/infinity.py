@@ -216,6 +216,25 @@ def actualizar_pareja(exchange, symbol):
                                 mostrar_lista(parejas_compra_venta)
                                 print(json.dumps(parejas_compra_venta,indent=2))
                                 print("")
+
+                    # Limpiar la lista
+                    ordenes = future.obtener_posicion(exchange, symbol)
+                    if float(ordenes[0]['size']) > 0:
+                        if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
+                            print("Removiendo pareja...", parejas_compra_venta)
+                            parejas_compra_venta.remove(pareja)
+                            mostrar_lista(parejas_compra_venta)
+
+                    if not(pareja['compra']['ejecutada']):
+                        ordenes_abiertas = future.obtener_ordenes(exchange, symbol)
+                        orden_puesta = False
+                        for orden in ordenes_abiertas:
+                            if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price']:
+                                orden_puesta = True
+                        if not(orden_puesta):
+                            print("Removiendo pareja...", parejas_compra_venta)
+                            parejas_compra_venta.remove(pareja)
+                            mostrar_lista(parejas_compra_venta)
         
         # SHORT
         if tipo.upper() == "" or tipo.upper() == "SHORT":
@@ -249,6 +268,25 @@ def actualizar_pareja(exchange, symbol):
                                 mostrar_lista(parejas_compra_venta_short)
                                 print(json.dumps(parejas_compra_venta_short,indent=2))
                                 print("")
+
+                    # Limpiar la lista
+                    ordenes = future.obtener_posicion(exchange, symbol)
+                    if float(ordenes[1]['size']) > 0:
+                        if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
+                            print("Removiendo pareja...", parejas_compra_venta_short)
+                            parejas_compra_venta_short.remove(pareja)
+                            mostrar_lista(parejas_compra_venta_short)
+
+                    if not(pareja['venta']['ejecutada']):
+                        ordenes_abiertas = future.obtener_ordenes(exchange, symbol)
+                        orden_puesta = False
+                        for orden in ordenes_abiertas:
+                            if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price']:
+                                orden_puesta = True
+                        if not(orden_puesta):
+                            print("Removiendo pareja...", parejas_compra_venta_short)
+                            parejas_compra_venta.remove(pareja)
+                            mostrar_lista(parejas_compra_venta_short)
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja()")
