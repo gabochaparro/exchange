@@ -120,7 +120,7 @@ def parametros():
         print("Precio actual:", precio_actual, "USDT")
         print("Proxima compra:", precio_compra, "USDT")
         print("Próxima venta:", precio_venta, "USDT")
-        print("Primera compra:", cantidad_monedas, activo.upper(), f"({cantidad_usdt} USDT)")
+        print("Primera compra:", cantidad_monedas, activo.upper(), f"({round(cantidad_monedas*precio_compra,2)} USDT)")
         print("-----------------------------------------")
         print("")
 
@@ -162,7 +162,7 @@ def prox_compra_venta(grid):
             for grilla in grid:
                 if grilla < precio_actual < grilla*(1+ganancia_grid/100):
                     prox_compra = grilla
-                if grilla > precio_actual > grilla*(1-ganancia_grid/100):
+                if grilla > prox_compra > grilla*(1-ganancia_grid/100):
                     prox_venta = grilla
             
                 # Cosultar el precio actual
@@ -194,6 +194,7 @@ def actualizar_pareja(exchange, symbol):
                     if ordenes != None:
                         if ordenes[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
                             pareja['compra']['ejecutada'] = True
+                            pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                             print("Grid Actual:")
                             print(grid)
                             print("Cantidad de grillas:", len(grid))
@@ -207,6 +208,8 @@ def actualizar_pareja(exchange, symbol):
                         if ordenes != None:
                             if ordenes[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
+                                pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
+                                pareja['general']['beneficios'] = cantidad_usdt*(ganancia_grid-0.11)/100
                                 print("Grid Actual:")
                                 print(grid)
                                 print("Cantidad de grillas:", len(grid))
@@ -224,6 +227,8 @@ def actualizar_pareja(exchange, symbol):
                     if ordenes != None:
                         if ordenes[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
                             pareja['compra']['ejecutada'] = True
+                            pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
+                            pareja['general']['beneficios'] = cantidad_usdt*(ganancia_grid-0.11)/100
                             print("Grid Actual:")
                             print(grid)
                             print("Cantidad de grillas:", len(grid))
@@ -237,6 +242,7 @@ def actualizar_pareja(exchange, symbol):
                         if ordenes != None:
                             if ordenes[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
+                                pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                                 print("Grid Actual:")
                                 print(grid)
                                 print("Cantidad de grillas:", len(grid))
@@ -281,18 +287,26 @@ def ordenes_compra(exchange, symbol, cantidad_usdt, grid):
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
                         orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
                         if orden != None:
-                            parejas_compra_venta.append({
+                            parejas_compra_venta.insert(0,{
+                                                        "general": {
+                                                                    "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                                                    "beneficios": 0
+                                                                    },
                                                         "compra": {
                                                                     "orderId": orden['orderId'],
                                                                     "price": prox_compra,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_compra,
                                                                     "ejecutada": False,
-                                                                    "fecha_ejecucion" : 0
+                                                                    "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": "",
                                                                     "price": prox_venta,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_venta,
                                                                     "ejecutada": False,
-                                                                    "fecha_ejecucion" : 0
+                                                                    "fecha_ejecucion" : "-"
                                                         }})
                             print("Grid Actual:")
                             print(grid)
@@ -377,7 +391,11 @@ def ordenes_venta_short(exchange, symbol, cantidad_usdt, grid):
                 orden_venta_puesta = False
                 for pareja in parejas_compra_venta_short:
                     if pareja["venta"]['price'] == prox_venta and not(pareja["compra"]['ejecutada']):
-                        orden_venta_puesta = True
+                        
+                        # Obtener las ordenes abiertas
+                        ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
+                        if ordenes[0]['orderStatus'] == "New":
+                            orden_venta_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt/precio_actual),decimales_moneda)
@@ -390,18 +408,26 @@ def ordenes_venta_short(exchange, symbol, cantidad_usdt, grid):
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
                         orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
                         if orden != None:
-                            parejas_compra_venta_short.append({
+                            parejas_compra_venta_short.insert(0,{
+                                                        "general": {
+                                                                    "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                                                    "beneficios": 0
+                                                                    },
                                                         "compra": {
                                                                     "orderId": "",
                                                                     "price": prox_compra,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_compra,
                                                                     "ejecutada": False,
-                                                                    "fecha_ejecucion" : 0
+                                                                    "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": orden['orderId'],
                                                                     "price": prox_venta,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_venta,
                                                                     "ejecutada": False,
-                                                                    "fecha_ejecucion" : 0
+                                                                    "fecha_ejecucion" : "-"
                                                         }})
                             print("Grid Actual:")
                             print(grid)
@@ -479,30 +505,48 @@ def margen():
             # LONG
             if tipo == "LONG":
                 mas_bajo = future_ws.precio_actual
+                pendiente = 0
                 for pareja in parejas_compra_venta:
+                    
+                    # Buscar le mas bajo
                     if pareja['compra']['orderId'] != "" and not(pareja['compra']['ejecutada']) and pareja['compra']['price'] < mas_bajo:
                         mas_bajo = pareja['compra']['price']
                         pareja_eliminar = pareja
+                    
+                    # Contar las parejas pendiente
+                    if not(pareja['compra']['ejecutada']):
+                        pendiente = pendiente + 1
                 
-                # Cancelar orden mas baja
-                future.cancelar_orden(exchange, activo, pareja_eliminar['compra']['orderId'])
+                # Cancelar la orden sólo si hay mas de una
+                if  pendiente > 1:
+                    
+                    # Cancelar orden mas baja
+                    future.cancelar_orden(exchange, activo, pareja_eliminar['compra']['orderId'])
 
-                # Remover la pareja mas baja
-                parejas_compra_venta.remove(pareja_eliminar)
+                    # Remover la pareja mas baja
+                    parejas_compra_venta.remove(pareja_eliminar)
             
             # SHORT
             if tipo == "SHORT":
                 mas_alto = future_ws.precio_actual
+                pendiente = 0
                 for pareja in parejas_compra_venta:
                     if pareja['venta']['orderId'] != "" and not(pareja['venta']['ejecutada']) and pareja['venta']['price'] > mas_alto:
                         mas_alto = pareja['venta']['price']
                         pareja_eliminar = pareja
+                    
+                    # Contar las parejas pendiente
+                    if not(pareja['compra']['ejecutada']):
+                        pendiente = pendiente + 1
                 
-                # Cancelar orden mas baja
-                future.cancelar_orden(exchange, activo, pareja_eliminar['venta']['orderId'])
+                # Cancelar la orden sólo si hay mas de una
+                if  pendiente > 1:
+                                    
+                    # Cancelar orden mas baja
+                    future.cancelar_orden(exchange, activo, pareja_eliminar['venta']['orderId'])
 
-                # Remover la pareja mas baja
-                parejas_compra_venta.remove(pareja_eliminar)
+                    # Remover la pareja mas baja
+                    parejas_compra_venta.remove(pareja_eliminar)
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN margen()")
@@ -516,10 +560,11 @@ def mostrar_lista(data):
     try:
 
         # Crear una imagen en blanco
-        img_width, img_height = 300, 130 * len(data)
+        img_width, img_height = 300, 300*len(data)
         background_color = (35, 35, 40)
         text_color = (200, 200, 200)
-        highlight_color = (0, 255, 0)
+        greenlight_color = (0, 255, 0)
+        redlight_color = (255, 0, 0)
         image = Image.new('RGB', (img_width, img_height), color=background_color)
 
         # Configurar el objeto de dibujo y la fuente
@@ -527,23 +572,54 @@ def mostrar_lista(data):
         font = ImageFont.load_default()  # Puedes cambiar esto por una fuente específica si lo deseas
 
         # Dibujar los datos en la imagen
-        draw.text((10, 10), f"{datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")} {activo.upper()}", font=font, fill=text_color)
-        y_text = 30
+        draw.text((10, 10), f" - INFINITY  Future - {activo.upper()} --- {datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")} -", font=font, fill=text_color)
+        draw.text((10, 30), f"Balance inicial:", font=font, fill=text_color)
+        draw.text((180, 30), f"{round(balance_inicial,2)} USDT", font=font, fill=text_color)
+        draw.text((10, 50), f"Balance actual:", font=font, fill=text_color)
+        draw.text((180, 50), f"{round(future.patrimonio(exchange),2)} USDT", font=font, fill=text_color)
+        
+        ganancias_grid = 0
+        for pareja in parejas_compra_venta:
+            ganancias_grid = ganancias_grid + pareja['general']['beneficios']
+        draw.text((10, 70), f"Ganancias del grid:", font=font, fill=text_color)
+        draw.text((180, 70), f"{round(ganancias_grid,3)} USDT ({round(100*ganancias_grid/balance_inicial,2)}%)", font=font, fill=greenlight_color)
+
+        ganancia = ganancia_actual()
+        if ganancia >= 0:
+            color_ganancias = greenlight_color
+        else:
+            color_ganancias = redlight_color
+        draw.text((10, 90), f"Ganancia actual:", font=font, fill=text_color)
+        draw.text((180, 90), f"{round(balance_inicial*ganancia/100,3)} USDT ({round(ganancia,2)}%)", font=font, fill=color_ganancias)
+       
+        y_text = 120
         for item in data:
+            general = item['general']
             compra = item['compra']
             venta = item['venta']
 
-            draw.text((10, y_text), f"Compra Limit", font=font, fill=highlight_color)
-            draw.text((150, y_text), f"Venta Limit", font=font, fill=(255, 0, 0))
+            draw.text((10, y_text), f"----------------------------------------------------------------------------------------------", font=font, fill=text_color)
+            y_text += 20
+            draw.text((10, y_text), f"{general['fecha']}", font=font, fill=text_color)
+            draw.text((180, y_text), f"+{round(general['beneficios'],3)}", font=font, fill=greenlight_color)
+            y_text += 20
+            draw.text((10, y_text), f"Compra Limit", font=font, fill=greenlight_color)
+            draw.text((180, y_text), f"Venta Limit", font=font, fill=redlight_color)
             y_text += 20
             draw.text((10, y_text), f"Precio: {compra['price']} USDT", font=font, fill=text_color)
-            draw.text((150, y_text), f"Precio: {venta['price']} USDT", font=font, fill=text_color)
+            draw.text((180, y_text), f"Precio: {venta['price']} USDT", font=font, fill=text_color)
+            y_text += 20
+            draw.text((10, y_text), f"Cantidad: {compra['cantidad']} {activo.upper()}", font=font, fill=text_color)
+            draw.text((180, y_text), f"Cantidad: {venta['cantidad']} {activo.upper()}", font=font, fill=text_color)
+            y_text += 20
+            draw.text((10, y_text), f"Monto: {round(compra['monto'],3)} USDT", font=font, fill=text_color)
+            draw.text((180, y_text), f"Monto: {round(venta['monto'],3)} USDT", font=font, fill=text_color)
             y_text += 20
             draw.text((10, y_text), f"{'Ejecutada' if compra['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
-            draw.text((150, y_text), f"{'Ejecutada' if venta['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
+            draw.text((180, y_text), f"{'Ejecutada' if venta['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
             y_text += 20
-            draw.text((10, y_text), f"Tiempo: {compra['fecha_ejecucion']}", font=font, fill=text_color)
-            draw.text((150, y_text), f"Tiempo: {venta['fecha_ejecucion']}", font=font, fill=text_color)
+            draw.text((10, y_text), f"{compra['fecha_ejecucion']}", font=font, fill=text_color)
+            draw.text((180, y_text), f"{venta['fecha_ejecucion']}", font=font, fill=text_color)
             y_text += 30  # Espacio entre bloques de datos
 
         # Guardar la imagen
@@ -594,16 +670,24 @@ def cerrar_todo():
 #--------------------------------------------
 def detener_estrategia():
     try:
-        if 1.00369*ganancia_actual() > tp and tp > 0:
+        ganancias_grid = 0
+        for pareja in parejas_compra_venta:
+            ganancias_grid = ganancias_grid + pareja['general']['beneficios']
+
+        if ganancia_actual() > 1.00369*tp and 100*ganancias_grid/balance_inicial > 1.00369*tp and tp > 0:
             iniciar_estrategia == False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR TP!!!")
+            print("")
+            mostrar_lista(parejas_compra_venta)
             exit()
             
         if ganancia_actual() <= (-1)*(sl) and sl > 0:
             iniciar_estrategia == False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR SL!!!")
+            print("")
+            mostrar_lista(parejas_compra_venta)
             exit()
     
     except Exception as e:
@@ -685,18 +769,26 @@ parejas_compra_venta_short = []
 if tipo.upper() == "" or tipo.upper() == "LONG":
     orden = future.nueva_orden(exchange=exchange, symbol=activo, order_type="LIMIT", quantity=cantidad_monedas, price=prox_compra, side="BUY", leverage=apalancamiento)
     if orden != None:
-        parejas_compra_venta.append({
+        parejas_compra_venta.insert(0,{
+                            "general": {
+                                        "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                        "beneficios": 0
+                                        },
                             "compra": {
                                         "orderId": orden['orderId'],
                                         "price": prox_compra,
+                                        "cantidad": cantidad_monedas,
+                                        "monto": cantidad_monedas*prox_compra,
                                         "ejecutada": False,
-                                        "fecha_ejecucion" : 0
+                                        "fecha_ejecucion" : "-"
                                         },
                             "venta": {
                                         "orderId": "",
                                         "price": prox_venta,
+                                        "cantidad": cantidad_monedas,
+                                        "monto": cantidad_monedas*prox_venta,
                                         "ejecutada": False,
-                                        "fecha_ejecucion" : 0
+                                        "fecha_ejecucion" : "-"
                             }})
         mostrar_lista(parejas_compra_venta)
         print(json.dumps(parejas_compra_venta,indent=2))
@@ -714,18 +806,26 @@ if tipo.upper() == "" or tipo.upper() == "LONG":
 if tipo.upper() == "" or tipo.upper() == "SHORT":
     orden = future.nueva_orden(exchange=exchange, symbol=activo, order_type="LIMIT", quantity=cantidad_monedas, price=prox_venta, side="SELL", leverage=apalancamiento)
     if orden != None:
-        parejas_compra_venta_short.append({
+        parejas_compra_venta_short.insert(0,{
+                            "general": {
+                                        "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                        "beneficios": 0
+                                        },
                             "compra": {
                                         "orderId": "",
                                         "price": prox_compra,
+                                        "cantidad": cantidad_monedas,
+                                        "monto": cantidad_monedas*prox_compra,
                                         "ejecutada": False,
-                                        "fecha_ejecucion" : 0
+                                        "fecha_ejecucion" : "-"
                                         },
                             "venta": {
                                         "orderId": orden['orderId'],
                                         "price": prox_venta,
+                                        "cantidad": cantidad_monedas,
+                                        "monto": cantidad_monedas*prox_venta,
                                         "ejecutada": False,
-                                        "fecha_ejecucion" : 0
+                                        "fecha_ejecucion" : "-"
                             }})
         print(json.dumps(parejas_compra_venta_short,indent=2))
         print("")

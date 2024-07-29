@@ -339,5 +339,4 @@ def margen_disponible():
         print("")
 # ----------------------------------------
 
-orden = patrimonio()
-print(orden)
+#print(nueva_orden("STMXUSDT", "LIMIT", 500, 0.009814, "BUY", 25))

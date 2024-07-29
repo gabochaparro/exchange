@@ -1,9 +1,9 @@
 {
     "exchange": "bybit",
-    "activo": "1000rats",
-    "apalancamiento": 9,
-    "precio_minimo": 0.11553,
-    "ganancia_grid": 0.6,
-    "tp": 9,
+    "activo": "tomi",
+    "apalancamiento": 12,
+    "precio_minimo": 0.1561,
+    "ganancia_grid": 0.9,
+    "tp": 1,
     "sl": 0
 }
