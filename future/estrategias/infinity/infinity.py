@@ -316,12 +316,14 @@ def ordenes_compra(exchange, symbol, cantidad_usdt, grid):
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt/precio_actual),decimales_moneda)
+                
                 # Definir la cantidad según el múltiplo
                 if multiplo >= 1:
                     qty = round(qty/multiplo)*multiplo
                 
                 # Colocar la orden de compra y crear la pareja de compra_veta
                 if not(orden_compra_puesta):
+                    print("Colocando orden en:", prox_compra, "USDT")
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
                         orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
                         if orden != None:
