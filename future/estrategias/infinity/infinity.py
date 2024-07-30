@@ -187,6 +187,7 @@ def actualizar_pareja(exchange, symbol):
         # LONG
         if tipo.upper() == "" or tipo.upper() == "LONG":
             for pareja in parejas_compra_venta:
+                
                 # BYBIT
                 if exchange.upper() == "BYBIT":
                     # Obtener la orden de compra en BYBIT
@@ -219,9 +220,9 @@ def actualizar_pareja(exchange, symbol):
 
                     # Limpiar la lista
                     ordenes = future.obtener_posicion(exchange, symbol)
-                    if float(ordenes[0]['size']) > 0:
+                    if ordenes[0]['size'] == "0":
                         if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
-                            print("Removiendo pareja...", parejas_compra_venta)
+                            print("Removiendo pareja...", pareja)
                             parejas_compra_venta.remove(pareja)
                             mostrar_lista(parejas_compra_venta)
 
@@ -232,7 +233,7 @@ def actualizar_pareja(exchange, symbol):
                             if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price']:
                                 orden_puesta = True
                         if not(orden_puesta):
-                            print("Removiendo pareja...", parejas_compra_venta)
+                            print("Removiendo pareja...", pareja)
                             parejas_compra_venta.remove(pareja)
                             mostrar_lista(parejas_compra_venta)
         
@@ -271,9 +272,9 @@ def actualizar_pareja(exchange, symbol):
 
                     # Limpiar la lista
                     ordenes = future.obtener_posicion(exchange, symbol)
-                    if float(ordenes[1]['size']) > 0:
+                    if ordenes[1]['size'] == "0":
                         if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
-                            print("Removiendo pareja...", parejas_compra_venta_short)
+                            print("Removiendo pareja...", pareja)
                             parejas_compra_venta_short.remove(pareja)
                             mostrar_lista(parejas_compra_venta_short)
 
@@ -284,7 +285,7 @@ def actualizar_pareja(exchange, symbol):
                             if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price']:
                                 orden_puesta = True
                         if not(orden_puesta):
-                            print("Removiendo pareja...", parejas_compra_venta_short)
+                            print("Removiendo pareja...", pareja)
                             parejas_compra_venta.remove(pareja)
                             mostrar_lista(parejas_compra_venta_short)
     
@@ -323,7 +324,6 @@ def ordenes_compra(exchange, symbol, cantidad_usdt, grid):
                 
                 # Colocar la orden de compra y crear la pareja de compra_veta
                 if not(orden_compra_puesta):
-                    print("Colocando orden en:", prox_compra, "USDT")
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt:
                         orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
                         if orden != None:
@@ -612,7 +612,7 @@ def mostrar_lista(data):
         font = ImageFont.load_default()  # Puedes cambiar esto por una fuente específica si lo deseas
 
         # Dibujar los datos en la imagen
-        draw.text((10, 10), f" - INFINITY  Future - {activo.upper()} --- {datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")} -", font=font, fill=text_color)
+        draw.text((10, 10), f" - INFINITY  Future - {activo.upper()} - {datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p')} -", font=font, fill=text_color)
         draw.text((10, 30), f"Balance inicial:", font=font, fill=text_color)
         draw.text((180, 30), f"{round(balance_inicial,2)} USDT", font=font, fill=text_color)
         draw.text((10, 50), f"Balance actual:", font=font, fill=text_color)
