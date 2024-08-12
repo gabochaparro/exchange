@@ -416,7 +416,7 @@ def stop_loss(exchange, symbol, positionSide, stopPrice):
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.stop_loss(symbol, positionSide, stopPrice)
+            return bybit.stop_loss(symbol, positionSide, stopPrice)
 
         # BITGET
         if exchange == "BITGET":

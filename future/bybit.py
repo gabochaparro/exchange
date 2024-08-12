@@ -120,11 +120,7 @@ def cancelar_ordenes(symbol):
 # ----------------------------------------------------
 def obtener_ordenes(symbol, orderId=""):
     try:
-
-        print("Buscando ordenes...")
-        oredenes_abiertas = bybit_session.get_open_orders(category="linear",symbol=symbol,orderId=orderId)["result"]['list']
-        print(f"{len(oredenes_abiertas)} ordenes encontradas")
-        return oredenes_abiertas
+        return bybit_session.get_open_orders(category="linear",symbol=symbol,orderId=orderId)["result"]['list']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
@@ -136,11 +132,17 @@ def obtener_ordenes(symbol, orderId=""):
 # -----------------------------
 def cancelar_orden(symbol, orderId):
     try:
-        
-        print(f"Eliminando orden {orderId}...")
-        bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
-        print(f"Eliminada la orden {orderId} de {symbol}.")
-        print("")
+
+        if orderId == "":
+            print("Eliminando todas las ordenes...")
+            bybit_session.cancel_all_orders(category="linear",symbol=symbol)
+            print("Todas las ordenes eliminadas.")
+            print("")
+        else:
+            print(f"Eliminando orden {orderId}...")
+            bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
+            print(f"Eliminada la orden {orderId} de {symbol}.")
+            print("")
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE BYBIT")
@@ -199,7 +201,7 @@ def cerrar_posicion(symbol, positionSide):
 
 # FUNCIÓN QUE COLOCA UN STOP LOSS
 # -------------------------------
-def stop_loss(symbol, positionSide, stopPrice):
+def stop_loss(symbol, positionSide, stopPrice, slSize=""):
     try:
 
         # Definir parametros
@@ -210,17 +212,35 @@ def stop_loss(symbol, positionSide, stopPrice):
             positionSide = 2
         
         # Colocar la orden de Stop Loss
-        orden = bybit_session.set_trading_stop(
-                                    category="linear",
-                                    symbol=symbol,
-                                    stopLoss=str(stopPrice),
-                                    tpslMode="Full",
-                                    positionIdx=positionSide
-                                )
+        if slSize == "":
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        stopLoss=str(stopPrice),
+                                        tpslMode="Full",
+                                        positionIdx=positionSide
+                                    )
+        else:
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        stopLoss=str(stopPrice),
+                                        tpslMode="Partial",
+                                        slSize=slSize,
+                                        positionIdx=positionSide
+                                        )
         
-        print(f"Stop Loss Colocado en {stopPrice}.")
-        print("")
-        return orden
+        ordenes = obtener_ordenes(symbol=symbol)
+        for orden in ordenes:
+            if orden['orderStatus'] == "Untriggered" and orden['triggerPrice'] == str(stopPrice) and orden['reduceOnly'] == True:
+        
+                print(f"Stop Loss Colocado en {orden['triggerPrice']}.")
+                print("")
+                
+                return {
+                "orderId": orden["orderId"],
+                "price": orden['triggerPrice']
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO STOP LOSS EN BYBIT")
@@ -244,34 +264,30 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
             if tpSize == "":
                 tpSize = obtener_posicion(symbol=symbol)[1]['size']
 
-        # Colocar Take Profit Market
-        if type == "MARKET":
-            orden = bybit_session.set_trading_stop(
-                                        category="linear",
-                                        symbol=symbol,
-                                        takeProfit=str(stopPrice),
-                                        tpslMode="Full",
-                                        positionIdx=positionSide
+        if type.upper() == "MARKET":
+            type = "Market"
+        if type.upper() == "LIMIT":
+            type = "Limit"
+        
+        # Colocar Take Profit
+        orden = bybit_session.set_trading_stop(
+                                    category="linear",
+                                    symbol=symbol,
+                                    takeProfit=str(stopPrice),
+                                    tpLimitPrice=str(stopPrice),
+                                    tpslMode="Partial",
+                                    tpSize=tpSize,
+                                    tpOrderType=type,
+                                    positionIdx=positionSide
                                     )
         
-        # Colocar Take Profit Limit
-        if type == "LIMIT":
-            orden = bybit_session.set_trading_stop(
-                                        category="linear",
-                                        symbol=symbol,
-                                        takeProfit=str(stopPrice),
-                                        tpLimitPrice=str(stopPrice),
-                                        tpslMode="Partial",
-                                        tpSize=tpSize,
-                                        tpOrderType="Limit",
-                                        positionIdx=positionSide
-                                        )
-        
-        print(f"Take Profit Colocado en {stopPrice}.")
-        print("")
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
             if orden['orderStatus'] == "Untriggered" and orden['price'] == str(stopPrice) and orden['reduceOnly'] == True:
+                
+                print(f"Take Profit Colocado en {stopPrice}.")
+                print("")
+
                 return {
                 "orderId": orden["orderId"],
                 "price": orden['price']
@@ -338,5 +354,3 @@ def margen_disponible():
         print(e)
         print("")
 # ----------------------------------------
-
-#print(nueva_orden("STMXUSDT", "LIMIT", 500, 0.009814, "BUY", 25))

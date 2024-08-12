@@ -393,7 +393,7 @@ def cerrar_posicion(exchange, symbol, positionSide):
 
 # FUNCIÓM QUE COLOCA UN STOP LOSS
 # -------------------------------
-def stop_loss(exchange, symbol, positionSide, stopPrice):
+def stop_loss(exchange, symbol, positionSide, stopPrice, slSize=""):
     try:
 
         exchange = exchange.upper()
@@ -413,7 +413,7 @@ def stop_loss(exchange, symbol, positionSide, stopPrice):
 
         # BYBIT
         if exchange == "BYBIT":
-            bybit.stop_loss(symbol, positionSide, stopPrice)
+            return bybit.stop_loss(symbol, positionSide, stopPrice, slSize=slSize)
 
         # BITGET
         if exchange == "BITGET":
