@@ -112,7 +112,7 @@ def parametros():
         # Obtener el precio de la proxima compra y la proxima venta
         print("")
         print("Buscando próximos niveles...")
-        precio_compra, precio_venta = prox_compra_venta(grid)
+        precio_compra, precio_venta = prox_compra_venta()
         print("Niveles encontrados.", precio_compra, precio_venta)
 
         # Revisar el apalancamiento
@@ -170,10 +170,10 @@ def parametros():
 
 # FUnción que se encarga de entrar la próxima compra y la próxima venta
 # ---------------------------------------------------------------------
-def prox_compra_venta(grid):
+def prox_compra_venta():
     try:
         # Variables globales
-        global precio_actual
+        global precio_actual, grid
 
         # Cosultar el precio actual
         if iniciar_estrategia == True:
@@ -370,7 +370,7 @@ def ordenes_compra(exchange, symbol):
                 precio_actual = future_ws.precio_actual
 
                 # Obtener el precio de la proxima compra y la proxima venta
-                prox_compra, prox_venta = prox_compra_venta(grid)
+                prox_compra, prox_venta = prox_compra_venta()
                 if nueva_compra != prox_compra or nueva_venta != prox_venta:
                     nueva_compra = prox_compra
                     nueva_venta = prox_venta
@@ -515,7 +515,7 @@ def ordenes_venta_short(exchange, symbol):
                 precio_actual = future_ws.precio_actual
 
                 # Obtener el precio de la proxima compra y la proxima venta
-                prox_compra, prox_venta = prox_compra_venta(grid)
+                prox_compra, prox_venta = prox_compra_venta()
                 if nueva_compra != prox_compra or nueva_venta != prox_venta:
                     nueva_compra = prox_compra
                     nueva_venta = prox_venta
@@ -918,17 +918,6 @@ hilo_precio_actual.start()
 precio_actual = future_ws.precio_actual
 while precio_actual == 0:
     precio_actual = future_ws.precio_actual
-
-# Cantidad de la 1ra posicion a colocar
-cantidad_monedas = round((cantidad_usdt/precio_actual), decimales_moneda)
-if multiplo >= 10:
-    cantidad_monedas = round(cantidad_monedas/multiplo)*multiplo
-cantidad_monedas_short = round((cantidad_usdt_short/precio_actual), decimales_moneda)
-if multiplo >= 10:
-    cantidad_monedas_short = round(cantidad_monedas_short/multiplo)*multiplo
-
-# Obtener el precio de la proxima compra y la proxima venta
-prox_compra, prox_venta = prox_compra_venta(grid)
 
 # Inicializar la lista de parejas
 parejas_compra_venta = []
