@@ -837,7 +837,7 @@ def detener_estrategia():
             ganancias_grid_short = ganancias_grid_short + pareja['general']['beneficios']
 
         # Detener estrategia por Take Profit
-        if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.00693*tp) and tp > 0:
+        if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.00936*tp) and tp > 0:
             iniciar_estrategia == False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR TP!!!")
