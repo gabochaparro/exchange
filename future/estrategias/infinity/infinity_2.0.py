@@ -945,66 +945,72 @@ hilo_ordenes_compra_short.daemon = True
 hilo_ordenes_compra_short.start()
 
 while iniciar_estrategia:
+    try:
 
-    # Detener la estrategia por TP/SL
-    detener_estrategia()
-    
-    # Abrir el archivo parametros.json y cargar su contenido
-    parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
+        # Detener la estrategia por TP/SL
+        detener_estrategia()
+        
+        # Abrir el archivo parametros.json y cargar su contenido
+        parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
 
-   # PARAMETROS DE LA ESTRATEGIA
-    # ---------------------------
-    exchange = parametros['exchange']                                                                   # Exchange a utilizar
-    activo = parametros['activo']                                                                       # Activo a operar
-    apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
-    precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-    ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
-    cuenta = future.margen_disponible(exchange=exchange)                                                # Inversión de la estrategia
-    tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
-    sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
-    tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
-    ganancia_grid_long = parametros['ganancia_grid_long']                                               # Ganancias por cada grid long
-    ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
-    cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
-    cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
-    # ---------------------------
+    # PARAMETROS DE LA ESTRATEGIA
+        # ---------------------------
+        exchange = parametros['exchange']                                                                   # Exchange a utilizar
+        activo = parametros['activo']                                                                       # Activo a operar
+        apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
+        precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
+        ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+        cuenta = future.margen_disponible(exchange=exchange)                                                # Inversión de la estrategia
+        tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
+        sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
+        tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
+        ganancia_grid_long = parametros['ganancia_grid_long']                                               # Ganancias por cada grid long
+        ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
+        cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
+        cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
+        # ---------------------------
 
-    # Verificar que el hilo del precio actual este activo
-    if not(hilo_precio_actual.is_alive):
-        hilo_precio_actual = threading.Thread(target=future_ws.precio_actual_activo, args=(exchange, activo))
-        hilo_precio_actual.daemon = True
-        hilo_precio_actual.start()
+        # Verificar que el hilo del precio actual este activo
+        if not(hilo_precio_actual.is_alive) or future_ws.precio_actual == 0:
+            hilo_precio_actual.join()
+            hilo_precio_actual = threading.Thread(target=future_ws.precio_actual_activo, args=(exchange, activo))
+            hilo_precio_actual.daemon = True
+            hilo_precio_actual.start()
+            while precio_actual == 0:
+                precio_actual = future_ws.precio_actual
 
-    # Verificar que el hilo actualizar grid este activo
-    if not(hilo_actualizar_grid.is_alive()):
-        hilo_actualizar_grid = threading.Thread(target=actualizar_grid)
-        hilo_actualizar_grid.daemon = True
-        hilo_actualizar_grid.start()
-    
-    if tipo.upper() == "" or tipo.upper() == "LONG":
+        # Verificar que el hilo actualizar grid este activo
+        if not(hilo_actualizar_grid.is_alive()):
+            hilo_actualizar_grid = threading.Thread(target=actualizar_grid)
+            hilo_actualizar_grid.daemon = True
+            hilo_actualizar_grid.start()
         
-        # Verificar que el hilo de compras este activo
-        if not(hilo_ordenes_compra.is_alive()):
-            hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo))
-            hilo_ordenes_compra.daemon = True
-            hilo_ordenes_compra.start()
+        if tipo.upper() == "" or tipo.upper() == "LONG":
+            
+            # Verificar que el hilo de compras este activo
+            if not(hilo_ordenes_compra.is_alive()):
+                hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo))
+                hilo_ordenes_compra.daemon = True
+                hilo_ordenes_compra.start()
+            
+            # Verificar que el hilo de venta este activo
+            if not(hilo_ordenes_venta.is_alive()):
+                hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo))
+                hilo_ordenes_venta.daemon = True
+                hilo_ordenes_venta.start()
         
-        # Verificar que el hilo de venta este activo
-        if not(hilo_ordenes_venta.is_alive()):
-            hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo))
-            hilo_ordenes_venta.daemon = True
-            hilo_ordenes_venta.start()
-    
-    if tipo.upper() == "" or tipo.upper() == "SHORT":
-        
-        # Verificar que el hilo de compras este activo
-        if not(hilo_ordenes_venta_short.is_alive()):
-            hilo_ordenes_venta_short = threading.Thread(target=ordenes_venta_short, args=(exchange,activo))
-            hilo_ordenes_venta_short.daemon = True
-            hilo_ordenes_venta_short.start()
-        
-        # Verificar que el hilo de venta este activo
-        if not(hilo_ordenes_compra_short.is_alive()):
-            hilo_ordenes_compra_short = threading.Thread(target=ordenes_compra_short, args=(exchange,activo))
-            hilo_ordenes_compra_short.daemon = True
-            hilo_ordenes_compra_short.start()
+        if tipo.upper() == "" or tipo.upper() == "SHORT":
+            
+            # Verificar que el hilo de compras este activo
+            if not(hilo_ordenes_venta_short.is_alive()):
+                hilo_ordenes_venta_short = threading.Thread(target=ordenes_venta_short, args=(exchange,activo))
+                hilo_ordenes_venta_short.daemon = True
+                hilo_ordenes_venta_short.start()
+            
+            # Verificar que el hilo de venta este activo
+            if not(hilo_ordenes_compra_short.is_alive()):
+                hilo_ordenes_compra_short = threading.Thread(target=ordenes_compra_short, args=(exchange,activo))
+                hilo_ordenes_compra_short.daemon = True
+                hilo_ordenes_compra_short.start()
+    except Exception as e:
+        print("ERROR EN EL PROGRAMA PRINCIPAL")

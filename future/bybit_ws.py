@@ -25,6 +25,7 @@ def precio_actual_activo(symbol):
 
         def on_close(ws, close_status_code, close_msg):
             print("### WS BYBIT: Precio actual Cerrado ###")
+            precio_actual = 0
 
         def on_open(ws):
             print("### WS BYBIT: Precio Actual Abierto ###")

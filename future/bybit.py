@@ -347,7 +347,9 @@ def patrimonio():
 # ----------------------------------------
 def margen_disponible():
     try:
-        return float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalAvailableBalance'])
+        margen = float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalAvailableBalance'])
+        if margen != None:
+            return margen
     
     except Exception as e:
         print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")

@@ -590,8 +590,8 @@ def apalancamiento_max(exchange, symbol):
         print("")
 # -------------------------------------------------------
 
-# FUNCIÓN QUE OBTIENE EL PATRIMONIO DE LA CUENTA
-# ----------------------------------------------------
+# FUNCIÓN QUE OBTIENE EL PATRIMONIO DE LA CUENTA DE FUTUROS
+# ---------------------------------------------------------
 def patrimonio(exchange):
     try:
 
@@ -629,7 +629,7 @@ def patrimonio(exchange):
         print("ERROR OBTENIENDO EL PATRIMONIO DE LA CUENTA")
         print(e)
         print("")
-# ----------------------------------------------------
+# ---------------------------------------------------------
 
 # FUNCIÓN QUE OBTIENE EL MARGEN DISPONIBLE
 # ----------------------------------------
