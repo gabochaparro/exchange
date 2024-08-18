@@ -243,10 +243,13 @@ def actualizar_pareja(exchange, symbol):
                     # Obtener la orden de sl en BYBIT
                     if pareja['sl']['orderId'] != "":
                         ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
-                        if ordenes != None:
+                        
+                        if ordenes != None:                         
                             if ordenes[0]['orderStatus'] == "Filled":
-                                parejas_compra_venta.remove(pareja)
                                 future.cancelar_orden(exchange, activo, orderId=pareja['venta']['orderId'])
+                            
+                            if pareja in parejas_compra_venta:
+                                parejas_compra_venta.remove(pareja)
         
         # SHORT
         if tipo.upper() == "" or tipo.upper() == "SHORT":
@@ -287,10 +290,13 @@ def actualizar_pareja(exchange, symbol):
                     # Obtener la orden de sl en BYBIT
                     if pareja['sl']['orderId'] != "":
                         ordenes = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
+                        
                         if ordenes != None:
                             if ordenes[0]['orderStatus'] == "Filled":
-                                parejas_compra_venta.remove(pareja)
                                 future.cancelar_orden(exchange, activo, orderId=pareja['compra']['orderId'])
+                                
+                                if pareja in parejas_compra_venta:
+                                    parejas_compra_venta.remove(pareja)
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja()")
@@ -482,7 +488,7 @@ def ordenes_venta(exchange, symbol):
                                         
                                         # Colocar SL
                                         if ganancia_actual() < -parametros['ganancia_grid_long'] and precio_actual > compra_venta["compra"]['price']/(1+ganancia_grid/100):
-                                            orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=1.001*(compra_venta["compra"]['price']/(1+ganancia_grid/100)),slSize=qty)
+                                            orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["compra"]['price']/(1+ganancia_grid/100),slSize=qty)
                                             if orden_sl != None:
                                                 compra_venta["sl"]['orderId'] = orden_sl['orderId']
                                         
@@ -627,7 +633,7 @@ def ordenes_compra_short(exchange, symbol):
                                         
                                         # Colocar SL
                                         if ganancia_actual() < -parametros['ganancia_grid_short'] and precio_actual < compra_venta["venta"]['price']*(1+ganancia_grid/100):
-                                            orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=0.999*(compra_venta["venta"]['price']*(1+ganancia_grid/100)),slSize=qty)
+                                            orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["venta"]['price']*(1+ganancia_grid/100),slSize=qty)
                                             if orden_sl != None:
                                                 compra_venta["sl"]['orderId'] = orden_sl['orderId']
                                         
