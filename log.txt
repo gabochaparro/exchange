@@ -9422,3 +9422,9 @@ Request → GET https://api.bybit.com/v5/account/wallet-balance: accountType=SPO
 Request → GET https://api.bybit.com/v5/account/wallet-balance: accountType=SPOT&coin=USDT.
 18-07-2024 10:23:12 ERROR: accountType only support UNIFIED and CONTRACT. (ErrCode: 10001) (ErrTime: 15:23:12).
 Request → GET https://api.bybit.com/v5/account/wallet-balance: accountType=SPOT&coin=USDT.
+30-08-2024 00:53:39 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given
+30-08-2024 00:53:41 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given
+30-08-2024 00:53:43 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given
+30-08-2024 00:53:45 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given
+30-08-2024 00:53:47 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given
+30-08-2024 00:53:49 ERROR: Client.futures_symbol_ticker() takes 1 positional argument but 2 were given

@@ -1,12 +1,12 @@
 {
     "exchange": "bybit",
-    "activo": "10000sats",
-    "direccion": "short",
+    "activo": "vidt",
+    "direccion": "",
     "apalancamiento": 200,
-    "precio_referencia": 0.002802,
-    "distancia_grid": 0.3,
-    "ganancia_grid_long": 0.101,
-    "ganancia_grid_short": 0.101,
-    "tp": 6,
-    "sl": 6
+    "precio_referencia": 0.05060,
+    "distancia_grid": 0.9,
+    "ganancia_grid_long": 0.333,
+    "ganancia_grid_short": 0.333,
+    "tp": 3,
+    "sl": 1
 }
