@@ -233,7 +233,7 @@ def actualizar_pareja(exchange, symbol):
                             pareja['compra']['ejecutada'] = True
                             pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                             mostrar_lista(parejas_compra_venta)
-                            print(json.dumps(parejas_compra_venta,indent=2))
+                            #print(json.dumps(parejas_compra_venta,indent=2))
                             print("")
                     
                     # Obtener la orden de venta
@@ -245,7 +245,7 @@ def actualizar_pareja(exchange, symbol):
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                                 pareja['general']['beneficios'] = float(ordenes_venta[0]['qty'])*float(ordenes_venta[0]['price'])*(ganancia_grid-0.11)/100
                                 mostrar_lista(parejas_compra_venta)
-                                print(json.dumps(parejas_compra_venta,indent=2))
+                                #print(json.dumps(parejas_compra_venta,indent=2))
                                 print("")
                                 
                                 # Cancelar la orden de SL en caso tenga
@@ -285,7 +285,7 @@ def actualizar_pareja(exchange, symbol):
                             pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                             pareja['general']['beneficios'] = float(ordenes_compra[0]['qty'])*float(ordenes_compra[0]['price'])*(ganancia_grid-0.11)/100
                             mostrar_lista(parejas_compra_venta_short)
-                            print(json.dumps(parejas_compra_venta_short,indent=2))
+                            #print(json.dumps(parejas_compra_venta_short,indent=2))
                             print("")
                                 
                             # Cancelar la orden de SL en caso tenga
@@ -304,7 +304,7 @@ def actualizar_pareja(exchange, symbol):
                                 print(grid)
                                 print("Cantidad de grillas:", len(grid))
                                 mostrar_lista(parejas_compra_venta_short)
-                                print(json.dumps(parejas_compra_venta_short,indent=2))
+                                #print(json.dumps(parejas_compra_venta_short,indent=2))
                                 print("")
                     
                     # Obtener la orden de sl en BYBIT
@@ -495,7 +495,7 @@ def ordenes_compra(exchange, symbol):
                             print("Cantidad de grillas:", len(grid))
                             print("")
                             mostrar_lista(parejas_compra_venta)
-                            print(json.dumps(parejas_compra_venta,indent=2))
+                            #print(json.dumps(parejas_compra_venta,indent=2))
                             print("")
                     if future.margen_disponible(exchange)*apalancamiento < cantidad_usdt:
                         print("Fondos insuficientes...")
@@ -569,7 +569,7 @@ def ordenes_venta(exchange, symbol):
                                             print("Cantidad de grillas:", len(grid))
                                             print("")
                                             mostrar_lista(parejas_compra_venta)
-                                            print(json.dumps(parejas_compra_venta,indent=2))
+                                            #print(json.dumps(parejas_compra_venta,indent=2))
                                             print("")
     
     except Exception as e:
@@ -648,7 +648,7 @@ def ordenes_venta_short(exchange, symbol):
                             print("Cantidad de grillas:", len(grid))
                             print("")
                             mostrar_lista(parejas_compra_venta_short)
-                            print(json.dumps(parejas_compra_venta_short,indent=2))
+                            #print(json.dumps(parejas_compra_venta_short,indent=2))
                             print("")
                     
                     if future.margen_disponible(exchange)*apalancamiento < cantidad_usdt_short:
@@ -724,7 +724,7 @@ def ordenes_compra_short(exchange, symbol):
                                             print("Cantidad de grillas:", len(grid))
                                             print("")
                                             mostrar_lista(parejas_compra_venta_short)
-                                            print(json.dumps(parejas_compra_venta_short,indent=2))
+                                            #print(json.dumps(parejas_compra_venta_short,indent=2))
                                             print("")
     
     except Exception as e:
