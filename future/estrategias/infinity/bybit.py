@@ -63,8 +63,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         if side == "SELL":
             positionSide = 2
 
-        # Coloca la orden "LIMIT" o "MARKET"
-        if order_type == "LIMIT":
+        # Coloca la orden "LIMIT"
+        if order_type.upper() == "LIMIT":
             order = bybit_session.place_order(
                 category="linear",
                 symbol=symbol,
@@ -75,7 +75,9 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 timeinforce="GTC",
                 positionIdx=positionSide
             )
-        if order_type == "MARKET":
+        
+        # Coloca la orden "MARKET"
+        if order_type.upper() == "MARKET":
             order = bybit_session.place_order(
                 category="linear",
                 symbol=symbol,
@@ -84,6 +86,22 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 qty=quantity,
                 positionIdx=positionSide
             )
+
+        # Coloca la orden "CONDITIONAL"
+        if order_type.upper() == "CONDITIONAL":
+            order = bybit_session.place_order(
+                category="linear",
+                symbol=symbol,
+                side=side[0] + side[1:].lower(),
+                orderType="LIMITI",
+                qty=quantity,
+                triggerPrice=price,
+                triggerBy="LastPrice",
+                timeinforce="GTC",
+                positionIdx=positionSide,
+                triggerDirection=positionSide
+            )
+
         print(f"Orden colocada en {price}. ID:", order["result"]["orderId"])
         print("")
 

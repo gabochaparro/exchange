@@ -1,10 +1,10 @@
 {
     "exchange": "bybit",
-    "activo": "vidt",
+    "activo": "cloud",
     "direccion": "",
     "apalancamiento": 200,
-    "precio_referencia": 0.05060,
-    "distancia_grid": 0.9,
+    "precio_referencia": 0,
+    "distancia_grid": 0.603,
     "ganancia_grid_long": 0.333,
     "ganancia_grid_short": 0.333,
     "tp": 3,

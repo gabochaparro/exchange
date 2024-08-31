@@ -13,11 +13,12 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 
 
-# Abrir el archivo parametros.json y cargar su contenido
-parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
 
 # PARAMETROS DE LA ESTRATEGIA
 # ---------------------------
+# Abrir el archivo parametros.json y cargar su contenido
+parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
+
 exchange = parametros['exchange']                                                                   # Exchange a utilizar
 activo = parametros['activo']                                                                       # Activo a operar
 apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
@@ -46,8 +47,12 @@ def actualizar_grid():
             
             # Iniciar la estrategia
             if iniciar_estrategia == True:
+                
                 # Consultar precio actual
                 precio_actual = future_ws.precio_actual
+
+                # Detener la estrategia por TP/SL
+                detener_estrategia()
 
             # Ciclo que arma y actualiza el grid long
             while grid[-1] <= precio_actual:
@@ -60,6 +65,8 @@ def actualizar_grid():
                 # Consultar precio actual
                 if iniciar_estrategia == True:
                     precio_actual = future_ws.precio_actual
+                else:
+                    precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
                 
                 # Grilla actualizada
                 if grid[-1] > precio_actual and iniciar_estrategia == True:
@@ -178,6 +185,8 @@ def prox_compra_venta():
         # Cosultar el precio actual
         if iniciar_estrategia == True:
             precio_actual = future_ws.precio_actual
+        else:
+            precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
         
         # Recorrer el grid y encontrar el próximo precio de compra y venta
         prox_compra = 0
@@ -191,6 +200,8 @@ def prox_compra_venta():
                 # Cosultar el precio actual
                 if iniciar_estrategia == True:
                     precio_actual = future_ws.precio_actual
+                else:
+                    precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
 
         #print(prox_compra, prox_venta)
         return prox_compra, prox_venta
@@ -326,63 +337,85 @@ def limpiar_listas():
 
         # LONG
         if tipo.upper() == "" or tipo.upper() == "LONG":
-            actualizar_pareja(exchange=exchange, symbol=activo)
             for pareja in parejas_compra_venta:
 
                     # Limpiar la lista
                     posiciones = future.obtener_posicion(exchange, activo)
                     for posicion in posiciones:
+                        
                         if posicion['positionIdx'] == 1:
                             if posicion['size'] == "0":
+                                
+                                # Actualizar las parejas
                                 actualizar_pareja(exchange=exchange, symbol=activo)
                                 if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
-                                    print("Removiendo pareja...", pareja)
+                                    print("Removiendo pareja long...", pareja)
                                     print("")
-                                    parejas_compra_venta.remove(pareja)
-                                    mostrar_lista(parejas_compra_venta)
+                                    
+                                    if pareja in parejas_compra_venta:
+                                        parejas_compra_venta.remove(pareja)
+                                        mostrar_lista(parejas_compra_venta)
                 
+                                
+                    # Actualizar las parejas
                     actualizar_pareja(exchange=exchange, symbol=activo)
                     if not(pareja['compra']['ejecutada']):
                         ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
+                        
                         if ordenes_abiertas != []:
+                            
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
                                     orden_puesta = True
+                            
                             if not(orden_puesta):
-                                print("Removiendo pareja...", pareja)
+                                print("Removiendo pareja short...", pareja)
                                 print("")
-                                parejas_compra_venta.remove(pareja)
-                                mostrar_lista(parejas_compra_venta)
+                                
+                                if pareja in parejas_compra_venta:
+                                    parejas_compra_venta.remove(pareja)
+                                    mostrar_lista(parejas_compra_venta)
         
         # SHORT
         if tipo.upper() == "" or tipo.upper() == "SHORT":
-            actualizar_pareja(exchange=exchange, symbol=activo)
             for pareja in parejas_compra_venta_short:
 
                     # Limpiar la lista
                     posiciones = future.obtener_posicion(exchange, activo)
                     for posicion in posiciones:
+                        
                         if posicion['positionIdx'] == 2:
                             if posicion['size'] == "0":
+                                
+                                # Actualizar las parejas
                                 actualizar_pareja(exchange=exchange, symbol=activo)
                                 if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
-                                    print("Removiendo pareja...", pareja)
-                                    parejas_compra_venta_short.remove(pareja)
-                                    mostrar_lista(parejas_compra_venta_short)
+                                    print("Removiendo pareja short...", pareja)
+                                    
+                                    if pareja in parejas_compra_venta_short:
+                                        parejas_compra_venta_short.remove(pareja)
+                                        mostrar_lista(parejas_compra_venta_short)
 
+                                
+                    # Actualizar las parejas
                     actualizar_pareja(exchange=exchange, symbol=activo)
                     if not(pareja['venta']['ejecutada']):
                         ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
+                        
                         if ordenes_abiertas != []:
+                            
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
                                     orden_puesta = True
+                            
                             if not(orden_puesta):
-                                print("Removiendo pareja...", pareja)
-                                parejas_compra_venta.remove(pareja)
-                                mostrar_lista(parejas_compra_venta_short)
+                                print("Removiendo pareja short...", pareja)
+                                
+                                if pareja in parejas_compra_venta_short:
+                                    parejas_compra_venta_short.remove(pareja)
+                                    mostrar_lista(parejas_compra_venta_short)
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN limpiar_lista()")
@@ -478,6 +511,7 @@ def ordenes_compra(exchange, symbol):
 def ordenes_venta(exchange, symbol):
     try:
         while iniciar_estrategia:
+            
             if tipo.upper() == "" or tipo.upper() == "LONG":
                 
                 # Colocar la orden de compra y actualiza la pareja de compra_veta
@@ -630,7 +664,8 @@ def ordenes_venta_short(exchange, symbol):
 # --------------------------------------------------
 def ordenes_compra_short(exchange, symbol):
     try:
-        while True:
+        while iniciar_estrategia:
+
             if tipo.upper() == "" or tipo.upper() == "SHORT":
                 
                 # Colocar la orden de compra y actualiza la pareja de compra_veta
@@ -863,12 +898,32 @@ def cerrar_todo():
         if tipo == "":
             print("CERRANDO ESTRTATEGIA...")
             future.cancelar_orden(exchange, activo, orderId="")
-            future.cerrar_posicion(exchange, activo, "LONG")
-            future.cerrar_posicion(exchange, activo, "SHORT")
+            
+            # Cerrar posiciones
+            posiciones = future.obtener_posicion(exchange, activo)
+            for posicion in posiciones:
+                # Long
+                if posicion['positionIdx'] == 1:
+                    if posicion['size'] != "0":
+                        future.cerrar_posicion(exchange, activo, "LONG")
+                # Short
+                if posicion['positionIdx'] == 2:
+                    if posicion['size'] != "0":
+                        future.cerrar_posicion(exchange, activo, "SHORT")
+            print("ORDENES Y POSICIONES CERRADAS!")
+            print("")
+        
         else:
             print("CERRANDO ESTRTATEGIA...")
-            future.cancelar_orden(exchange, activo, orderId="")
-            future.cerrar_posicion(exchange, activo, tipo.upper())
+            future.cancelar_orden(exchange, activo, orderId="")# Cerrar posiciones
+            posiciones = future.obtener_posicion(exchange, activo)
+            for posicion in posiciones:
+                # Long
+                if posicion['positionIdx'] == 1 or posicion['positionIdx'] == 2:
+                    if posicion['size'] != "0":
+                        future.cerrar_posicion(exchange, activo, tipo.upper())
+            print(f"ORDENES Y POSICIÓN {tipo.upper()} CERRADAS!")
+            print("")
 
     except Exception as e:
         print("ERROR CERRANDO TODO")
@@ -882,13 +937,15 @@ def detener_estrategia():
     try:
         # Ganancias del grid long
         ganancias_grid = 0
-        for pareja in parejas_compra_venta:
-            ganancias_grid = ganancias_grid + pareja['general']['beneficios']
+        if parejas_compra_venta != []:
+            for pareja in parejas_compra_venta:
+                ganancias_grid = ganancias_grid + pareja['general']['beneficios']
         
         # Ganancias del grid short
         ganancias_grid_short = 0
-        for pareja in parejas_compra_venta_short:
-            ganancias_grid_short = ganancias_grid_short + pareja['general']['beneficios']
+        if parejas_compra_venta_short != []:
+            for pareja in parejas_compra_venta_short:
+                ganancias_grid_short = ganancias_grid_short + pareja['general']['beneficios']
 
         # Detener estrategia por Take Profit
         if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.00963*tp) and tp > 0:
@@ -948,9 +1005,16 @@ if 0.001 < precio_actual < 0.05:
 if precio_actual < 0.001:
     multiplo = 1000
 
-# Inicializar las variables
+# Inicializar las listas de parejas
+parejas_compra_venta = []
+parejas_compra_venta_short = []
+
+# Inicializar el grid
 grid = []
-grid.append(precio_referencia)
+if precio_referencia == 0:
+    grid.append(precio_actual)
+else:
+    grid.append(precio_referencia)
 
 # Iniciar Hilo que actualiza el grid
 hilo_actualizar_grid = threading.Thread(target=actualizar_grid)
@@ -973,10 +1037,6 @@ precio_actual = future_ws.precio_actual
 while precio_actual == 0:
     precio_actual = future_ws.precio_actual
 
-# Inicializar la lista de parejas
-parejas_compra_venta = []
-parejas_compra_venta_short = []
-
 # Iniciar Hilo de las ordenes compra
 hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo))
 hilo_ordenes_compra.daemon = True
@@ -986,7 +1046,6 @@ hilo_ordenes_compra.start()
 hilo_ordenes_venta = threading.Thread(target=ordenes_venta, args=(exchange,activo))
 hilo_ordenes_venta.daemon = True
 hilo_ordenes_venta.start()
-
 
 # Iniciar Hilo de las ordenes venta_short
 hilo_ordenes_venta_short = threading.Thread(target=ordenes_venta_short, args=(exchange,activo))
@@ -1001,11 +1060,11 @@ hilo_ordenes_compra_short.start()
 while iniciar_estrategia:
     try:
         
-        # Abrir el archivo parametros.json y cargar su contenido
-        parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
-
         # PARAMETROS DE LA ESTRATEGIA
         # ---------------------------
+        # Abrir el archivo parametros.json y cargar su contenido
+        parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
+        
         exchange = parametros['exchange']                                                                   # Exchange a utilizar
         activo = parametros['activo']                                                                       # Activo a operar
         apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
@@ -1074,3 +1133,4 @@ while iniciar_estrategia:
     
     except Exception as e:
         print("ERROR EN EL PROGRAMA PRINCIPAL")
+        print("")
