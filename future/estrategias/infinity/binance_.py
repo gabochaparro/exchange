@@ -238,7 +238,7 @@ def stop_loss(symbol, positionSide, stopPrice):
                                                     timestamp = int(time.time()*1000)
                                                     )
         
-        print(f"Stop Loss Colocado en {orden["stopPrice"]}. ID:", orden["orderId"])
+        print(f"Stop Loss Colocado en {orden['stopPrice']}. ID:", orden["orderId"])
         print("")
         return orden
     
@@ -290,7 +290,7 @@ def take_profit(symbol, positionSide, stopPrice, type):
                                                         timestamp = int(time.time()*1000)
                                                         )
         
-        print(f"Take Profit Colocado en {orden["stopPrice"]}. ID:", orden["orderId"])
+        print(f"Take Profit Colocado en {orden['stopPrice']}. ID:", orden["orderId"])
         print("")
         return orden
     
