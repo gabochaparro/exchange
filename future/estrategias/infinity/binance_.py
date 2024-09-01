@@ -66,7 +66,7 @@ def apalancameinto_max(symbol):
         print("")
 # ------------------------------------------------------
 
-# FUNCIÓN DE BINANCE NUEVA ORDEN 'LIMIT' O 'MARKET'
+# FUNCIÓN DE BINANCE NUEVA ORDEN 'LIMIT' , 'MARKET' o "CONDITIONAL"
 # ------------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
@@ -103,7 +103,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 quantity=quantity,
                 timestamp=time.time()
             )
-        print(f"Orden colocada en {order["price"]}. ID:", order["orderId"])
+        print(f"Orden colocada en {order['price']}. ID:", order["orderId"])
         print((""))
         
         return {
@@ -115,7 +115,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         print("ERROR COLOCANDO LA ORDEN EN BINANCE")
         print(e)
         print("")
-# ------------------------------------------------------# FUNCIÓN DE BINANCE NUEVA ORDEN 'LIMIT' O 'MARKET'
+# ------------------------------------------------------
 
 # FUNCIÓN QUE CANCELA TODAS LAS ORDENES ABIERTAS
 # ----------------------------------------------
