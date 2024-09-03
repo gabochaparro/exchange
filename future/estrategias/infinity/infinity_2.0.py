@@ -209,12 +209,13 @@ def prox_compra_venta():
         print("")
 # ---------------------------------------------------------------------
 
-# Función que actualiza el estado de las parejas de compra y venta
-# ----------------------------------------------------------------
-def actualizar_pareja(exchange, symbol):
+# Función que actualiza el estado de las parejas de compra y venta long
+# ---------------------------------------------------------------------
+def actualizar_pareja_long(exchange, symbol):
     try:
 
-        # LONG
+        ti = time.time()
+
         if tipo.upper() == "" or tipo.upper() == "LONG":
             for pareja in parejas_compra_venta:
                 
@@ -264,8 +265,22 @@ def actualizar_pareja(exchange, symbol):
                                     mostrar_lista(parejas_compra_venta)
                                     print("Pareja removida.", pareja)
                                     print("")
-        
-        # SHORT
+
+        print("Parejas long actualizadas", time.time()-ti, "segundos")
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCION actualizar_pareja_long()")
+        print(e)
+        print("")
+# ---------------------------------------------------------------------
+
+# Función que actualiza el estado de las parejas de compra y venta short
+# ----------------------------------------------------------------------
+def actualizar_pareja_short(exchange, symbol):
+    try:
+
+        ti = time.time()
+
         if tipo.upper() == "" or tipo.upper() == "SHORT":
             for pareja in parejas_compra_venta_short:
                 
@@ -319,16 +334,20 @@ def actualizar_pareja(exchange, symbol):
                                     print("Pareja removida.", pareja)
                                     print("")
     
+        print("Parejas short actualizadas", time.time()-ti, "segundos")
+    
     except Exception as e:
-        print("ERROR EN LA FUNCION actualizar_pareja()")
+        print("ERROR EN LA FUNCION actualizar_pareja_short()")
         print(e)
         print("")
-# ----------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # Función que limpia las listas de las parejas
 # --------------------------------------------
 def limpiar_listas():
     try:
+
+        ti = time.time()
 
         # LONG
         if tipo.upper() == "" or tipo.upper() == "LONG":
@@ -342,7 +361,7 @@ def limpiar_listas():
                             if posicion['size'] == "0":
                                 
                                 # Actualizar las parejas
-                                actualizar_pareja(exchange=exchange, symbol=activo)
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
                                     print("Removiendo pareja long...", pareja)
                                     print("")
@@ -353,7 +372,7 @@ def limpiar_listas():
                 
                                 
                     # Actualizar las parejas
-                    actualizar_pareja(exchange=exchange, symbol=activo)
+                    actualizar_pareja_long(exchange=exchange, symbol=activo)
                     if not(pareja['compra']['ejecutada']):
                         ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
@@ -384,7 +403,7 @@ def limpiar_listas():
                             if posicion['size'] == "0":
                                 
                                 # Actualizar las parejas
-                                actualizar_pareja(exchange=exchange, symbol=activo)
+                                actualizar_pareja_short(exchange=exchange, symbol=activo)
                                 if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
                                     print("Removiendo pareja short...", pareja)
                                     
@@ -394,7 +413,7 @@ def limpiar_listas():
 
                                 
                     # Actualizar las parejas
-                    actualizar_pareja(exchange=exchange, symbol=activo)
+                    actualizar_pareja_short(exchange=exchange, symbol=activo)
                     if not(pareja['venta']['ejecutada']):
                         ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
@@ -412,6 +431,8 @@ def limpiar_listas():
                                     parejas_compra_venta_short.remove(pareja)
                                     mostrar_lista(parejas_compra_venta_short)
     
+        print("Listas limpias", time.time()-ti, "segundos")
+
     except Exception as e:
         print("ERROR EN LA FUNCIÓN limpiar_lista()")
         print(e)
@@ -441,7 +462,7 @@ def ordenes_compra(exchange, symbol):
                 # Verificar si la pareja compra_venta esta activa
                 orden_compra_puesta = False
                 orddenes_abiertas = future.obtener_ordenes(exchange=exchange, symbol=symbol)
-                actualizar_pareja(exchange=exchange, symbol=symbol)
+                actualizar_pareja_long(exchange=exchange, symbol=symbol)
                 for pareja in parejas_compra_venta:
                     if pareja["compra"]['price'] == prox_compra and not(pareja["venta"]['ejecutada']):
                             for orden in orddenes_abiertas:
@@ -581,7 +602,7 @@ def ordenes_venta_short(exchange, symbol):
                 # Verificar si la pareja compra_venta esta activa
                 orden_venta_puesta = False
                 orddenes_abiertas = future.obtener_ordenes(exchange=exchange, symbol=symbol)
-                actualizar_pareja(exchange=exchange, symbol=symbol)
+                actualizar_pareja_short(exchange=exchange, symbol=symbol)
                 for pareja in parejas_compra_venta_short:
                     if pareja["venta"]['price'] == prox_venta and not(pareja["compra"]['ejecutada']):
                             for orden in orddenes_abiertas:
@@ -950,9 +971,6 @@ def detener_estrategia():
 def auxiliar():
     try:
         while iniciar_estrategia:
-
-            # Actualizar las listas de parejas
-            actualizar_pareja(exchange, activo)
             
             # Actualizar y limpiar la lista de parejas
             limpiar_listas()
@@ -1143,3 +1161,5 @@ while iniciar_estrategia:
     except Exception as e:
         print("ERROR EN EL PROGRAMA PRINCIPAL")
         print("")
+
+cerrar_todo()
