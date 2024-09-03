@@ -93,8 +93,9 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 category="linear",
                 symbol=symbol,
                 side=side[0] + side[1:].lower(),
-                orderType="LIMITI",
+                orderType="MARKET",
                 qty=quantity,
+                price=price,
                 triggerPrice=price,
                 triggerBy="LastPrice",
                 timeinforce="GTC",
@@ -139,6 +140,18 @@ def cancelar_ordenes(symbol):
 def obtener_ordenes(symbol, orderId=""):
     try:
         return bybit_session.get_open_orders(category="linear",symbol=symbol,orderId=orderId)["result"]['list']
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES CERRADAS
+# ----------------------------------------------------
+def obtener_historial_ordenes(symbol, limit=30, orderId=""):
+    try:
+        return bybit_session.get_order_history(category="linear",symbol=symbol,limit=limit,orderId=orderId)['result']['list']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
@@ -284,20 +297,32 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
 
         if type.upper() == "MARKET":
             type = "Market"
+            # Colocar Take Profit
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpLimitPrice=str(stopPrice),
+                                        tpslMode="Partial",
+                                        tpSize=tpSize,
+                                        tpOrderType=type,
+                                        positionIdx=positionSide
+                                        )
+        
         if type.upper() == "LIMIT":
             type = "Limit"
+            # Colocar Take Profit
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpLimitPrice=str(stopPrice),
+                                        tpslMode="Partial",
+                                        tpSize=tpSize,
+                                        tpOrderType=type,
+                                        positionIdx=positionSide
+                                        )
         
-        # Colocar Take Profit
-        orden = bybit_session.set_trading_stop(
-                                    category="linear",
-                                    symbol=symbol,
-                                    takeProfit=str(stopPrice),
-                                    tpLimitPrice=str(stopPrice),
-                                    tpslMode="Partial",
-                                    tpSize=tpSize,
-                                    tpOrderType=type,
-                                    positionIdx=positionSide
-                                    )
         
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:

@@ -1,10 +1,10 @@
 {
     "exchange": "bybit",
-    "activo": "cloud",
+    "activo": "uxlink",
     "direccion": "",
     "apalancamiento": 200,
     "precio_referencia": 0,
-    "distancia_grid": 0.603,
+    "distancia_grid": 1.09,
     "ganancia_grid_long": 0.333,
     "ganancia_grid_short": 0.333,
     "tp": 3,
