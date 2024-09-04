@@ -378,7 +378,6 @@ def limpiar_listas():
                         if posicion['positionIdx'] == 1:
                             if posicion['size'] == "0":
                                 
-                                # Actualizar las parejas
                                 actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
                                     print("Removiendo pareja long...", pareja)
@@ -387,12 +386,11 @@ def limpiar_listas():
                                     if pareja in parejas_compra_venta:
                                         parejas_compra_venta.remove(pareja)
                                         mostrar_lista(parejas_compra_venta)
-                
                                 
-                    # Actualizar las parejas
+                    
+                    ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                     actualizar_pareja_long(exchange=exchange, symbol=activo)
                     if not(pareja['compra']['ejecutada']):
-                        ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
                         
                         if ordenes_abiertas != []:
@@ -430,10 +428,9 @@ def limpiar_listas():
                                         mostrar_lista(parejas_compra_venta_short)
 
                                 
-                    # Actualizar las parejas
+                    ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                     actualizar_pareja_short(exchange=exchange, symbol=activo)
                     if not(pareja['venta']['ejecutada']):
-                        ordenes_abiertas = future.obtener_ordenes(exchange, activo)
                         orden_puesta = False
                         
                         if ordenes_abiertas != []:
