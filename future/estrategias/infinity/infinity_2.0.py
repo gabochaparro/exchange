@@ -217,29 +217,38 @@ def actualizar_pareja_long(exchange, symbol):
         ti = time.time()
 
         if tipo.upper() == "" or tipo.upper() == "LONG":
+
+            #Obtener historial de ordenes
+            historial_ordenes = future.obtener_historial_ordenes(exchange=exchange, symbol=symbol)
+            
             for pareja in parejas_compra_venta:
-                
-                # BYBIT
-                if exchange.upper() == "BYBIT":
+                for orden in historial_ordenes:
                     
                     # Obtener la orden de compra
-                    ordenes_compra = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['compra']['orderId'])
-                    if ordenes_compra != None and ordenes_compra != []:
-                        if ordenes_compra[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
-                            pareja['compra']['ejecutada'] = True
-                            pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                            mostrar_lista(parejas_compra_venta)
-                            #print(json.dumps(parejas_compra_venta,indent=2))
-                            print("")
+                    if orden['orderId'] == pareja['compra']['orderId']:
+                
+                        # BYBIT
+                        if exchange.upper() == "BYBIT":
+
+                            # Obtener la orden de compra en Bybit
+                            if orden['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
+                                pareja['compra']['ejecutada'] = True
+                                pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
+                                mostrar_lista(parejas_compra_venta)
+                                #print(json.dumps(parejas_compra_venta,indent=2))
+                                print("")
                     
                     # Obtener la orden de venta
-                    if pareja['venta']['orderId'] != "":
-                        ordenes_venta = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
-                        if ordenes_venta != None and ordenes_venta != []:
-                            if ordenes_venta[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
+                    if orden['orderId'] == pareja['venta']['orderId']:
+                        
+                        # BYBIT
+                        if exchange.upper() == "BYBIT":
+                    
+                            # Obtener la orden de venta en Bybit
+                            if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['general']['beneficios'] = float(ordenes_venta[0]['qty'])*float(ordenes_venta[0]['price'])*(ganancia_grid-0.11)/100
+                                pareja['general']['beneficios'] = 0.9989*(float(orden['qty'])*float(orden['price'])-pareja['compra']['monto'])
                                 mostrar_lista(parejas_compra_venta)
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 print("")
@@ -248,25 +257,25 @@ def actualizar_pareja_long(exchange, symbol):
                                 if pareja['sl']['orderId'] != "":
                                     future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                     print("SL Cancelado.")
-                    
-                    # Obtener la orden de sl
-                    if pareja['sl']['orderId'] != "":
-                        ordenes_sl = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
-                        
-                        if ordenes_sl != None and ordenes_sl != []:                         
-                            if ordenes_sl[0]['orderStatus'] == "Filled" and ordenes_venta[0]['orderStatus'] == "Untriggered":
+                            
+                            # Obtener la orden de sl
+                            if pareja['sl']['orderId'] != "":
+                                ordenes_sl = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
                                 
-                                # Cancelar la orden venta en caso se haya tocado el SL
-                                if pareja['venta']['orderId'] != "":
-                                    future.cancelar_orden(exchange, activo, orderId=pareja['venta']['orderId'])
-                                    print("TP Cancelado.")
-                                    print("")
-                                    parejas_compra_venta.remove(pareja)
-                                    mostrar_lista(parejas_compra_venta)
-                                    print("Pareja removida.", pareja)
-                                    print("")
+                                if ordenes_sl != None and ordenes_sl != []:                         
+                                    if ordenes_sl[0]['orderStatus'] == "Filled" and ordenes_venta[0]['orderStatus'] == "Untriggered":
+                                        
+                                        # Cancelar la orden venta en caso se haya tocado el SL
+                                        if pareja['venta']['orderId'] != "":
+                                            future.cancelar_orden(exchange, activo, orderId=pareja['venta']['orderId'])
+                                            print("TP Cancelado.")
+                                            print("")
+                                            parejas_compra_venta.remove(pareja)
+                                            mostrar_lista(parejas_compra_venta)
+                                            print("Pareja removida.", pareja)
+                                            print("")
 
-        print("Parejas long actualizadas", time.time()-ti, "segundos")
+        #print("Parejas long actualizadas", time.time()-ti, "segundos")
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja_long()")
@@ -282,32 +291,41 @@ def actualizar_pareja_short(exchange, symbol):
         ti = time.time()
 
         if tipo.upper() == "" or tipo.upper() == "SHORT":
+
+            #Obtener historial de ordenes
+            historial_ordenes = future.obtener_historial_ordenes(exchange=exchange, symbol=symbol)
+            
             for pareja in parejas_compra_venta_short:
+                for orden in historial_ordenes:
+
+                    # Obtener la orden de compra
+                    if orden['orderId'] == pareja['compra']['orderId']:
                 
-                # BYBIT
-                if exchange.upper() == "BYBIT":
-                    
-                    # Obtener la orden de compra en BYBIT
-                    ordenes_compra = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['compra']['orderId'])
-                    if ordenes_compra != None and ordenes_compra != []:
-                        if ordenes_compra[0]['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
-                            pareja['compra']['ejecutada'] = True
-                            pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                            pareja['general']['beneficios'] = float(ordenes_compra[0]['qty'])*float(ordenes_compra[0]['price'])*(ganancia_grid-0.11)/100
-                            mostrar_lista(parejas_compra_venta_short)
-                            #print(json.dumps(parejas_compra_venta_short,indent=2))
-                            print("")
-                                
-                            # Cancelar la orden de SL en caso tenga
-                            if pareja['sl']['orderId'] != "":
-                                future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
-                                print("SL Cancelado.")
-                    
-                    # Obtener la orden de venta en BYBIT
-                    if pareja['venta']['orderId'] != "":
-                        ordenes_venta = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['venta']['orderId'])
-                        if ordenes_venta != None and ordenes_venta != []:
-                            if ordenes_venta[0]['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
+                        # BYBIT
+                        if exchange.upper() == "BYBIT":
+                            
+                            # Obtener la orden de compra en BYBIT
+                                if orden['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
+                                    pareja['compra']['ejecutada'] = True
+                                    pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
+                                    pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-float(orden['qty'])*float(orden['price']))
+                                    mostrar_lista(parejas_compra_venta_short)
+                                    #print(json.dumps(parejas_compra_venta_short,indent=2))
+                                    print("")
+                                        
+                                    # Cancelar la orden de SL en caso tenga
+                                    if pareja['sl']['orderId'] != "":
+                                        future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
+                                        print("SL Cancelado.")
+
+                    # Obtener la orden de Venta
+                    if orden['orderId'] == pareja['venta']['orderId']:
+                
+                        # BYBIT
+                        if exchange.upper() == "BYBIT":
+                            
+                            # Obtener la orden de venta en BYBIT
+                            if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
                                 print("Grid Actual:")
@@ -316,25 +334,25 @@ def actualizar_pareja_short(exchange, symbol):
                                 mostrar_lista(parejas_compra_venta_short)
                                 #print(json.dumps(parejas_compra_venta_short,indent=2))
                                 print("")
-                    
-                    # Obtener la orden de sl en BYBIT
-                    if pareja['sl']['orderId'] != "":
-                        ordenes_sl = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
-                        
-                        if ordenes_sl != None and ordenes_sl != []:
-                            if ordenes_sl[0]['orderStatus'] == "Filled" and ordenes_compra[0]['orderStatus'] == "Untriggered":
+                            
+                            # Obtener la orden de sl en BYBIT
+                            if pareja['sl']['orderId'] != "":
+                                ordenes_sl = future.obtener_ordenes(exchange=exchange, symbol=symbol, orderId=pareja['sl']['orderId'])
                                 
-                                # Cancelar la orden compra en caso se haya tocado el SL
-                                if pareja['compra']['orderId'] != "":
-                                    future.cancelar_orden(exchange, activo, orderId=pareja['compra']['orderId'])
-                                    print("TP Cancelado.")
-                                    print("")
-                                    parejas_compra_venta.remove(pareja)
-                                    mostrar_lista(parejas_compra_venta)
-                                    print("Pareja removida.", pareja)
-                                    print("")
+                                if ordenes_sl != None and ordenes_sl != []:
+                                    if ordenes_sl[0]['orderStatus'] == "Filled" and ordenes_compra[0]['orderStatus'] == "Untriggered":
+                                        
+                                        # Cancelar la orden compra en caso se haya tocado el SL
+                                        if pareja['compra']['orderId'] != "":
+                                            future.cancelar_orden(exchange, activo, orderId=pareja['compra']['orderId'])
+                                            print("TP Cancelado.")
+                                            print("")
+                                            parejas_compra_venta.remove(pareja)
+                                            mostrar_lista(parejas_compra_venta)
+                                            print("Pareja removida.", pareja)
+                                            print("")
     
-        print("Parejas short actualizadas", time.time()-ti, "segundos")
+        #print("Parejas short actualizadas", time.time()-ti, "segundos")
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja_short()")
@@ -560,19 +578,22 @@ def ordenes_venta(exchange, symbol):
                                     '''
                             
                             # Colocar TP
+                            orden = None
                             if precio_actual < compra_venta["venta"]['price'] > 1.0011*avgPrice:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=str(compra_venta["venta"]['cantidad']))
+                            if precio_actual > compra_venta["venta"]['price'] > 1.0011*avgPrice:
+                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="MARKET",tpSize=str(compra_venta["venta"]['cantidad']))
                                 
-                                # Verificar que la respuesta sea válida antes de modificar la pareja
-                                if orden != None:
-                                    compra_venta["venta"]['orderId'] = orden['orderId']
-                                    print("Grid Actual:")
-                                    print(grid)
-                                    print("Cantidad de grillas:", len(grid))
-                                    print("")
-                                    mostrar_lista(parejas_compra_venta)
-                                    #print(json.dumps(parejas_compra_venta,indent=2))
-                                    print("")
+                            # Verificar que la respuesta sea válida antes de modificar la pareja
+                            if orden != None:
+                                compra_venta["venta"]['orderId'] = orden['orderId']
+                                print("Grid Actual:")
+                                print(grid)
+                                print("Cantidad de grillas:", len(grid))
+                                print("")
+                                mostrar_lista(parejas_compra_venta)
+                                #print(json.dumps(parejas_compra_venta,indent=2))
+                                print("")
     
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_venta()")
@@ -942,23 +963,21 @@ def detener_estrategia():
                 ganancias_grid_short = ganancias_grid_short + pareja['general']['beneficios']
 
         # Detener estrategia por Take Profit
-        if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.00963*tp) and tp > 0:
+        if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.09*tp) and tp > 0:
+            iniciar_estrategia = False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR TP!!!")
             print
             print("")
             mostrar_lista(parejas_compra_venta)
-            iniciar_estrategia = False
-            exit()
 
         # Detener estrategia por Stop Loss    
-        if ganancia_actual() <= (-1)*(sl) and sl > 0:
+        if ganancia_actual() <= (-1)*(0.9*sl) and sl > 0:
+            iniciar_estrategia = False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR SL!!!")
             print("")
             mostrar_lista(parejas_compra_venta)
-            iniciar_estrategia = False
-            exit()
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN detener_estrategia()")
@@ -978,6 +997,9 @@ def auxiliar():
             # Mantener margen
             margen()
 
+            # Gestionar la  dirección
+            direccion()
+
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN detener_estrategia()")
@@ -985,6 +1007,31 @@ def auxiliar():
         print("")
 #--------------------------------------------
 
+# Función que genera las direcciones
+#-----------------------------------
+def direccion():
+    try:
+        if tipo.upper() == "LONG":
+
+            # Cancelar todas las ordenes short
+            ordenes_abiertas = future.obtener_ordenes(exchange, activo)
+            for orden in ordenes_abiertas:
+                if orden['positionIdx'] == 2 and not(orden['reduceOnly']):
+                    future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+        
+        if tipo.upper() == "SHORT":
+
+            # Cancelar todas las ordenes long
+            ordenes_abiertas = future.obtener_ordenes(exchange, activo)
+            for orden in ordenes_abiertas:
+                if orden['positionIdx'] == 1 and not(orden['reduceOnly']):
+                    future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN direccion()")
+        print(e)
+        print("")
+#-----------------------------------
 
 # Balance inicial
 balance_inicial = future.patrimonio(exchange)
