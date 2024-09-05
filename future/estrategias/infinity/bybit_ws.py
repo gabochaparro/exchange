@@ -25,6 +25,7 @@ def precio_actual_activo(symbol):
                 print(json.dumps(data_precio_actual,indent=2))
 
         def on_close(ws, close_status_code, close_msg):
+            global precio_actual
             print("### WS BYBIT: Precio actual Cerrado ###")
             precio_actual = 0
 

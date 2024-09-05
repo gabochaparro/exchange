@@ -397,9 +397,12 @@ def limpiar_listas():
                         
                         if ordenes_abiertas != []:
                             
+                            # Verificar si hay una orden limite
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
                                     orden_puesta = True
+                                
+                                # Verificar si hay una orden condicional
                                 if orden['triggerPrice'] != "":
                                     if 0.999*pareja['compra']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
                                         orden_puesta = True
@@ -440,9 +443,12 @@ def limpiar_listas():
                         
                         if ordenes_abiertas != []:
                             
+                            # Verificar si hay una orden limite
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
                                     orden_puesta = True
+                                
+                                # Verificar si hay una orden condicional
                                 if orden['triggerPrice'] != "":
                                     if 0.999*pareja['venta']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
                                         orden_puesta = True
@@ -898,7 +904,7 @@ def mostrar_lista(data):
     try:
 
         # Crear una imagen en blanco
-        img_width, img_height = 300, 300*len(data)
+        img_width, img_height = 450, 300*len(data)
         background_color = (35, 35, 40)
         text_color = (200, 200, 200)
         greenlight_color = (0, 255, 0)
