@@ -32,6 +32,8 @@ ganancia_grid_long = parametros['ganancia_grid_long']                           
 ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
 cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
 cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
+condicional_long = parametros['condicional_long']
+condicional_short = parametros['condicional_short']
 # ---------------------------
 
 
@@ -398,6 +400,9 @@ def limpiar_listas():
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
                                     orden_puesta = True
+                                if orden['triggerPrice'] != "":
+                                    if 0.999*pareja['compra']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
+                                        orden_puesta = True
                             
                             if not(orden_puesta):
                                 print("Removiendo pareja short...", pareja)
@@ -438,6 +443,9 @@ def limpiar_listas():
                             for orden in ordenes_abiertas:
                                 if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
                                     orden_puesta = True
+                                if orden['triggerPrice'] != "":
+                                    if 0.999*pareja['venta']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
+                                        orden_puesta = True
                             
                             if not(orden_puesta):
                                 print("Removiendo pareja short...", pareja)
@@ -476,13 +484,23 @@ def ordenes_compra(exchange, symbol):
 
                 # Verificar si la pareja compra_venta esta activa
                 orden_compra_puesta = False
+                orden_condicional_compra_puesta = False
                 orddenes_abiertas = future.obtener_ordenes(exchange=exchange, symbol=symbol)
                 actualizar_pareja_long(exchange=exchange, symbol=symbol)
                 for pareja in parejas_compra_venta:
-                    if pareja["compra"]['price'] == prox_compra and not(pareja["venta"]['ejecutada']):
-                            for orden in orddenes_abiertas:
-                                if  pareja["compra"]['ejecutada'] or (0.999*pareja["compra"]['price']< float(orden['price']) <1.001*pareja["compra"]['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy"):
+                    for orden in orddenes_abiertas:
+                        if not(pareja["venta"]['ejecutada']):
+
+                            # Verificar la orden limite
+                            if pareja["compra"]['ejecutada'] or (0.999*pareja["compra"]['price'] < float(orden['price']) < 1.001*pareja["compra"]['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy"):
+                                if pareja["compra"]['price'] == prox_compra:
                                     orden_compra_puesta = True
+                                
+                            # Verificar la orden condicional
+                            if orden['triggerPrice'] != "":
+                                if pareja["compra"]['ejecutada'] or (0.999*pareja["compra"]['price'] < float(orden['triggerPrice']) < 1.001*pareja["compra"]['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy"):
+                                    if pareja["compra"]['price'] == prox_venta:
+                                        orden_condicional_compra_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt/precio_actual),decimales_moneda)
@@ -491,18 +509,20 @@ def ordenes_compra(exchange, symbol):
                 if multiplo >= 1:
                     qty = round(qty/multiplo)*multiplo
                 
-                # Colocar la orden de compra y crear la pareja de compra_veta
+                orden_compra = None
+                
+                # Colocar la orden limite de compra y crear la pareja de compra_veta
                 if not(orden_compra_puesta):
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt and precio_actual > prox_compra:
-                        orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
-                        if orden != None:
+                        orden_compra = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
+                        if orden_compra != None:
                             parejas_compra_venta.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
                                                                     "beneficios": 0
                                                                     },
                                                         "compra": {
-                                                                    "orderId": orden['orderId'],
+                                                                    "orderId": orden_compra['orderId'],
                                                                     "price": prox_compra,
                                                                     "cantidad": qty,
                                                                     "monto": qty*prox_compra,
@@ -521,15 +541,46 @@ def ordenes_compra(exchange, symbol):
                                                                     "orderId": ""
                                                                     }
                                                         })
-                            print("Grid Actual:")
-                            print(grid)
-                            print("Cantidad de grillas:", len(grid))
-                            print("")
-                            mostrar_lista(parejas_compra_venta)
-                            #print(json.dumps(parejas_compra_venta,indent=2))
-                            print("")
-                    if future.margen_disponible(exchange)*apalancamiento < cantidad_usdt:
-                        print("Fondos insuficientes...")
+                
+                # Colocar la orden condicional de compra y crear la pareja de compra_veta
+                if not(orden_condicional_compra_puesta) and condicional_long:
+                    if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt and precio_actual < prox_venta:
+                        orden_compra = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_venta, side="BUY", leverage=apalancamiento)
+                        if orden_compra != None:
+                            parejas_compra_venta.insert(0,{
+                                                        "general": {
+                                                                    "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                                                    "beneficios": 0
+                                                                    },
+                                                        "compra": {
+                                                                    "orderId": orden_compra['orderId'],
+                                                                    "price": prox_venta,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_venta,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : "-"
+                                                                    },
+                                                        "venta": {
+                                                                    "orderId": "",
+                                                                    "price": round(prox_venta*(1+ganancia_grid/100),decimales_precio),
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*round(prox_venta*(1+ganancia_grid/100),decimales_precio),
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : "-"
+                                                                    },
+                                                        "sl": {
+                                                                    "orderId": ""
+                                                                    }
+                                                        })
+                
+                # Imprimir cambios
+                if orden_compra != None:
+                    print("Grid Actual:")
+                    print(grid)
+                    print("Cantidad de grillas:", len(grid))
+                    print("")
+                    mostrar_lista(parejas_compra_venta)
+                    #print(json.dumps(parejas_compra_venta,indent=2))
     
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_compra()")
@@ -619,13 +670,23 @@ def ordenes_venta_short(exchange, symbol):
 
                 # Verificar si la pareja compra_venta esta activa
                 orden_venta_puesta = False
+                orden_condicional_venta_puesta = False
                 orddenes_abiertas = future.obtener_ordenes(exchange=exchange, symbol=symbol)
                 actualizar_pareja_short(exchange=exchange, symbol=symbol)
                 for pareja in parejas_compra_venta_short:
-                    if pareja["venta"]['price'] == prox_venta and not(pareja["compra"]['ejecutada']):
-                            for orden in orddenes_abiertas:
-                                if pareja["venta"]['ejecutada'] or (0.999*pareja["venta"]['price'] < float(orden['price']) < 1.001*pareja["venta"]['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell"):
+                    for orden in orddenes_abiertas:
+                        if not(pareja["compra"]['ejecutada']):
+                        
+                            # Verificar orden limite
+                            if pareja["venta"]['ejecutada'] or (0.999*pareja["venta"]['price'] < float(orden['price']) < 1.001*pareja["venta"]['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell"):
+                                if pareja["venta"]['price'] == prox_venta:
                                     orden_venta_puesta = True
+                                
+                            # Verificar orden condicional
+                            if orden['triggerPrice'] != "":
+                                if pareja["venta"]['ejecutada'] or (0.999*pareja["venta"]['price'] < float(orden['triggerPrice']) < 1.001*pareja["venta"]['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell"):
+                                    if pareja["venta"]['price'] == prox_compra:
+                                        orden_condicional_venta_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt_short/precio_actual),decimales_moneda)
@@ -633,11 +694,13 @@ def ordenes_venta_short(exchange, symbol):
                 if multiplo >= 1:
                     qty = round(qty/multiplo)*multiplo
                 
-                # Colocar la orden de compra y crear la pareja de compra_veta
+                orden_venta = None
+                
+                # Colocar la orden limite de compra y crear la pareja de compra_veta
                 if not(orden_venta_puesta):
                     if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt_short and precio_actual < prox_venta:
-                        orden = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
-                        if orden != None:
+                        orden_venta = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
+                        if orden_venta != None:
                             parejas_compra_venta_short.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
@@ -652,7 +715,7 @@ def ordenes_venta_short(exchange, symbol):
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
-                                                                    "orderId": orden['orderId'],
+                                                                    "orderId": orden_venta['orderId'],
                                                                     "price": prox_venta,
                                                                     "cantidad": qty,
                                                                     "monto": qty*prox_venta,
@@ -663,16 +726,47 @@ def ordenes_venta_short(exchange, symbol):
                                                                     "orderId": ""
                                                                     }
                                                         })
-                            print("Grid Actual:")
-                            print(grid)
-                            print("Cantidad de grillas:", len(grid))
-                            print("")
-                            mostrar_lista(parejas_compra_venta_short)
-                            #print(json.dumps(parejas_compra_venta_short,indent=2))
-                            print("")
-                    
-                    if future.margen_disponible(exchange)*apalancamiento < cantidad_usdt_short:
-                        print("Fondos insuficientes...")
+                
+                # Colocar la orden condicional de compra y crear la pareja de compra_veta
+                if not(orden_condicional_venta_puesta) and condicional_short:
+                    if future.margen_disponible(exchange)*apalancamiento > cantidad_usdt_short and precio_actual > prox_compra:
+                        orden_venta = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_compra, side="SELL", leverage=apalancamiento)
+                        if orden_venta != None:
+                            parejas_compra_venta_short.insert(0,{
+                                                        "general": {
+                                                                    "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
+                                                                    "beneficios": 0
+                                                                    },
+                                                        "compra": {
+                                                                    "orderId": "",
+                                                                    "price": round(prox_compra/(1+ganancia_grid/100),decimales_precio),
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*round(prox_compra/(1+ganancia_grid/100),decimales_precio),
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : "-"
+                                                                    },
+                                                        "venta": {
+                                                                    "orderId": orden_venta['orderId'],
+                                                                    "price": prox_compra,
+                                                                    "cantidad": qty,
+                                                                    "monto": qty*prox_compra,
+                                                                    "ejecutada": False,
+                                                                    "fecha_ejecucion" : "-"
+                                                                    },
+                                                        "sl": {
+                                                                    "orderId": ""
+                                                                    }
+                                                        })
+                
+                # Imprimir cambios
+                if orden_venta != None:
+                    print("Grid Actual:")
+                    print(grid)
+                    print("Cantidad de grillas:", len(grid))
+                    print("")
+                    mostrar_lista(parejas_compra_venta_short)
+                    #print(json.dumps(parejas_compra_venta_short,indent=2))
+                    print("")
     
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_compra()")
@@ -1146,6 +1240,8 @@ while iniciar_estrategia:
         ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
         cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
         cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
+        condicional_long = parametros['condicional_long']
+        condicional_short = parametros['condicional_short']
         # ---------------------------
 
         # Verificar que el hilo detener_estrategia este activo
