@@ -1,14 +1,14 @@
 {
     "exchange": "bybit",
-    "activo": "bigtime",
+    "activo": "neiroeth",
     "direccion": "",
     "apalancamiento": 200,
-    "precio_referencia": 0,
-    "distancia_grid": 1.44,
-    "ganancia_grid_long": 0.0288,
-    "ganancia_grid_short": 0.0288,
-    "tp": 3,
-    "sl": 1,
+    "precio_referencia": 0.0730,
+    "distancia_grid": 2.43,
+    "ganancia_grid_long": 0.270,
     "condicional_long": true,
-    "condicional_short": false
+    "ganancia_grid_short": 0.270,
+    "condicional_short": true,
+    "tp": 3,
+    "sl": 1
 }

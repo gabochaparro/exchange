@@ -1,6 +1,7 @@
 import binance_ws
 import bybit_ws
 import threading
+import time
 
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
@@ -54,17 +55,25 @@ def precio_actual_activo(exchange, symbol):
         
         # BINANCE
         if exchange == "BINANCE":
-            hilo = threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,))
-            hilo.start()
+            threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = binance_ws.precio_actual
+                if precio_actual == 0:
+                    time.sleep(3)
+                    if precio_actual == 0:
+                        threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,)).start()
+                #print(precio_actual)
 
         # BYBIT
         if exchange == "BYBIT":
-            hilo = threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,))
-            hilo.start()
+            threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = bybit_ws.precio_actual
+                if precio_actual == 0:
+                    time.sleep(3)
+                    if precio_actual == 0:
+                        threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
+                #print(precio_actual)
     
     except Exception as e:
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol}")
