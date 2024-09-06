@@ -460,7 +460,8 @@ def limpiar_listas():
                                     parejas_compra_venta_short.remove(pareja)
                                     mostrar_lista(parejas_compra_venta_short)
     
-        print("Listas limpias", time.time()-ti, "segundos")
+        #print("Listas limpias", round(time.time()-ti, 2), "segundos")
+        #print("")
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN limpiar_lista()")
@@ -485,7 +486,7 @@ def ordenes_compra(exchange, symbol):
                 if nueva_compra != prox_compra or nueva_venta != prox_venta:
                     nueva_compra = prox_compra
                     nueva_venta = prox_venta
-                    print("Próxima compra-venta:", nueva_compra, nueva_venta)
+                    print(f"Próxima compra-venta: ({nueva_compra},{nueva_venta})")
                     print("")
 
                 # Verificar si la pareja compra_venta esta activa
@@ -671,7 +672,7 @@ def ordenes_venta_short(exchange, symbol):
                 if nueva_compra != prox_compra or nueva_venta != prox_venta:
                     nueva_compra = prox_compra
                     nueva_venta = prox_venta
-                    print("Próxima compra-venta:", nueva_compra, nueva_venta)
+                    print(f"Próxima compra-venta: ({nueva_compra},{nueva_venta})")
                     print("")
 
                 # Verificar si la pareja compra_venta esta activa
@@ -1064,9 +1065,9 @@ def detener_estrategia():
             iniciar_estrategia = False
             cerrar_todo()
             print("ESTRATEGIA DETENIDA POR TP!!!")
-            print
             print("")
             mostrar_lista(parejas_compra_venta)
+            mostrar_lista(parejas_compra_venta_short)
 
         # Detener estrategia por Stop Loss    
         if ganancia_actual() <= (-1)*(0.9*sl) and sl > 0:
@@ -1075,6 +1076,7 @@ def detener_estrategia():
             print("ESTRATEGIA DETENIDA POR SL!!!")
             print("")
             mostrar_lista(parejas_compra_venta)
+            mostrar_lista(parejas_compra_venta_short)
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN detener_estrategia()")
@@ -1309,3 +1311,5 @@ while iniciar_estrategia:
         print("")
 
 cerrar_todo()
+mostrar_lista(parejas_compra_venta)
+mostrar_lista(parejas_compra_venta_short)

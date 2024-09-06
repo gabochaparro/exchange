@@ -52,8 +52,7 @@ def precio_actual_activo(symbol):
         
         def ping():
             while True:
-                global precio_actual
-                time.sleep(27)
+                time.sleep(90)
                 ws.send(json.dumps({'op': 'ping'}))
                 print("Ping Enviado")
         
