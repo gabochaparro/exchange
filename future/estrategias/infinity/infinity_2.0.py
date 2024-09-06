@@ -1311,5 +1311,6 @@ while iniciar_estrategia:
         print("")
 
 cerrar_todo()
+cerrar_todo()
 mostrar_lista(parejas_compra_venta)
 mostrar_lista(parejas_compra_venta_short)
