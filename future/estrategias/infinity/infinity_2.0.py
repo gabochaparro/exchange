@@ -29,7 +29,7 @@ tp = float(parametros['tp'])                                                    
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
 tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
 ganancia_grid_long = parametros['ganancia_grid_long']                                               # Ganancias por cada grid long
-ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
+ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid short
 cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
 cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
 condicional_long = parametros['condicional_long']
@@ -41,8 +41,9 @@ condicional_short = parametros['condicional_short']
 # -----------------------------
 def actualizar_grid():
     try:
-        # variables globales
+        # variables globales y locales
         global precio_actual
+        referencia_nuevo_grid = precio_referencia
 
         while precio_actual != 0:
             #print(grid)
@@ -95,6 +96,12 @@ def actualizar_grid():
                     print("Cantidad de grillas:", len(grid))
                     print("")
             time.sleep(0.3)
+
+            # Modificar el grid
+            if precio_referencia != referencia_nuevo_grid:
+                referencia_nuevo_grid = precio_referencia
+                grid = []
+                grid.append(precio_referencia)
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN actualizar_grid()")
@@ -849,13 +856,13 @@ def margen():
             
             # LONG
             if tipo == "" or "LONG":
-                mas_bajo = future_ws.precio_actual
+                max_distancia = 0
                 pendiente = 0
                 for pareja in parejas_compra_venta:
                     
                     # Buscar le mas bajo
-                    if pareja['compra']['orderId'] != "" and not(pareja['compra']['ejecutada']) and pareja['compra']['price'] < mas_bajo:
-                        mas_bajo = pareja['compra']['price']
+                    if not(pareja['compra']['ejecutada']) and abs(pareja['compra']['price']-future_ws.precio_actual) > max_distancia:
+                        max_distancia = abs(pareja['compra']['price']-future_ws.precio_actual)
                         pareja_eliminar = pareja
                     
                     # Contar las parejas pendiente
@@ -873,11 +880,13 @@ def margen():
             
             # SHORT
             if tipo == "" or "SHORT":
-                mas_alto = future_ws.precio_actual
+                max_distancia = 0
                 pendiente = 0
                 for pareja in parejas_compra_venta_short:
-                    if pareja['venta']['orderId'] != "" and not(pareja['venta']['ejecutada']) and pareja['venta']['price'] > mas_alto:
-                        mas_alto = pareja['venta']['price']
+                    
+                    # Buscar le mas alto
+                    if not(pareja['venta']['ejecutada']) and abs(pareja['venta']['price']-future_ws.precio_actual) > max_distancia:
+                        max_distancia = abs(pareja['venta']['price']-future_ws.precio_actual)
                         pareja_eliminar = pareja
                     
                     # Contar las parejas pendiente
@@ -1088,6 +1097,7 @@ def detener_estrategia():
 #--------------------------------------------
 def auxiliar():
     try:
+        
         while iniciar_estrategia:
             
             # Actualizar y limpiar la lista de parejas
@@ -1098,10 +1108,9 @@ def auxiliar():
 
             # Gestionar la  dirección
             direccion()
-
     
     except Exception as e:
-        print("ERROR EN LA FUNCIÓN detener_estrategia()")
+        print("ERROR EN LA FUNCIÓN auxiliar()")
         print(e)
         print("")
 #--------------------------------------------
@@ -1235,17 +1244,14 @@ while iniciar_estrategia:
         # Abrir el archivo parametros.json y cargar su contenido
         parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
         
-        exchange = parametros['exchange']                                                                   # Exchange a utilizar
-        activo = parametros['activo']                                                                       # Activo a operar
         apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
         precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
         ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
-        cuenta = future.margen_disponible(exchange=exchange)                                                # Inversión de la estrategia
         tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
         sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
         tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
         ganancia_grid_long = parametros['ganancia_grid_long']                                               # Ganancias por cada grid long
-        ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid long
+        ganancia_grid_short = parametros['ganancia_grid_short']                                             # Ganancias por cada grid short
         cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
         cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
         condicional_long = parametros['condicional_long']
