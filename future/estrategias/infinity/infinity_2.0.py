@@ -42,7 +42,7 @@ condicional_short = parametros['condicional_short']
 def actualizar_grid():
     try:
         # variables globales y locales
-        global precio_actual
+        global precio_actual, grid
         referencia_nuevo_grid = precio_referencia
 
         while precio_actual != 0:
@@ -467,7 +467,7 @@ def limpiar_listas():
                                     parejas_compra_venta_short.remove(pareja)
                                     mostrar_lista(parejas_compra_venta_short)
     
-        #print("Listas limpias", round(time.time()-ti, 2), "segundos")
+        print("Listas limpias", round(time.time()-ti, 2), "segundos")
         #print("")
 
     except Exception as e:

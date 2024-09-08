@@ -21,8 +21,9 @@ def precio_actual_activo(symbol):
             # Recibir mensaje de Pong
             if "ret_msg" in data_precio_actual:
                 if data_precio_actual['ret_msg'] == "pong":
-                    print("Pong Recibido")
-                    print("")
+                    #print("Pong Recibido")
+                    #print("")
+                    pass
             
             # Recibir el mensaje del precio actual
             if "data" in data_precio_actual:
@@ -52,9 +53,9 @@ def precio_actual_activo(symbol):
         
         def ping():
             while True:
-                time.sleep(90)
+                time.sleep(36)
                 ws.send(json.dumps({'op': 'ping'}))
-                print("Ping Enviado")
+                #print("Ping Enviado")
         
         threading.Thread(target=ping).start()
         
