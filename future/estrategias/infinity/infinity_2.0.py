@@ -374,102 +374,103 @@ def actualizar_pareja_short(exchange, symbol):
 def limpiar_listas():
     try:
         while iniciar_estrategia:
+            if parejas_compra_venta != [] or parejas_compra_venta_short != []:
 
-            ti = time.time()
+                ti = time.time()
 
-            # LONG
-            if tipo.upper() == "" or tipo.upper() == "LONG":
-                for pareja in parejas_compra_venta:
+                # LONG
+                if tipo.upper() == "" or tipo.upper() == "LONG":
+                    for pareja in parejas_compra_venta:
 
-                        # Limpiar la lista
-                        posiciones = future.obtener_posicion(exchange, activo)
-                        for posicion in posiciones:
+                            # Limpiar la lista
+                            posiciones = future.obtener_posicion(exchange, activo)
+                            for posicion in posiciones:
+                                
+                                if posicion['positionIdx'] == 1:
+                                    if posicion['size'] == "0":
+                                        
+                                        actualizar_pareja_long(exchange=exchange, symbol=activo)
+                                        if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
+                                            print("Removiendo pareja long...", pareja)
+                                            print("")
+                                            
+                                            if pareja in parejas_compra_venta:
+                                                parejas_compra_venta.remove(pareja)
+                                                mostrar_lista(parejas_compra_venta)
+                                        
                             
-                            if posicion['positionIdx'] == 1:
-                                if posicion['size'] == "0":
+                            ordenes_abiertas = future.obtener_ordenes(exchange, activo)
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            if not(pareja['compra']['ejecutada']):
+                                orden_puesta = False
+                                
+                                if ordenes_abiertas != []:
                                     
-                                    actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                    if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
-                                        print("Removiendo pareja long...", pareja)
+                                    # Verificar si hay una orden limite
+                                    for orden in ordenes_abiertas:
+                                        if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
+                                            orden_puesta = True
+                                        
+                                        # Verificar si hay una orden condicional
+                                        if orden['triggerPrice'] != "":
+                                            if 0.999*pareja['compra']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
+                                                orden_puesta = True
+                                    
+                                    if not(orden_puesta):
+                                        print("Removiendo pareja short...", pareja)
                                         print("")
                                         
                                         if pareja in parejas_compra_venta:
                                             parejas_compra_venta.remove(pareja)
                                             mostrar_lista(parejas_compra_venta)
-                                    
-                        
-                        ordenes_abiertas = future.obtener_ordenes(exchange, activo)
-                        actualizar_pareja_long(exchange=exchange, symbol=activo)
-                        if not(pareja['compra']['ejecutada']):
-                            orden_puesta = False
-                            
-                            if ordenes_abiertas != []:
-                                
-                                # Verificar si hay una orden limite
-                                for orden in ordenes_abiertas:
-                                    if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
-                                        orden_puesta = True
-                                    
-                                    # Verificar si hay una orden condicional
-                                    if orden['triggerPrice'] != "":
-                                        if 0.999*pareja['compra']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['compra']['price'] and orden['positionIdx'] == 1 and orden['side'] == "Buy":
-                                            orden_puesta = True
-                                
-                                if not(orden_puesta):
-                                    print("Removiendo pareja short...", pareja)
-                                    print("")
-                                    
-                                    if pareja in parejas_compra_venta:
-                                        parejas_compra_venta.remove(pareja)
-                                        mostrar_lista(parejas_compra_venta)
-            
-            # SHORT
-            if tipo.upper() == "" or tipo.upper() == "SHORT":
-                for pareja in parejas_compra_venta_short:
+                
+                # SHORT
+                if tipo.upper() == "" or tipo.upper() == "SHORT":
+                    for pareja in parejas_compra_venta_short:
 
-                        # Limpiar la lista
-                        posiciones = future.obtener_posicion(exchange, activo)
-                        for posicion in posiciones:
-                            
-                            if posicion['positionIdx'] == 2:
-                                if posicion['size'] == "0":
+                            # Limpiar la lista
+                            posiciones = future.obtener_posicion(exchange, activo)
+                            for posicion in posiciones:
+                                
+                                if posicion['positionIdx'] == 2:
+                                    if posicion['size'] == "0":
+                                        
+                                        # Actualizar las parejas
+                                        actualizar_pareja_short(exchange=exchange, symbol=activo)
+                                        if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
+                                            print("Removiendo pareja short...", pareja)
+                                            
+                                            if pareja in parejas_compra_venta_short:
+                                                parejas_compra_venta_short.remove(pareja)
+                                                mostrar_lista(parejas_compra_venta_short)
+
+                                        
+                            ordenes_abiertas = future.obtener_ordenes(exchange, activo)
+                            actualizar_pareja_short(exchange=exchange, symbol=activo)
+                            if not(pareja['venta']['ejecutada']):
+                                orden_puesta = False
+                                
+                                if ordenes_abiertas != []:
                                     
-                                    # Actualizar las parejas
-                                    actualizar_pareja_short(exchange=exchange, symbol=activo)
-                                    if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
+                                    # Verificar si hay una orden limite
+                                    for orden in ordenes_abiertas:
+                                        if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
+                                            orden_puesta = True
+                                        
+                                        # Verificar si hay una orden condicional
+                                        if orden['triggerPrice'] != "":
+                                            if 0.999*pareja['venta']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
+                                                orden_puesta = True
+                                    
+                                    if not(orden_puesta):
                                         print("Removiendo pareja short...", pareja)
                                         
                                         if pareja in parejas_compra_venta_short:
                                             parejas_compra_venta_short.remove(pareja)
                                             mostrar_lista(parejas_compra_venta_short)
-
-                                    
-                        ordenes_abiertas = future.obtener_ordenes(exchange, activo)
-                        actualizar_pareja_short(exchange=exchange, symbol=activo)
-                        if not(pareja['venta']['ejecutada']):
-                            orden_puesta = False
-                            
-                            if ordenes_abiertas != []:
-                                
-                                # Verificar si hay una orden limite
-                                for orden in ordenes_abiertas:
-                                    if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
-                                        orden_puesta = True
-                                    
-                                    # Verificar si hay una orden condicional
-                                    if orden['triggerPrice'] != "":
-                                        if 0.999*pareja['venta']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['venta']['price'] and orden['positionIdx'] == 2 and orden['side'] == "Sell":
-                                            orden_puesta = True
-                                
-                                if not(orden_puesta):
-                                    print("Removiendo pareja short...", pareja)
-                                    
-                                    if pareja in parejas_compra_venta_short:
-                                        parejas_compra_venta_short.remove(pareja)
-                                        mostrar_lista(parejas_compra_venta_short)
-        
-            print("Listas limpias", round(time.time()-ti, 2), "segundos")
-            #print("")
+            
+                print("Listas limpias", round(time.time()-ti, 2), "segundos")
+                print("")
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN limpiar_lista()")
@@ -1074,19 +1075,19 @@ def detener_estrategia():
         if ((ganancia_actual() > 1.00369*tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > 1.00369*tp) or ganancia_actual() > 1.09*tp) and tp > 0:
             iniciar_estrategia = False
             cerrar_todo()
-            print("ESTRATEGIA DETENIDA POR TP!!!")
-            print("")
             mostrar_lista(parejas_compra_venta)
             mostrar_lista(parejas_compra_venta_short)
+            print("ESTRATEGIA DETENIDA POR TP!!!")
+            print("")
 
         # Detener estrategia por Stop Loss    
         if ganancia_actual() <= (-1)*(0.9*sl) and sl > 0:
             iniciar_estrategia = False
             cerrar_todo()
-            print("ESTRATEGIA DETENIDA POR SL!!!")
-            print("")
             mostrar_lista(parejas_compra_venta)
             mostrar_lista(parejas_compra_venta_short)
+            print("ESTRATEGIA DETENIDA POR SL!!!")
+            print("")
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN detener_estrategia()")
@@ -1329,3 +1330,5 @@ cerrar_todo()
 cerrar_todo()
 mostrar_lista(parejas_compra_venta)
 mostrar_lista(parejas_compra_venta_short)
+cerrar_todo()
+cerrar_todo()
