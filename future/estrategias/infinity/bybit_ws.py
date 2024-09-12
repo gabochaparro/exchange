@@ -12,6 +12,7 @@ def precio_actual_activo(symbol):
     try:
         
         topic = f"publicTrade.{symbol}"
+        ws_abierto = False
 
         def on_message(ws, message):
             global precio_actual, data_precio_actual
@@ -34,14 +35,17 @@ def precio_actual_activo(symbol):
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
 
         def on_close(ws, close_status_code, close_msg):
-            global precio_actual
+            global precio_actual, ws_abierto
             print("### WS BYBIT: Precio actual Cerrado ###")
+            ws_abierto = False
             precio_actual = 0
             #print(precio_actual)
 
         def on_open(ws):
+            global ws_abierto
             print("### WS BYBIT: Precio Actual Abierto ###")
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
+            ws_abierto = True
 
         ws = websocket.WebSocketApp(
                                     url="wss://stream.bybit.com/v5/public/linear",
@@ -52,7 +56,7 @@ def precio_actual_activo(symbol):
                                     )
         
         def ping():
-            while True:
+            while ws_abierto:
                 time.sleep(36)
                 ws.send(json.dumps({'op': 'ping'}))
                 #print("Ping Enviado")

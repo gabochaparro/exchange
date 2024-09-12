@@ -7,8 +7,8 @@ import time
 # Definir la session para Bybit
 bybit_session = HTTP(
                     testnet=False,
-                    api_key=credenciales.bybit_api_key,
-                    api_secret=credenciales.bybit_api_secret,
+                    api_key=credenciales.bybit_subcuenta04_api_key,
+                    api_secret=credenciales.bybit_subcuenta04_api_secret,
                 )
 
 

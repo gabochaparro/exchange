@@ -23,7 +23,7 @@ exchange = parametros['exchange']                                               
 activo = parametros['activo']                                                                       # Activo a operar
 apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
 precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+ganancia_grid = parametros['distancia_grid']+0.207                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
 cuenta = future.margen_disponible(exchange=exchange)                                                # Inversión de la estrategia
 tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
@@ -54,7 +54,7 @@ def actualizar_grid():
                 # Consultar precio actual
                 precio_actual = future_ws.precio_actual
 
-            # Ciclo que arma y actualiza el grid long
+            # LONG
             while grid[-1] <= precio_actual:
                 
                 # Agregar un nuevo nivel al grid
@@ -76,7 +76,7 @@ def actualizar_grid():
                     print("Cantidad de grillas:", len(grid))
                     print("")
 
-            # Ciclo que arma y actualiza el grid short
+            # SHORT
             while grid[0] >= precio_actual:
                 
                 # Agregar un nuevo nivel al grid
@@ -95,7 +95,8 @@ def actualizar_grid():
                     print(grid)
                     print("Cantidad de grillas:", len(grid))
                     print("")
-            time.sleep(0.3)
+            
+            time.sleep(0.36)
 
             # Modificar el grid
             if precio_referencia != referencia_nuevo_grid:
@@ -373,6 +374,10 @@ def actualizar_pareja_short(exchange, symbol):
 # --------------------------------------------
 def limpiar_listas():
     try:
+
+        # Variables globales
+        global parejas_compra_venta, parejas_compra_venta_short
+        
         while iniciar_estrategia:
             if parejas_compra_venta != [] or parejas_compra_venta_short != []:
 
@@ -469,8 +474,9 @@ def limpiar_listas():
                                             parejas_compra_venta_short.remove(pareja)
                                             mostrar_lista(parejas_compra_venta_short)
             
-                print("Listas limpias", round(time.time()-ti, 2), "segundos")
-                print("")
+                if time.time()-ti > 60:
+                    print("Listas limpias", round(time.time()-ti, 2), "segundos")
+                    print("")
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN limpiar_lista()")
