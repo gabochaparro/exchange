@@ -47,9 +47,11 @@ def definir_symbol(exchange, symbol):
 precio_actual = 0
 def precio_actual_activo(exchange, symbol):
     try:
+        # Variables globales
+        global precio_actual
+        
         exchange = exchange.upper()
         symbol = symbol.upper()
-        global precio_actual
 
         # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
