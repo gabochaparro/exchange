@@ -23,7 +23,7 @@ exchange = parametros['exchange']                                               
 activo = parametros['activo']                                                                       # Activo a operar
 apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
 precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-ganancia_grid = parametros['distancia_grid']+0.207                                                  # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
 cuenta = future.patrimonio(exchange=exchange)                                                       # Inversión de la estrategia
 tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
@@ -55,7 +55,7 @@ def actualizar_grid():
                 precio_actual = future_ws.precio_actual
 
             # LONG
-            while grid[-1] <= precio_actual:
+            while grid[-1] <= precio_actual != 0:
                 
                 # Agregar un nuevo nivel al grid
                 nuevo_nivel = round(grid[-1]*(1+ganancia_grid/100),decimales_precio)
@@ -77,7 +77,7 @@ def actualizar_grid():
                     print("")
 
             # SHORT
-            while grid[0] >= precio_actual:
+            while grid[0] >= precio_actual != 0:
                 
                 # Agregar un nuevo nivel al grid
                 nuevo_nivel = round(grid[0]/(1+ganancia_grid/100),decimales_precio)
