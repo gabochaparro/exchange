@@ -23,8 +23,8 @@ exchange = parametros['exchange']                                               
 activo = parametros['activo']                                                                       # Activo a operar
 apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
 precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-ganancia_grid = parametros['distancia_grid']+0.207                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
-cuenta = future.margen_disponible(exchange=exchange)                                                # Inversión de la estrategia
+ganancia_grid = parametros['distancia_grid']+0.207                                                  # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+cuenta = future.patrimonio(exchange=exchange)                                                       # Inversión de la estrategia
 tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
 tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
@@ -1257,6 +1257,7 @@ while iniciar_estrategia:
         apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
         precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
         ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+        cuenta = future.patrimonio(exchange=exchange)                                                       # Inversión de la estrategia
         tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
         sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
         tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
