@@ -204,7 +204,7 @@ def prox_compra_venta():
         prox_venta = 0
         while prox_compra == 0 or prox_venta == 0:
             for grilla in grid:
-                if grilla <= precio_actual <= grilla*(1+ganancia_grid/100):
+                if grilla <= precio_actual < grilla*(1+ganancia_grid/100):
                     prox_compra = grilla
                     prox_venta = grid[grid.index(grilla)+1]
             
@@ -262,7 +262,10 @@ def actualizar_pareja_long(exchange, symbol):
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['general']['beneficios'] = 0.9989*(float(orden['qty'])*float(orden['price'])-pareja['compra']['monto'])
+                                pareja['venta']['cantidad'] = float(orden['qty'])
+                                pareja['venta']['price'] = float(orden['price'])
+                                pareja['venta']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
+                                pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
                                 mostrar_lista(parejas_compra_venta)
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 print("")
@@ -322,7 +325,10 @@ def actualizar_pareja_short(exchange, symbol):
                                 if orden['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
                                     pareja['compra']['ejecutada'] = True
                                     pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                    pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-float(orden['qty'])*float(orden['price']))
+                                    pareja['compra']['cantidad'] = float(orden['qty'])
+                                    pareja['compra']['price'] = float(orden['price'])
+                                    pareja['compra']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
+                                    pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
                                     mostrar_lista(parejas_compra_venta_short)
                                     #print(json.dumps(parejas_compra_venta_short,indent=2))
                                     print("")
