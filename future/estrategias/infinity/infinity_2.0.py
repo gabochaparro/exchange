@@ -144,13 +144,17 @@ def parametros():
         # Imprimir Parametros
         print("")
         print("-----------------------------------------")
+        print("INFINITY 2.0 - FUTUROS")
         print("Exchange:", exchange.upper())
         print( "Activo:", activo.upper())
         if tipo == "":
             print("Dirección:", "LONG-SHORT")
         else:
             print("Dirección:", tipo.upper())
-        print("Precio de referencia:", precio_referencia, "USDT")
+        if precio_referencia == 0:
+            print("Precio de referencia:", precio_actual, "USDT")
+        else:
+            print("Precio de referencia:", precio_referencia, "USDT")
         print("Cantidad de cada compra long:", round(cantidad_usdt,2), "USDT")
         print("Cantidad de cada compra short:", round(cantidad_usdt_short,2), "USDT")
         print(f"Distancia entre cada grid: {ganancia_grid-0.11}%")
@@ -200,7 +204,7 @@ def prox_compra_venta():
         prox_venta = 0
         while prox_compra == 0 or prox_venta == 0:
             for grilla in grid:
-                if grilla < precio_actual < grilla*(1+ganancia_grid/100):
+                if grilla <= precio_actual <= grilla*(1+ganancia_grid/100):
                     prox_compra = grilla
                     prox_venta = grid[grid.index(grilla)+1]
             
