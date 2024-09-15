@@ -659,9 +659,9 @@ def ordenes_venta(exchange, symbol):
                             
                             # Colocar TP
                             orden = None
-                            if precio_actual < compra_venta["venta"]['price'] > 1.0011*avgPrice:
+                            if precio_actual < compra_venta["venta"]['price']: #> 1.0011*avgPrice:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=str(compra_venta["venta"]['cantidad']))
-                            if precio_actual > compra_venta["venta"]['price'] > 1.0011*avgPrice:
+                            if precio_actual > compra_venta["venta"]['price']: #> 1.0011*avgPrice:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="MARKET",tpSize=str(compra_venta["venta"]['cantidad']))
                                 
                             # Verificar que la respuesta sea válida antes de modificar la pareja

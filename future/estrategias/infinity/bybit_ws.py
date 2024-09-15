@@ -7,9 +7,9 @@ import threading
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #----------------------------------------------
+precio_actual = 0
 def precio_actual_activo(symbol):
     try:
-        precio_actual = None
         
         topic = f"publicTrade.{symbol}"
 
