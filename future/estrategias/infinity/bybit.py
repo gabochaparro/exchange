@@ -105,7 +105,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
 
         order = obtener_ordenes(symbol, order["result"]["orderId"])
         
-        print(f"Orden colocada en {order[0]["price"]}. ID:", order[0]["orderId"])
+        print(f"Orden colocada en {order[0]['price']}. ID:", order[0]["orderId"])
         print("")
 
         return {

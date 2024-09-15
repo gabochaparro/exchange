@@ -73,12 +73,13 @@ def precio_actual_activo(exchange, symbol):
             threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = bybit_ws.precio_actual
-                if precio_actual == 0:
-                    time.sleep(3)
-                    precio_actual = bybit_ws.precio_actual
+                if precio_actual != None:
                     if precio_actual == 0:
-                        precio_actual = bybit.precio_actual_activo(symbol)
-                        threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
+                        time.sleep(3)
+                        precio_actual = bybit_ws.precio_actual
+                        if precio_actual == 0:
+                            precio_actual = bybit.precio_actual_activo(symbol)
+                            threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
                 #print(precio_actual)
     
     except Exception as e:

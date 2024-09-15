@@ -9,6 +9,7 @@ import threading
 #----------------------------------------------
 def precio_actual_activo(symbol):
     try:
+        precio_actual = None
         
         topic = f"publicTrade.{symbol}"
 
