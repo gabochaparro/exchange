@@ -14,10 +14,10 @@ bybit_session = HTTP(
 )
 
 #future.nueva_orden(exchange="BYBIT", symbol="XRP", order_type="LIMIT", quantity=10, price=0.5, side="BUY", leverage=200)
-#orden = future.obtener_ordenes(exchange="BYBIT", symbol="neiroeth")
+orden = future.obtener_ordenes(exchange="BYBIT", symbol="1000rats", orderId="1aff609f-6a79-4691-aa9f-78be7b8ce181")
 #orden = future.obtener_posicion(exchange="BYBIT", symbol="ordi")
 #orden = future.take_profit(exchange="BYBIT", symbol="zeta", positionSide="LONG", stopPrice=0.7790, type="LIMIT")
 #orden = future.stop_loss(exchange="BYBIT", symbol="1000rats", positionSide="short", stopPrice=0.09049)
 #orden = future.obtener_historial_ordenes(exchange="BYBIT", symbol="bond",limit=2)
-orden = future.patrimonio(exchange="BYBIT")
+#orden = future.patrimonio(exchange="BYBIT")
 print(json.dumps(orden,indent=2))

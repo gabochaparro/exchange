@@ -555,17 +555,17 @@ def ordenes_compra(exchange, symbol):
                                                                     },
                                                         "compra": {
                                                                     "orderId": orden_compra['orderId'],
-                                                                    "price": prox_compra,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_compra,
+                                                                    "price": orden_compra['price'],
+                                                                    "cantidad": orden_compra['qty'],
+                                                                    "monto": orden_compra['qty']*orden_compra['price'],
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": "",
                                                                     "price": prox_venta,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_venta,
+                                                                    "cantidad": orden_compra['qty'],
+                                                                    "monto": orden_compra['qty']*prox_venta,
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -586,17 +586,17 @@ def ordenes_compra(exchange, symbol):
                                                                     },
                                                         "compra": {
                                                                     "orderId": orden_compra['orderId'],
-                                                                    "price": prox_venta,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_venta,
+                                                                    "price": orden_compra['price'],
+                                                                    "cantidad": orden_compra['qty'],
+                                                                    "monto": orden_compra['qty']*orden_compra['price'],
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": "",
                                                                     "price": round(prox_venta*(1+ganancia_grid/100),decimales_precio),
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*round(prox_venta*(1+ganancia_grid/100),decimales_precio),
+                                                                    "cantidad": orden_compra['qty'],
+                                                                    "monto": orden_compra['qty']*round(prox_venta*(1+ganancia_grid/100),decimales_precio),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -741,16 +741,16 @@ def ordenes_venta_short(exchange, symbol):
                                                         "compra": {
                                                                     "orderId": "",
                                                                     "price": prox_compra,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_compra,
+                                                                    "cantidad": orden_venta['qty'],
+                                                                    "monto": orden_venta['qty']*prox_compra,
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": orden_venta['orderId'],
-                                                                    "price": prox_venta,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_venta,
+                                                                    "price": orden_venta['price'],
+                                                                    "cantidad": orden_venta['qty'],
+                                                                    "monto": orden_venta['qty']*orden_venta['price'],
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -772,16 +772,16 @@ def ordenes_venta_short(exchange, symbol):
                                                         "compra": {
                                                                     "orderId": "",
                                                                     "price": round(prox_compra/(1+ganancia_grid/100),decimales_precio),
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*round(prox_compra/(1+ganancia_grid/100),decimales_precio),
+                                                                    "cantidad": orden_venta['qty'],
+                                                                    "monto": orden_venta['qty']*round(prox_compra/(1+ganancia_grid/100),decimales_precio),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": orden_venta['orderId'],
-                                                                    "price": prox_compra,
-                                                                    "cantidad": qty,
-                                                                    "monto": qty*prox_compra,
+                                                                    "price": orden_venta['price'],
+                                                                    "cantidad": orden_venta['qty'],
+                                                                    "monto": orden_venta['qty']*orden_venta['price'],
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },

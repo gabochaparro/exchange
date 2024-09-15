@@ -103,12 +103,15 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 triggerDirection=positionSide
             )
 
-        print(f"Orden colocada en {price}. ID:", order["result"]["orderId"])
+        order = obtener_ordenes(symbol, order["result"]["orderId"])
+        
+        print(f"Orden colocada en {order[0]["price"]}. ID:", order[0]["orderId"])
         print("")
 
         return {
-                "orderId": order["result"]["orderId"],
-                "price": price
+                "orderId": order[0]["orderId"],
+                "price": float(order[0]["price"]),
+                "qty": float(order[0]["qty"])
                 }
     
     except Exception as e:
