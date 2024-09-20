@@ -1,7 +1,7 @@
 {
     "exchange": "bybit",
     "activo": "1000rats",
-    "direccion": "LONG",
+    "direccion": "SHORT",
     "auto": true,
     "apalancamiento": 3,
     "precio_referencia": 0.11443,

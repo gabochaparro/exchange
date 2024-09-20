@@ -111,7 +111,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         else:
             price = float(order[0]["price"])
         
-        print(f"Orden {order_type.upper()}-{side} de {order[0]["qty"]}{symbol.split("USDT")[0]}  colocada en {price}. ID:", order[0]["orderId"])
+        print(f"Orden {order_type.upper()}-{side} de {order[0]['qty']}{symbol.split('USDT')[0]}  colocada en {price}. ID:", order[0]["orderId"])
         print("")
 
         
