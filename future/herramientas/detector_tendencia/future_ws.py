@@ -1,6 +1,8 @@
 import binance_ws
 import bybit_ws
+import bybit
 import threading
+import time
 
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
@@ -45,26 +47,39 @@ def definir_symbol(exchange, symbol):
 precio_actual = 0
 def precio_actual_activo(exchange, symbol):
     try:
+        # Variables globales
+        global precio_actual
+        
         exchange = exchange.upper()
         symbol = symbol.upper()
-        global precio_actual
 
         # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
         
         # BINANCE
         if exchange == "BINANCE":
-            hilo = threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,))
-            hilo.start()
+            threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = binance_ws.precio_actual
+                if precio_actual == 0:
+                    time.sleep(3)
+                    precio_actual = binance_ws.precio_actual
+                    if precio_actual == 0:
+                        threading.Thread(target=binance_ws.precio_actual_activo,args=(symbol,)).start()
+                #print(precio_actual)
 
         # BYBIT
         if exchange == "BYBIT":
-            hilo = threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,))
-            hilo.start()
+            threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = bybit_ws.precio_actual
+                if precio_actual == 0:
+                    time.sleep(9)
+                    precio_actual = bybit_ws.precio_actual
+                    if precio_actual == 0:
+                        precio_actual = bybit.precio_actual_activo(symbol)
+                        threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
+                #print(precio_actual)
     
     except Exception as e:
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol}")

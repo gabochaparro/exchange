@@ -2,9 +2,17 @@
 binance_api_key = 'qytDo2THWQlgPUJQuqdy9VbSKXwNB27vZ4IlQHNNgNAVIJo0mmdXLSS2Unl6AT0L'
 binance_api_secret = 'cOYnfKAbaSfzId79fLvmKUQ3oHIjHAWdbjIkoW75iNRdDomUzBaJZ2d8PPONs5xl'
 
+# Inserta tus claves de API de ByBit futuros aquí
+bybit_api_key = '0beuShYVzDP7PC5KJp'
+bybit_api_secret = '6vz5nPuaGx6LWMovyJOe66S80rNIifuxBLHO'
+
+# Inserta tus claves de API de ByBit (SUBCUENTA01) futuros aquí
+bybit_subcuenta01_api_key = 'vrhG5QBGx6n6mThyLg'
+bybit_subcuenta01_api_secret = 'oOThAEnduVzI6ypaZtvAiSrXouM2HaDy219B'
+
 # Inserta tus claves de API de BYBIT futuros aquí
-bybit_api_key = 'hfASpq8R2YJ20cOwRC'
-bybit_api_secret = 'yQG4whLxMS2629OJ38hAmlhhJecmTrd0YdjS'
+bybit_subcuenta04_api_key = 'NBd6tPqZ5SszYN4gVw'
+bybit_subcuenta04_api_secret = 'byXUXZJVBl4g7hL8ry4lvm1Z1u2jzNfdNdXd'
 
 # Inserta tus claves de API de BITGET futuros aquí
 bitget_api_key = "bg_5edea92dbb19848ce1729b19dee73de9"

@@ -7,8 +7,8 @@ import time
 # Definir la session para Bybit
 bybit_session = HTTP(
                     testnet=False,
-                    api_key=credenciales.bybit_api_key,
-                    api_secret=credenciales.bybit_api_secret,
+                    api_key=credenciales.bybit_subcuenta04_api_key,
+                    api_secret=credenciales.bybit_subcuenta04_api_secret,
                 )
 
 
@@ -63,8 +63,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         if side == "SELL":
             positionSide = 2
 
-        # Coloca la orden "LIMIT" o "MARKET"
-        if order_type == "LIMIT":
+        # Coloca la orden "LIMIT"
+        if order_type.upper() == "LIMIT":
             order = bybit_session.place_order(
                 category="linear",
                 symbol=symbol,
@@ -75,7 +75,9 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 timeinforce="GTC",
                 positionIdx=positionSide
             )
-        if order_type == "MARKET":
+        
+        # Coloca la orden "MARKET"
+        if order_type.upper() == "MARKET":
             order = bybit_session.place_order(
                 category="linear",
                 symbol=symbol,
@@ -84,12 +86,39 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 qty=quantity,
                 positionIdx=positionSide
             )
-        print(f"Orden colocada en {price}. ID:", order["result"]["orderId"])
+
+        # Coloca la orden "CONDITIONAL"
+        if order_type.upper() == "CONDITIONAL":
+            order = bybit_session.place_order(
+                category="linear",
+                symbol=symbol,
+                side=side[0] + side[1:].lower(),
+                orderType="MARKET",
+                qty=quantity,
+                price=price,
+                triggerPrice=price,
+                triggerBy="LastPrice",
+                timeinforce="GTC",
+                positionIdx=positionSide,
+                triggerDirection=positionSide
+            )
+
+        order = obtener_ordenes(symbol, order["result"]["orderId"])
+        #print(json.dumps(order,indent=2))
+        
+        if order_type.upper() == "CONDITIONAL":
+            price = float(order[0]["triggerPrice"])
+        else:
+            price = float(order[0]["price"])
+        
+        print(f"Orden {order_type.upper()}-{side} de {order[0]["qty"]}{symbol.split("USDT")[0]}  colocada en {price}. ID:", order[0]["orderId"])
         print("")
 
+        
         return {
-                "orderId": order["result"]["orderId"],
-                "price": price
+                "orderId": order[0]["orderId"],
+                "price": price,
+                "qty": float(order[0]["qty"])
                 }
     
     except Exception as e:
@@ -121,6 +150,18 @@ def cancelar_ordenes(symbol):
 def obtener_ordenes(symbol, orderId=""):
     try:
         return bybit_session.get_open_orders(category="linear",symbol=symbol,orderId=orderId)["result"]['list']
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES CERRADAS
+# ----------------------------------------------------
+def obtener_historial_ordenes(symbol, orderId=""):
+    try:
+        return bybit_session.get_order_history(category="linear",symbol=symbol,orderId=orderId,limit=369)['result']['list']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
@@ -232,7 +273,7 @@ def stop_loss(symbol, positionSide, stopPrice, slSize=""):
         
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['orderStatus'] == "Untriggered" and orden['triggerPrice'] == str(stopPrice) and orden['reduceOnly'] == True:
+            if orden['orderStatus'] == "Untriggered" and 0.999*stopPrice <= float(orden['triggerPrice']) <= 1.001*stopPrice and orden['reduceOnly'] == True:
         
                 print(f"Stop Loss Colocado en {orden['triggerPrice']}.")
                 print("")
@@ -266,24 +307,35 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
 
         if type.upper() == "MARKET":
             type = "Market"
+            # Colocar Take Profit
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpslMode="Partial",
+                                        tpSize=tpSize,
+                                        tpOrderType=type,
+                                        positionIdx=positionSide
+                                        )
+        
         if type.upper() == "LIMIT":
             type = "Limit"
+            # Colocar Take Profit
+            orden = bybit_session.set_trading_stop(
+                                        category="linear",
+                                        symbol=symbol,
+                                        takeProfit=str(stopPrice),
+                                        tpLimitPrice=str(stopPrice),
+                                        tpslMode="Partial",
+                                        tpSize=tpSize,
+                                        tpOrderType=type,
+                                        positionIdx=positionSide
+                                        )
         
-        # Colocar Take Profit
-        orden = bybit_session.set_trading_stop(
-                                    category="linear",
-                                    symbol=symbol,
-                                    takeProfit=str(stopPrice),
-                                    tpLimitPrice=str(stopPrice),
-                                    tpslMode="Partial",
-                                    tpSize=tpSize,
-                                    tpOrderType=type,
-                                    positionIdx=positionSide
-                                    )
         
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['orderStatus'] == "Untriggered" and orden['price'] == str(stopPrice) and orden['reduceOnly'] == True:
+            if orden['orderStatus'] == "Untriggered" and 0.999*stopPrice <= float(orden['triggerPrice']) <= 1.001*stopPrice and orden['reduceOnly'] == True:
                 
                 print(f"Take Profit Colocado en {stopPrice}.")
                 print("")
@@ -347,9 +399,7 @@ def patrimonio():
 # ----------------------------------------
 def margen_disponible():
     try:
-        margen = float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalAvailableBalance'])
-        if margen != None:
-            return margen
+        return float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalAvailableBalance'])
     
     except Exception as e:
         print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")

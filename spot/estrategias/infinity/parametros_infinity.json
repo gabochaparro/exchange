@@ -1,0 +1,10 @@
+{
+    "exchange": "bybit",
+    "activo": "rats",
+    "precio_referencia": 0,
+    "distancia_grid": 0.306,
+    "ganancia_grid_long": 0.333,
+    "condicional_long": true,
+    "tp": 3.006,
+    "sl": 0.909
+}

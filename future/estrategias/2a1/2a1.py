@@ -16,7 +16,7 @@ try:
     stop_loss = 2
     # ----------------------------
 
-    # Colocar orden Marjet
+    # Colocar orden Market
     future.nueva_orden(
                     exchange=exchange, 
                     symbol=symbol, 

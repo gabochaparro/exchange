@@ -130,6 +130,20 @@ def cancelar_orden(symbol, orderId):
         print("")
 # -----------------------------
 
+# FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
+# ---------------------------------------------
+def obtener_posicion(symbol):
+    try:
+        symbol = symbol.split("USDT")[0]
+
+        return (bybit_session.get_wallet_balance(accountType="UNIFIED", coin=symbol)['result']['list'][0]['coin'][0]['walletBalance'])
+
+    except Exception as e:
+        print("ERROR OBTENIENDO INFO DE LAS POSICIONES DE BYBIT")
+        print(e)
+        print("")
+# ---------------------------------------------
+
 # FUNCIÓN QUE COLOCA UN STOP LOSS
 # -------------------------------
 def stop_loss(symbol, stopPrice, slSize=""):
@@ -177,19 +191,9 @@ def take_profit(symbol, stopPrice, type, tpSize=""):
 
         if type.upper() == "MARKET":
             type = "Market"
-            # Colocar Take Profit
-            orden = bybit_session.set_trading_stop(
-                                        category="spot",
-                                        symbol=symbol,
-                                        takeProfit=str(stopPrice),
-                                        tpLimitPrice=str(stopPrice),
-                                        tpslMode="Partial",
-                                        tpSize=tpSize,
-                                        tpOrderType=type
-                                        )
-        
         if type.upper() == "LIMIT":
             type = "Limit"
+            
             # Colocar Take Profit
             orden = bybit_session.set_trading_stop(
                                         category="spot",

@@ -1,14 +1,15 @@
 {
     "exchange": "bybit",
     "activo": "1000rats",
-    "direccion": "long",
-    "apalancamiento": 200,
-    "precio_referencia": 0.10257,
-    "distancia_grid": 0.603,
-    "ganancia_grid_long": 0.333,
+    "direccion": "LONG",
+    "auto": true,
+    "apalancamiento": 3,
+    "precio_referencia": 0.11443,
+    "distancia_grid": 0.306,
+    "ganancia_grid_long": 0.108,
+    "ganancia_grid_short": 0.036,
     "condicional_long": true,
-    "ganancia_grid_short": 0.333,
     "condicional_short": true,
-    "tp": 3.006,
-    "sl": 0.909
+    "tp": 0,
+    "sl": 0
 }

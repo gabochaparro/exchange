@@ -104,13 +104,20 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             )
 
         order = obtener_ordenes(symbol, order["result"]["orderId"])
+        #print(json.dumps(order,indent=2))
         
-        print(f"Orden colocada en {order[0]['price']}. ID:", order[0]["orderId"])
+        if order_type.upper() == "CONDITIONAL":
+            price = float(order[0]["triggerPrice"])
+        else:
+            price = float(order[0]["price"])
+        
+        print(f"Orden {order_type.upper()}-{side} de {order[0]["qty"]}{symbol.split("USDT")[0]}  colocada en {price}. ID:", order[0]["orderId"])
         print("")
 
+        
         return {
                 "orderId": order[0]["orderId"],
-                "price": float(order[0]["price"]),
+                "price": price,
                 "qty": float(order[0]["qty"])
                 }
     
@@ -152,9 +159,9 @@ def obtener_ordenes(symbol, orderId=""):
 
 # FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES CERRADAS
 # ----------------------------------------------------
-def obtener_historial_ordenes(symbol, limit=30, orderId=""):
+def obtener_historial_ordenes(symbol, orderId=""):
     try:
-        return bybit_session.get_order_history(category="linear",symbol=symbol,limit=limit,orderId=orderId)['result']['list']
+        return bybit_session.get_order_history(category="linear",symbol=symbol,orderId=orderId,limit=369)['result']['list']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
@@ -305,7 +312,6 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                                         category="linear",
                                         symbol=symbol,
                                         takeProfit=str(stopPrice),
-                                        tpLimitPrice=str(stopPrice),
                                         tpslMode="Partial",
                                         tpSize=tpSize,
                                         tpOrderType=type,

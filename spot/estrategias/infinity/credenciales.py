@@ -1,6 +1,6 @@
 # Inserta tus claves de API de BINANCE aquí
-binance_api_key = 'qytDo2THWQlgPUJQuqdy9VbSKXwNB27vZ4IlQHNNgNAVIJo0mmdXLSS2Unl6AT0L'
-binance_api_secret = 'cOYnfKAbaSfzId79fLvmKUQ3oHIjHAWdbjIkoW75iNRdDomUzBaJZ2d8PPONs5xl'
+binance_api_key = 'ecUeMMrl2TkdMGCYddsQ48ouZGW8nNggvtGKD29DparKVUHy16MKPfDh2SFksWq2'
+binance_api_secret = 'u5ZlU1SZfuYPxkxB8590tyYsVN8RaJawgvb8jhyRbOofVBSeHMYBdyi0nOlw3KOW'
 
 # Inserta tus claves de API de BYBIT spot aquí
 bybit_api_key = 'xEWwLavm3yFkrjXCPo'

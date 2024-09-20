@@ -254,7 +254,7 @@ def obtener_ordenes(exchange, symbol, orderId=""):
 
 # FUNCIÓN QUE BUSCA LA INFO DE TODAS LAS ORDENES CERRADAS
 # -------------------------------------------------------
-def obtener_historial_ordenes(exchange, symbol, limit=30, orderId=""):
+def obtener_historial_ordenes(exchange, symbol, orderId=""):
     try:
 
         exchange = exchange.upper()
@@ -269,7 +269,7 @@ def obtener_historial_ordenes(exchange, symbol, limit=30, orderId=""):
 
         # BYBIT
         if exchange == "BYBIT":
-            return bybit.obtener_historial_ordenes(symbol=symbol,limit=limit,orderId=orderId)
+            return bybit.obtener_historial_ordenes(symbol=symbol,orderId=orderId)
 
         # BITGET
         if exchange == "BITGET":
