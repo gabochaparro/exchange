@@ -1,4 +1,3 @@
-
 ''' 
 Grid de futuros que imita el comportamiento del grid spot infinity de BingX.
 La gran diferencia es que puedes aprovechar el apalancamiento para aumentar las ganancias.
@@ -1693,6 +1692,11 @@ def direccion():
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "LONG"
+                    
+                    if ganancia_grid_long > ganancia_grid_short:
+                        parametros['ganancia_long'] = ganancia_grid_long
+                        parametros['ganancia_short'] = ganancia_grid_short
+                    
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a SHORT
@@ -1702,6 +1706,11 @@ def direccion():
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "SHORT"
+                    
+                    if ganancia_grid_long > ganancia_grid_short:
+                        parametros['ganancia_long'] = ganancia_grid_short
+                        parametros['ganancia_short'] = ganancia_grid_long
+                    
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a RANGO
@@ -2035,7 +2044,7 @@ while iniciar_estrategia:
             else:
                 future.apalancamiento(exchange,activo,apalancamiento)
         precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-        ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+        ganancia_grid = float(parametros['distancia_grid'])+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
         tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
         sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
         tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
@@ -2043,8 +2052,8 @@ while iniciar_estrategia:
             auto = False
         else:
             auto = parametros['auto']
-        ganancia_grid_long = parametros['ganancia_long']                                               # Ganancias por cada grid long
-        ganancia_grid_short = parametros['ganancia_short']                                                # Ganancias por cada grid short
+        ganancia_grid_long = float(parametros['ganancia_long'])                                               # Ganancias por cada grid long
+        ganancia_grid_short = float(parametros['ganancia_short'])                                                # Ganancias por cada grid short
         cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
         cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
         condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
