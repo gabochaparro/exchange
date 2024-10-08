@@ -1,3 +1,4 @@
+
 ''' 
 Grid de futuros que imita el comportamiento del grid spot infinity de BingX.
 La gran diferencia es que puedes aprovechar el apalancamiento para aumentar las ganancias.
@@ -1379,10 +1380,15 @@ def ganancia_actual():
                 if posicion['positionIdx'] == 2:
                     size = size + float(posicion['size'])
         
+        # Comisión por cierre a market
+        comision_cierre = 0.001
+        if exchange == "BYBIT":
+            comision_cierre = 0.001
+        
         if inverso:
-            return 100*((inverse.patrimonio(exchange,activo)-size*0.001) - balance_inicial)/balance_inicial
+            return 100*((inverse.patrimonio(exchange,activo)-size*comision_cierre) - balance_inicial)/balance_inicial
         else:
-            return 100*((future.patrimonio(exchange)-size*precio_actual*0.001) - balance_inicial)/balance_inicial
+            return 100*((future.patrimonio(exchange)-size*precio_actual*comision_cierre) - balance_inicial)/balance_inicial
 
     except Exception  as e:
         print("ERROR EN LA FUNCIÓN ganancia_actual()")
