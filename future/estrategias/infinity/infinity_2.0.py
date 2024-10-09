@@ -1696,6 +1696,9 @@ def direccion():
                     if ganancia_grid_long > ganancia_grid_short:
                         parametros['ganancia_long'] = ganancia_grid_long
                         parametros['ganancia_short'] = ganancia_grid_short
+                    else:
+                        parametros['ganancia_long'] = ganancia_grid_short
+                        parametros['ganancia_short'] = ganancia_grid_long
                     
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
@@ -1710,6 +1713,9 @@ def direccion():
                     if ganancia_grid_long > ganancia_grid_short:
                         parametros['ganancia_long'] = ganancia_grid_short
                         parametros['ganancia_short'] = ganancia_grid_long
+                    else:
+                        parametros['ganancia_long'] = ganancia_grid_long
+                        parametros['ganancia_short'] = ganancia_grid_short
                     
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
