@@ -93,6 +93,7 @@ cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']          
 cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
 condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
 condicional_short = parametros['condicional_short']                                                 # Activar condicional de SHORT
+umbral = parametros['umbral_libro']
 # ---------------------------
 
 
@@ -632,6 +633,8 @@ def limpiar_parejas_long():
                             
                             if not(orden_puesta):
                                 actualizar_pareja_long(exchange=exchange, symbol=activo)
+                                time.sleep(3.6)
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if not(pareja['compra']['ejecutada']):
                                     if pareja in parejas_compra_venta:
                                         parejas_compra_venta.remove(pareja)
@@ -746,6 +749,8 @@ def limpiar_parejas_short():
                             
                             if not(orden_puesta):
                                 actualizar_pareja_short(exchange=exchange, symbol=activo)
+                                time.sleep(3.6)
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if not(pareja['venta']['ejecutada']):
                                     if pareja in parejas_compra_venta_short:
                                         parejas_compra_venta_short.remove(pareja)
@@ -770,7 +775,7 @@ def ordenes_compra(exchange, symbol):
         nueva_venta = 0
         while iniciar_estrategia:
 
-            if tipo == "" or tipo == "LONG":
+            if (tipo == "" or tipo == "LONG") and not(pausa):
                 
                 # Obtener el precio de la proxima compra y la proxima venta
                 prox_compra, prox_venta = prox_compra_venta()
@@ -969,7 +974,8 @@ def ordenes_venta_short(exchange, symbol):
         nueva_venta = 0
         while iniciar_estrategia:
 
-            if tipo == "" or tipo == "SHORT":
+            if (tipo == "" or tipo == "SHORT") and not(pausa):
+                
                 # Obtener el precio de la proxima compra y la proxima venta
                 prox_compra, prox_venta = prox_compra_venta()
                 if nueva_compra != prox_compra or nueva_venta != prox_venta:
@@ -1461,7 +1467,7 @@ def detener_estrategia():
     try:
 
         # Variables globales
-        global iniciar_estrategia, riesgo_max
+        global iniciar_estrategia, riesgo_max, pausa, balance_inicial
 
         # Riesgo máximo alcanzado
         riesgo_actual = ganancia_actual()
@@ -1482,12 +1488,17 @@ def detener_estrategia():
 
         # Detener estrategia por Take Profit
         if ((ganancia_actual() > tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > tp) or ganancia_actual() > tp) and tp > 0:
-            iniciar_estrategia = False
+            pausa = True
             cerrar_todo()
             mostrar_lista(parejas_compra_venta)
             mostrar_lista(parejas_compra_venta_short)
-            print("ESTRATEGIA DETENIDA POR TP!!!")
+            cerrar_todo()
+            print("ESTRATEGIA PAUSADA POR TP!!!")
             print("")
+            if inverso:
+                balance_inicial = inverse.patrimonio(exchange=exchange,symbol=activo)  
+            else:
+                balance_inicial = future.patrimonio(exchange=exchange) 
 
         # Detener estrategia por Stop Loss    
         if ganancia_actual() <= (-1)*(0.9*sl) and sl > 0:
@@ -1684,6 +1695,14 @@ def detectar_tendencia(exchange, symbol):
 #----------------------------------
 def direccion():
     try:
+
+        # Ganancia del grid
+        if ganancia_grid_long > ganancia_grid_short:
+            mayor = ganancia_grid_long
+            menor = ganancia_grid_short
+        else:
+            mayor = ganancia_grid_short
+            menor = ganancia_grid_long
         
         # Cambiar la dirección a LONG
         if tendencia_detector[0] == "ALCISTA":
@@ -1692,14 +1711,8 @@ def direccion():
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "LONG"
-                    
-                    if ganancia_grid_long > ganancia_grid_short:
-                        parametros['ganancia_long'] = ganancia_grid_long
-                        parametros['ganancia_short'] = ganancia_grid_short
-                    else:
-                        parametros['ganancia_long'] = ganancia_grid_short
-                        parametros['ganancia_short'] = ganancia_grid_long
-                    
+                    parametros['ganancia_long'] = mayor
+                    parametros['ganancia_short'] = menor
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a SHORT
@@ -1709,14 +1722,8 @@ def direccion():
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "SHORT"
-                    
-                    if ganancia_grid_long > ganancia_grid_short:
-                        parametros['ganancia_long'] = ganancia_grid_short
-                        parametros['ganancia_short'] = ganancia_grid_long
-                    else:
-                        parametros['ganancia_long'] = ganancia_grid_long
-                        parametros['ganancia_short'] = ganancia_grid_short
-                    
+                    parametros['ganancia_long'] = menor
+                    parametros['ganancia_short'] = mayor
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a RANGO
@@ -1728,32 +1735,58 @@ def direccion():
                     parametros['direccion'] = ""
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
 
+        # Cancelar todas las ordenes short
         if tipo == "LONG":
-            # Cancelar todas las ordenes short
             for orden in ordenes_abiertas:  
-                for pareja in parejas_compra_venta_short:
-                    if exchange == "BYBIT":
-                        if orden['positionIdx'] == 2 and not(orden['reduceOnly']) and orden['orderId'] == pareja['venta']['orderId']:
-                            if inverso:
-                                inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
-                            else:
-                                future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
-                            if pareja in parejas_compra_venta_short:
-                                parejas_compra_venta_short.remove(pareja)
+                if exchange == "BYBIT":
+                    if orden['positionIdx'] == 2 and not(orden['reduceOnly']):
+                        if inverso:
+                            inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+                        else:
+                            future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
 
+        # Cancelar todas las ordenes long
         if tipo == "SHORT":
-            # Cancelar todas las ordenes long
             for orden in ordenes_abiertas:
-                for pareja in parejas_compra_venta:
-                    if exchange == "BYBIT":
-                        if orden['positionIdx'] == 1 and not(orden['reduceOnly']) and orden['orderId'] == pareja['compra']['orderId']:
-                            if inverso:
-                                inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
-                            else:
-                                future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
-                            if pareja in parejas_compra_venta:
-                                parejas_compra_venta.remove(pareja)
+                if exchange == "BYBIT":
+                    if orden['positionIdx'] == 1 and not(orden['reduceOnly']):
+                        if inverso:
+                            inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+                        else:
+                            future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
     
+        # Libro de ordenes
+        porcentaje_distancia = 0.018 
+        tiempo_espera = 9*60
+        
+        if libro == "LONG" and umbral != 0:
+
+            if precio_actual > (1+porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
+                if not(auto):
+                    parametros['auto'] = True
+                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
+            else:
+                if auto:
+                    parametros['auto'] = False
+                    parametros['direccion'] = "LONG"
+                    parametros['ganancia_long'] = mayor
+                    parametros['ganancia_short'] = menor
+                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
+        
+        if libro == "SHORT" and umbral != 0:
+
+            if precio_actual < (1-porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
+                if not(auto):
+                    parametros['auto'] = True
+                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
+            else:
+                if auto:
+                    parametros['auto'] = False
+                    parametros['direccion'] = "SHORT"
+                    parametros['ganancia_long'] = menor
+                    parametros['ganancia_short'] = mayor
+                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
+
     except Exception as e:
         print("ERROR EN LA FUNCIÓN direccion()")
         print(e)
@@ -1897,11 +1930,151 @@ def auxiliar():
         print("")
 #--------------------------------------------
 
+# # FUNCIÓN QUE CALCULA LA ACUMULACIÓN DE ÓRDENES EN EL LIBRO DE ORDENES DE BINANCE
+# -------------------------------------------------------------------------------
+def order_book(symbol, umbral):
+    try:
+        from binance.client import Client
+        import pygame
+        from mutagen.mp3 import MP3
+        from gtts import gTTS
+        import time
+        from datetime import datetime
+
+
+        binance_client = Client(
+                                    api_key="",
+                                    api_secret="",
+                                    tld="com"
+                                )
+
+
+        # FUNCIÓN QUE GENERA UN ARCHIVO DE AUDIO A PARTIR DE UN TEXTO
+        #------------------------------------------------------------
+        def texto_audio(texto):
+            try:
+                # Variables globales
+                global duracion
+
+                # Eliminar la palabra "USDT"
+                texto = texto.replace("USDT", "")
+                
+                # Elegir el idioma
+                idioma = "es"
+                
+                #Escoger el tipo de voz
+                voz = "female"
+                
+                # Indicar el texto, idioma y velocidad de lectura
+                tts = gTTS(text=texto, lang=idioma, slow=False)
+                
+                # Generar el archivo de audio
+                tts.save("future/estrategias/infinity/salida/alerta_voz.mp3")
+                
+                # Duracion del audio
+                duracion = MP3("future/estrategias/infinity/salida/alerta_voz.mp3").info.length
+            
+            except Exception as e:
+                print("ERROR EN LA FUNCIÓN QUE GENERA UN ARCHIVO DE AUDIO A PARTIR DE UN TEXTO. (texto_audio())")
+                print(e)
+                print("")
+                tts = gTTS(text="ERROR", lang=idioma, slow=False)
+                tts.save("alerta_voz.mp3")
+        #------------------------------------------------------------
+
+        # FUNCIÓN PARA REPRODUCIR SONIDOS
+        #--------------------------------
+        def reproducir_audio(audio):
+            try:
+                pygame.mixer.init()
+                pygame.mixer.music.load(audio)
+                pygame.mixer.music.play()
+                time.sleep(duracion)
+            except Exception as e:
+                print("ERROR EN LA FUNCIÓN QUE REPRODUCE AUDIO")
+                print(e)
+        # -------------------------------
+
+        # FUNCIÓN QUE ALERTA CUANDO UN ACTIVO ACUMULA CIERTA CANTIDAD DE ORDENES EN EL LIBRO DE ORDENES
+        # ---------------------------------------------------------------------------------------------
+        def alerta_ordenes(symbol, umbral):
+            try:
+                # Variables globales
+                global precio, tiempo, libro, pausa
+
+                # Definir el simbolo
+                symbol = symbol.upper()
+                
+                # Obtener las ordenes de compra
+                libro_compras = binance_client.futures_order_book(symbol=symbol, limit=1000)['bids']
+
+                # Decimales de la moneda
+                decimales_moneda = len((libro_compras[0][0]).split(".")[1])
+
+                cantidad_compra = 0
+                for order in libro_compras:
+                    cantidad_compra = cantidad_compra + float(order[1])
+
+                if cantidad_compra > umbral and umbral != 0:
+                    pausa = False
+                    libro = "LONG"
+                    precio = precio_actual
+                    tiempo = time.time()
+                    print("")
+                    print("Acumulación de ordenes de compra")
+                    print(f"{libro_compras[-1][0]} - {libro_compras[0][0]} ({round(float(libro_compras[0][0]) - float(libro_compras[-1][0]),decimales_moneda)})")
+                    print(int(cantidad_compra), symbol.split("USDT")[0])
+                    print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
+                    print("")
+                    #texto_audio(f"Acumulación de órdenes de compra en {symbol.split('USDT')[0]}")
+                    #reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
+
+                # Obtener las ordenes de venta
+                libro_ventas = binance_client.futures_order_book(symbol=symbol, limit=1000)['asks']
+
+                cantidad_venta = 0
+                for order in libro_ventas:
+                    cantidad_venta = cantidad_venta + float(order[1])
+
+                if cantidad_venta > umbral and umbral != 0:
+                    pausa = False
+                    libro = "SHORT"
+                    precio = precio_actual
+                    tiempo = time.time()
+                    print("")
+                    print("Acumulación de ordenes de venta")
+                    print(f"{libro_ventas[0][0]} - {libro_ventas[-1][0]} ({round(float(libro_ventas[-1][0]) - float(libro_ventas[0][0]),decimales_moneda)})")
+                    print(int(cantidad_venta), symbol.split("USDT")[0])
+                    print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
+                    print("")
+                    #texto_audio(f"Acumulación de órdenes de venta en {symbol.split('USDT')[0]}")
+                    #reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
+            
+            except Exception as e:
+                print("ERROR EN LA FUNCIÓN alerta_ordenes()")
+                print(e)
+                print("")
+        # ---------------------------------------------------------------------------------------------
+
+        print(f"Monitoreo del Order Book de {symbol}")
+        print("")
+
+        while True:
+            alerta_ordenes(symbol=symbol+"USDT",umbral=umbral)
+            time.sleep(3.06)
+
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN order_book()")
+        print(e)
+        print("")
+# -------------------------------------------------------------------------------
+
 # Balance inicial
 balance_inicial = cuenta
 
 # Iniciar estrategia
 iniciar_estrategia = False
+pausa = False
 
 # Consultar precio actual
 if inverso:
@@ -2032,6 +2205,16 @@ hilo_detectar_tendencia = threading.Thread(target=detectar_tendencia, args=(exch
 hilo_detectar_tendencia.daemon = True
 hilo_detectar_tendencia.start()
 
+# Inicializar las variables del libro de ordenes
+libro = ""
+precio = 0
+tiempo = 0
+
+# Iniciar Hilo que monitorea el libro de ordenes de Binance
+hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,umbral))
+hilo_libro_ordenes.daemon = True
+hilo_libro_ordenes.start()
+
 # Iniciar Hilo auxiliar
 hilo_auxiliar = threading.Thread(target=auxiliar)
 hilo_auxiliar.daemon = True
@@ -2058,12 +2241,14 @@ while iniciar_estrategia:
             auto = False
         else:
             auto = parametros['auto']
+        pausa = parametros['pausa']
         ganancia_grid_long = float(parametros['ganancia_long'])                                               # Ganancias por cada grid long
         ganancia_grid_short = float(parametros['ganancia_short'])                                                # Ganancias por cada grid short
         cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
         cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
         condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
         condicional_short = parametros['condicional_short']                                                 # Activar condicional de SHORT
+        umbral = parametros['umbral_libro']
         # ---------------------------
             
         # Consultar precio actual
@@ -2119,6 +2304,12 @@ while iniciar_estrategia:
             hilo_detectar_tendencia = threading.Thread(target=detectar_tendencia, args=(exchange,activo))
             hilo_detectar_tendencia.daemon = True
             hilo_detectar_tendencia.start()
+
+        # Verificar que el hilo libro ordenes este activo
+        if not(hilo_libro_ordenes.is_alive()):
+            hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,umbral))
+            hilo_libro_ordenes.daemon = True
+            hilo_libro_ordenes.start()
 
         # Verificar que el hilo auxiliar este activo
         if not(hilo_auxiliar.is_alive()):
