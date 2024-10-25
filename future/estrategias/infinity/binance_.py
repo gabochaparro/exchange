@@ -66,6 +66,23 @@ def apalancameinto_max(symbol):
         print("")
 # ------------------------------------------------------
 
+# FUNCIÓN QUE CAMBIA EL APALANCAMIENTO DE UN TICK
+# ------------------------------------------------------
+def apalancamiento(symbol,leverage):
+    try:
+        
+        # Cambia el apalancamiento
+        max_leverage = apalancameinto_max(symbol=symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
+        binance_client.futures_change_leverage(symbol=symbol, leverage=leverage)
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN DE BINANCE NUEVA ORDEN 'LIMIT' , 'MARKET' o "CONDITIONAL"
 # ------------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
@@ -82,7 +99,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         if side == "SELL":
             position_side = "SHORT"
 
-        # Coloca la orden "LIMIT" o "MARKET"
+        # Coloca la orden "LIMIT" , "MARKET" o "CONDITIONAL"
         if order_type == "LIMIT":
             order = binance_client.futures_create_order(
                 symbol=symbol,
@@ -94,6 +111,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 timeinforce="GTC",
                 timestamp=time.time()
             )
+            price = order["price"]
+        
         if order_type == "MARKET":
             order = binance_client.futures_create_order(
                 symbol=symbol,
@@ -103,12 +122,28 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 quantity=quantity,
                 timestamp=time.time()
             )
-        print(f"Orden colocada en {order['price']}. ID:", order["orderId"])
-        print((""))
+            price = order["price"]
         
+        if order_type == "CONDITIONAL":
+            order = binance_client.futures_create_order(
+                symbol=symbol,
+                side=side,
+                positionSide=position_side,
+                type="STOP_MARKET",
+                quantity=quantity,
+                stopPrice=price,
+                timeinforce="GTC",
+                recvWindow=int(time.time()*1000),
+            )
+            price = order["stopPrice"]
+        
+        print(f"Orden colocada en {price}. ID:", order["orderId"])
+        print((""))
+
         return {
                 "orderId": order["orderId"],
-                "price": order["price"]
+                "price": price,
+                "qty": order["origQty"]
                 }
 
     except Exception as e:
@@ -139,10 +174,10 @@ def cancelar_ordenes(symbol):
 def obtener_ordenes(symbol):
     try:
 
-        print("Buscando ordenes...")
+        #print("Buscando ordenes...")
         ordenes = binance_client.futures_get_open_orders(symbol=symbol)
-        print(f"{len(ordenes)} ordenes encontradas.")
-        print("")
+        #print(f"{len(ordenes)} ordenes encontradas.")
+        #print("")
         return ordenes
 
     except Exception as e:
@@ -150,6 +185,19 @@ def obtener_ordenes(symbol):
         print(e)
         print("")
 # ----------------------------------------------------
+
+# FUNCIÓN QUE BUSCA LA INFO DE TODAS LAS ORDENES CERRADAS
+# -------------------------------------------------------
+def obtener_historial_ordenes(symbol,limit=100):
+    try:
+
+        return binance_client.futures_get_all_orders(symbol=symbol,limit=limit)
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN obtener_historial_ordenes() de BINANCE")
+        print(e)
+        print("")
+# -------------------------------------------------------
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
@@ -250,7 +298,7 @@ def stop_loss(symbol, positionSide, stopPrice):
 
 # FUNCIÓN QUE COLOCA UN TAKE PROFIT LIMIT O MARKET
 # ------------------------------------------------
-def take_profit(symbol, positionSide, stopPrice, type):
+def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
     try:
 
         # Definir parametros
@@ -258,41 +306,61 @@ def take_profit(symbol, positionSide, stopPrice, type):
         type = type.upper()
         if positionSide == "LONG":
             side = "SELL"
-            quantity = obtener_posicion(symbol=symbol)[0]['positionAmt']
+            if tpSize == "":
+                quantity = obtener_posicion(symbol=symbol)[0]['positionAmt']
+            else:
+                quantity = tpSize
         if positionSide == "SHORT":
             side = "BUY"
-            quantity = str(float(obtener_posicion(symbol=symbol)[1]['positionAmt'])*(-1))
+            if tpSize == "":
+                quantity = str(float(obtener_posicion(symbol=symbol)[1]['positionAmt'])*(-1))
+            else:
+                quantity = tpSize
+
+        info = binance_client.futures_exchange_info()['symbols']
+        for data in info:
+            if data['symbol'] == symbol:
+                decimales_precio = len(data['filters'][0]['tickSize'].split(".")[-1])
+                tickSize = float(data['filters'][0]['tickSize'])
+                stopPrice = round(round(float(stopPrice)/tickSize)*tickSize, decimales_precio)
+                decimales_moneda = len(data['filters'][1]['stepSize'].split(".")[-1])
+                stepSize = float(data['filters'][1]['stepSize'])
+                quantity = round(round(float(quantity)/stepSize)*stepSize,decimales_moneda)
+                print("precio:", stopPrice, "cantidad:", quantity)
 
         # Colocar Take Profit Market
         if type == "MARKET":
-            type = "TAKE_PROFIT_MARKET"
             orden = binance_client.futures_create_order(
                                                         symbol=symbol, 
                                                         side=side, 
                                                         positionSide=positionSide, 
-                                                        type=type, 
-                                                        stopPrice=stopPrice, 
+                                                        type="TAKE_PROFIT_MARKET", 
+                                                        stopPrice=float(stopPrice), 
                                                         closePosition=True,
                                                         timestamp = int(time.time()*1000)
                                                         )
         
         # Colocar Take Profit Limit
         if type == "LIMIT":
-            type = "TAKE_PROFIT"
             orden = binance_client.futures_create_order(
-                                                        symbol=symbol, 
-                                                        side=side, 
-                                                        positionSide=positionSide, 
-                                                        type=type, 
-                                                        stopPrice=stopPrice,
-                                                        price=stopPrice,
-                                                        quantity=quantity,
+                                                        symbol=symbol,
+                                                        side=side,
+                                                        positionSide=positionSide,
+                                                        type="TAKE_PROFIT",
+                                                        quantity=float(quantity),
+                                                        price=float(stopPrice),
+                                                        stopprice=float(stopPrice),
+                                                        timeinforce="GTC",
                                                         timestamp = int(time.time()*1000)
                                                         )
         
         print(f"Take Profit Colocado en {orden['stopPrice']}. ID:", orden["orderId"])
         print("")
-        return orden
+        return {
+                "orderId": orden["orderId"],
+                "price": orden['stopPrice'],
+                "qty": orden['origQty']
+                }
     
     except Exception as e:
         print("ERROR COLOCANDO TAKE PROFIT EN BINANCE")
@@ -336,5 +404,35 @@ def trailing_stop(symbol, positionSide, activationPrice, callbackRate):
         print("")
 # -----------------------------------
 
-#prueba = precio_actual_activo("1000RATSUSDT")
-#print(json.dumps(prueba,indent=2))
+# FUNCIÓN QUE OBTIENE EL MONTO DISPONIBLE DE LA CUENTA
+# ----------------------------------------------------
+def patrimonio():
+    try:
+        activos = binance_client.futures_account_balance()
+        for activo in activos:
+            if activo['asset'] == "USDT":
+                return float(activo['balance'])+float(activo['crossUnPnl'])
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL PATRIMONIO ACTUAL")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL MARGEN DISPONIBLE
+# ----------------------------------------
+def margen_disponible():
+    try:
+        activos = binance_client.futures_account_balance()
+        for activo in activos:
+            if activo['asset'] == "USDT":
+                return float(activo['maxWithdrawAmount'])
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
+        print(e)
+        print("")
+# ----------------------------------------
+
+#orden = patrimonio()
+#print(json.dumps(orden,indent=2))
