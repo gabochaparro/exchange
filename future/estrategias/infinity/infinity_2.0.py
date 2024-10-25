@@ -4,6 +4,7 @@ La gran diferencia es que puedes aprovechar el apalancamiento para aumentar las 
 El riesgo aumenta a medidas que icrementas el apalancamiento (recomiendo 3x máximo).
 Pudes quemar la cuenta si desconoces la magnitud de las correcciones mercado.
 '''
+
 import future
 import inverse
 import inverse_ws
@@ -19,6 +20,9 @@ import os
 import glob
 
 
+# Abrir el archivo parametros.json y cargar su contenido
+parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))
+
 # Especifica la ruta de la carpeta parametros
 carpeta_parametros = 'future/estrategias/infinity/parametros/*'
 
@@ -28,8 +32,9 @@ archivos = glob.glob(carpeta_parametros)
 # Elimina cada archivo en la carpeta
 for archivo in archivos:
     try:
-        os.remove(archivo)
-        print(f"{archivo} eliminado exitosamente.")
+        if f"{parametros['activo'].upper()}_{parametros['exchange'].upper()}" in archivo:
+            os.remove(archivo)
+            print(f"{archivo} eliminado exitosamente.")
     except IsADirectoryError:
         print(f"{archivo} es una carpeta, omitiendo.")
     except FileNotFoundError:
@@ -46,8 +51,9 @@ archivos = glob.glob(carpeta_salida)
 # Elimina cada archivo en la carpeta
 for archivo in archivos:
     try:
-        os.remove(archivo)
-        print(f"{archivo} eliminado exitosamente.")
+        if f"{parametros['activo'].upper()}_{parametros['exchange'].upper()}" in archivo:
+            os.remove(archivo)
+            print(f"{archivo} eliminado exitosamente.")
     except IsADirectoryError:
         print(f"{archivo} es una carpeta, omitiendo.")
     except FileNotFoundError:
@@ -58,8 +64,7 @@ for archivo in archivos:
 
 # Crear una copia temporal del archivo json con los parametros
 fecha_inicio = int(time.time())
-parametros = json.load(open("future/estrategias/infinity/parametros_infinity_2.0.json", "r"))       # Abrir el archivo parametros.json y cargar su contenido
-parametros_copia = f"future/estrategias/infinity/parametros/{parametros['activo']}_{parametros['exchange']}_{fecha_inicio}.json"
+parametros_copia = f"future/estrategias/infinity/parametros/{parametros['activo'].upper()}_{parametros['exchange'].upper()}_{fecha_inicio}.json"
 shutil.copy("future/estrategias/infinity/parametros_infinity_2.0.json", parametros_copia)
 
 
@@ -69,24 +74,22 @@ parametros = json.load(open(parametros_copia, "r"))
 exchange = parametros['exchange'].upper()                                                           # Exchange a utilizar
 inverso = parametros['inverso']                                                                     # Futuros inversos (True/False)
 activo = parametros['activo'].upper()                                                               # Activo a operar
-apalancamiento = parametros['apalancamiento']                                                       # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
+# Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
+apalancamiento = parametros['apalancamiento']
 if inverso:
     inverse.apalancamiento(exchange,activo,apalancamiento)
 else:
     future.apalancamiento(exchange,activo,apalancamiento)
 precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-ganancia_grid = parametros['distancia_grid']+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+ganancia_grid = parametros['distancia_grid']+0.155                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+# Obtener e, monto de la cuenta en USDT
 if inverso:
-    cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)  
+    cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)*inverse.precio_actual_activo(exchange,activo)  
 else:
     cuenta = future.patrimonio(exchange=exchange)                                                   # Inversión de la estrategia
 tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
 tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
-if inverso and exchange == "BYBIT":
-    auto = False
-else:
-    auto = parametros['auto']
 ganancia_grid_long = parametros['ganancia_long']                                               # Ganancias por cada grid long
 ganancia_grid_short = parametros['ganancia_short']
 cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
@@ -94,6 +97,16 @@ cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']   
 condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
 condicional_short = parametros['condicional_short']                                                 # Activar condicional de SHORT
 umbral = parametros['umbral_libro']
+auto = parametros['auto']
+if exchange == "BYBIT":
+    lote = 1
+if exchange == "BINANCE":
+    lote = 100
+invertir_ganancias_grid = parametros['invertir_ganancias_grid']
+if exchange == "BINANCE":
+    retraso_api = 7.92
+else:
+    retraso_api = 0.9
 # ---------------------------
 
 
@@ -159,7 +172,7 @@ def actualizar_grid():
 def parametros():
     try:
         # Variables globales
-        global apalancamiento, multiplo, cantidad_usdt, cantidad_usdt_short
+        global apalancamiento
 
         # Obtener el grid
         print("")
@@ -187,12 +200,6 @@ def parametros():
         if multiplo >= 1:
             cantidad_monedas = round(cantidad_monedas/multiplo)*multiplo
             cantidad_monedas_short = round(cantidad_monedas_short/multiplo)*multiplo
-        if inverso:
-            cantidad_monedas = round(cantidad_usdt)
-            cantidad_monedas_short = round(cantidad_usdt_short)
-        else:
-            cantidad_monedas = round((cantidad_usdt/precio_actual),decimales_moneda)
-            cantidad_monedas_short = round((cantidad_usdt_short/precio_actual),decimales_moneda)
         
         # Imprimir Parametros
         print("")
@@ -211,14 +218,23 @@ def parametros():
             print("Precio de referencia:", precio_actual, "USDT")
         else:
             print("Precio de referencia:", precio_referencia, "USDT")
-        print("Cantidad de cada compra long:", round(cantidad_usdt,2), "USDT")
-        print("Cantidad de cada compra short:", round(cantidad_usdt_short,2), "USDT")
-        print(f"Distancia entre cada grid: {ganancia_grid-0.11}%")
+        if inverso:
+            print("Cantidad de cada compra long:", round(cantidad_monedas,decimales_moneda), activo)
+        else:
+            print("Cantidad de cada compra long:", round(cantidad_usdt,2), "USDT")
+        if inverso:
+            print("Cantidad de cada compra short:", round(cantidad_monedas_short,decimales_moneda), activo)
+        else:
+            print("Cantidad de cada compra short:", round(cantidad_usdt_short,2), "USDT")
+        print(f"Distancia entre cada grid: {round(ganancia_grid-0.11,3)}%")
         print(f"Ganancas del grid long: {ganancia_grid_long}%")
         print(f"Ganancas del grid short: {ganancia_grid_short}%")
         print("Cuenta:", round(cuenta,2), "USDT")
         print(f"Apalancamiento: {apalancamiento}x")
-        print("Inversión inicial:", round(cuenta*apalancamiento,2), "USDT")
+        if inverso:
+            print("Inversión inicial:", round(cuenta*apalancamiento,2), activo)
+        else:
+            print("Inversión inicial:", round(cuenta*apalancamiento,2), "USDT")
         print("-----------------------------------------")
         print("Precio actual:", precio_actual, "USDT")
         print("Proxima compra:", precio_compra, "USDT")
@@ -233,7 +249,7 @@ def parametros():
         while iniciar_estrategia != "":
             iniciar_estrategia = input("Presiona ENTER para iniciar la estrategia")
         if iniciar_estrategia == "":
-            return cantidad_usdt, cantidad_usdt_short
+            return True
         
     except Exception as e:
         print("ERROR EN LA FUNCIÓN parametros()")
@@ -281,6 +297,7 @@ def actualizar_pareja_long(exchange, symbol):
         else:
             historial_ordenes = future.obtener_historial_ordenes(exchange=exchange, symbol=symbol)
         
+        # Recorrer las parejas long
         for pareja in parejas_compra_venta:
             if historial_ordenes != None:
                 
@@ -297,9 +314,9 @@ def actualizar_pareja_long(exchange, symbol):
                             if orden['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
                                 pareja['compra']['ejecutada'] = True
                                 pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['compra']['cantidad'] = float(orden['qty'])
-                                pareja['compra']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['compra']['monto'] = pareja['compra']['cantidad']*pareja['compra']['price']
+                                pareja['compra']['cantidad'] = orden['qty']
+                                pareja['compra']['price'] = orden['avgPrice']
+                                pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 break
                                 
@@ -310,9 +327,9 @@ def actualizar_pareja_long(exchange, symbol):
                             if orden['status'] == "FILLED" and pareja['compra']['ejecutada'] == False:
                                 pareja['compra']['ejecutada'] = True
                                 pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['compra']['cantidad'] = float(orden['qty'])
-                                pareja['compra']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['compra']['monto'] = pareja['compra']['cantidad']*pareja['compra']['price']
+                                pareja['compra']['cantidad'] = orden['origQty']
+                                pareja['compra']['price'] = orden['avgPrice']
+                                pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 break
                 
@@ -329,10 +346,13 @@ def actualizar_pareja_long(exchange, symbol):
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['venta']['cantidad'] = float(orden['qty'])
-                                pareja['venta']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['venta']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
-                                pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
+                                pareja['venta']['cantidad'] = orden['qty']
+                                pareja['venta']['price'] = orden['avgPrice']
+                                pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
+                                if inverso:
+                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                else:
+                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 
                                 # Cancelar la orden de SL en caso tenga
@@ -343,7 +363,6 @@ def actualizar_pareja_long(exchange, symbol):
                                     else:
                                         future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                         print("SL Cancelado.")
-                                
                                 break
                                 
                         # BINANCE
@@ -353,10 +372,13 @@ def actualizar_pareja_long(exchange, symbol):
                             if orden['status'] == "FILLED" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['venta']['cantidad'] = float(orden['qty'])
-                                pareja['venta']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['venta']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
-                                pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
+                                pareja['venta']['cantidad'] = orden['qty']
+                                pareja['venta']['price'] = orden['avgPrice']
+                                pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
+                                if inverso:
+                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                else:
+                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 
                                 # Cancelar la orden de SL en caso tenga
@@ -394,7 +416,10 @@ def actualizar_pareja_long(exchange, symbol):
                                         print("")
                         break
 
-        #print("Parejas long actualizadas", time.time()-ti, "segundos")
+        if time.time()-ti < retraso_api:
+            time.sleep(retraso_api)
+        if time.time()-ti > 10.8:
+            print("Parejas long actualizadas", round(time.time()-ti,2), "segundos")
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja_long()")
@@ -431,10 +456,13 @@ def actualizar_pareja_short(exchange, symbol):
                                 if orden['orderStatus'] == "Filled" and not(pareja['compra']['ejecutada']):
                                     pareja['compra']['ejecutada'] = True
                                     pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                    pareja['compra']['cantidad'] = float(orden['qty'])
-                                    pareja['compra']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                    pareja['compra']['monto'] = pareja['compra']['cantidad']*pareja['compra']['price']
-                                    pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
+                                    pareja['compra']['cantidad'] = orden['qty']
+                                    pareja['compra']['price'] = orden['avgPrice']
+                                    pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
+                                    if inverso:
+                                        pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                    else:
+                                        pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                     #print(json.dumps(parejas_compra_venta_short,indent=2))
                                         
                                     # Cancelar la orden de SL en caso tenga
@@ -454,10 +482,13 @@ def actualizar_pareja_short(exchange, symbol):
                             if orden['status'] == "FILLED" and pareja['compra']['ejecutada'] == False:
                                 pareja['compra']['ejecutada'] = True
                                 pareja['compra']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['compra']['cantidad'] = float(orden['qty'])
-                                pareja['compra']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['compra']['monto'] = pareja['compra']['cantidad']*pareja['compra']['price']
-                                pareja['general']['beneficios'] = 0.9989*(pareja['venta']['monto']-pareja['compra']['monto'])
+                                pareja['compra']['cantidad'] = orden['origQty']
+                                pareja['compra']['price'] = orden['avgPrice']
+                                pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
+                                if inverso:
+                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                else:
+                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                         
                                 # Cancelar la orden de SL en caso tenga
@@ -483,9 +514,9 @@ def actualizar_pareja_short(exchange, symbol):
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['venta']['cantidad'] = float(orden['qty'])
-                                pareja['venta']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['venta']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
+                                pareja['venta']['cantidad'] = orden['qty']
+                                pareja['venta']['price'] = orden['avgPrice']
+                                pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 #print(json.dumps(parejas_compra_venta_short,indent=2))
                                 
                                 break
@@ -497,9 +528,9 @@ def actualizar_pareja_short(exchange, symbol):
                             if orden['status'] == "FILLED" and pareja['venta']['ejecutada'] == False:
                                 pareja['venta']['ejecutada'] = True
                                 pareja['venta']['fecha_ejecucion'] = datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p")
-                                pareja['venta']['cantidad'] = float(orden['qty'])
-                                pareja['venta']['price'] = round(float(orden['avgPrice']),decimales_precio)
-                                pareja['venta']['monto'] = pareja['venta']['cantidad']*pareja['venta']['price']
+                                pareja['venta']['cantidad'] = orden['origQty']
+                                pareja['venta']['price'] = orden['avgPrice']
+                                pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 
                                 break
@@ -527,7 +558,10 @@ def actualizar_pareja_short(exchange, symbol):
                                         print("Pareja removida.", pareja)
                                         print("")
 
-        #print("Parejas short actualizadas", time.time()-ti, "segundos")
+        if time.time()-ti < retraso_api:
+            time.sleep(retraso_api)
+        if time.time()-ti > 10.8:
+            print("Parejas short actualizadas", round(time.time()-ti,2), "segundos")
     
     except Exception as e:
         print("ERROR EN LA FUNCION actualizar_pareja_short()")
@@ -541,7 +575,7 @@ def limpiar_parejas_long():
     try:
 
         # Variables globales
-        global parejas_compra_venta, parejas_compra_venta_short
+        global parejas_compra_venta, parejas_compra_venta_short, posiciones, ordenes_abiertas
         
         while iniciar_estrategia:
             if parejas_compra_venta != [] or parejas_compra_venta_short != []:
@@ -549,11 +583,6 @@ def limpiar_parejas_long():
                 ti = time.time()
                 
                 # Obtener tamaño de la posición long
-                if inverso:
-                    posiciones = inverse.obtener_posicion(exchange, activo)
-                else:
-                    posiciones = future.obtener_posicion(exchange, activo)
-                
                 size_long = "0"
                 for posicion in posiciones:
                     
@@ -569,10 +598,6 @@ def limpiar_parejas_long():
                             size_long = posicion['positionAmt']
 
                 # Obtener ordenes abiertas
-                if inverso:
-                    ordenes_abiertas = inverse.obtener_ordenes(exchange, activo)
-                else:
-                    ordenes_abiertas = future.obtener_ordenes(exchange, activo)
 
                 actualizar_pareja_long(exchange=exchange, symbol=activo)
                 for pareja in parejas_compra_venta:
@@ -616,19 +641,19 @@ def limpiar_parejas_long():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*pareja['compra']['price'] <= float(orden['price']) <= 1.001*pareja['compra']['price'] and orden['side'].upper() == "BUY" and not(orden['reduceOnly']):
+                                if 0.999*float(pareja['compra']['price']) <= float(orden['price']) <= 1.001*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']):
                                     orden_puesta = True
                                 
                                 if exchange == "BYBIT":
                                     # Verificar si hay una orden condicional
                                     if orden['triggerPrice'] != "":
-                                        if 0.999*pareja['compra']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['compra']['price'] and orden['side'].upper() == "BUY" and not(orden['reduceOnly']) :
+                                        if 0.999*float(pareja['compra']['price']) <= float(orden['triggerPrice']) <= 1.001*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']) :
                                             orden_puesta = True
                                 
                                 if exchange == "BINANCE":
                                     # Verificar si hay una orden condicional
                                     if orden['stopPrice'] != "":
-                                        if 0.999*pareja['compra']['price'] <= float(orden['stopPrice']) <= 1.001*pareja['compra']['price'] and orden['side'] == "BUY" and not(orden['reduceOnly']) :
+                                        if 0.999*float(pareja['compra']['price']) <= float(orden['stopPrice']) <= 1.001*float(pareja['compra']['price']) and orden['side'] == "BUY" and not(orden['reduceOnly']) :
                                             orden_puesta = True
                             
                             if not(orden_puesta):
@@ -641,7 +666,9 @@ def limpiar_parejas_long():
                                         print("Pareja long removida!", pareja)
                                         print("")
                                         
-                
+                if time.time()-ti < retraso_api:
+                    time.sleep(retraso_api)
+
                 if time.time()-ti > 60:
                     print("Parejas Long limpias", round(time.time()-ti, 2), "segundos")
                     print("")
@@ -658,7 +685,7 @@ def limpiar_parejas_short():
     try:
 
         # Variables globales
-        global parejas_compra_venta, parejas_compra_venta_short
+        global parejas_compra_venta, parejas_compra_venta_short, posiciones, ordenes_abiertas
         
         while iniciar_estrategia:
             if parejas_compra_venta != [] or parejas_compra_venta_short != []:
@@ -666,11 +693,6 @@ def limpiar_parejas_short():
                 ti = time.time()
                 
                 # Obtener tamaño de la posición short
-                if inverso:
-                    posiciones = inverse.obtener_posicion(exchange, activo)
-                else:
-                    posiciones = future.obtener_posicion(exchange, activo)
-                
                 size_short = "0"
                 for posicion in posiciones:
                     
@@ -685,10 +707,6 @@ def limpiar_parejas_short():
                             size_short = posicion['positionAmt']
 
                 # Obtener ordenes abiertas
-                if inverso:
-                    ordenes_abiertas = inverse.obtener_ordenes(exchange, activo)
-                else:
-                    ordenes_abiertas = future.obtener_ordenes(exchange, activo)
 
                 actualizar_pareja_short(exchange=exchange, symbol=activo)
                 for pareja in parejas_compra_venta_short:
@@ -732,19 +750,19 @@ def limpiar_parejas_short():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*pareja['venta']['price'] <= float(orden['price']) <= 1.001*pareja['venta']['price'] and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
+                                if 0.999*float(pareja['venta']['price']) <= float(orden['price']) <= 1.001*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
                                     orden_puesta = True
                                 
                                 
                                 # Verificar si hay una orden condicional
                                 if exchange == "BYBIT":
                                     if orden['triggerPrice'] != "":
-                                        if 0.999*pareja['venta']['price'] <= float(orden['triggerPrice']) <= 1.001*pareja['venta']['price'] and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
+                                        if 0.999*float(pareja['venta']['price']) <= float(orden['triggerPrice']) <= 1.001*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
                                             orden_puesta = True
                                 
                                 if exchange == "BINANCE":
                                     if orden['stopPrice'] != "":
-                                        if 0.999*pareja['venta']['price'] <= float(orden['stopPrice']) <= 1.001*pareja['venta']['price'] and orden['side'] == "SELL" and not(orden['reduceOnly']):
+                                        if 0.999*float(pareja['venta']['price']) <= float(orden['stopPrice']) <= 1.001*float(pareja['venta']['price']) and orden['side'] == "SELL" and not(orden['reduceOnly']):
                                             orden_puesta = True
                             
                             if not(orden_puesta):
@@ -756,6 +774,9 @@ def limpiar_parejas_short():
                                         parejas_compra_venta_short.remove(pareja)
                                         print("Pareja short removida!", pareja)
                                         print("")
+                
+                if time.time()-ti < retraso_api:
+                    time.sleep(retraso_api)
                 
                 if time.time()-ti > 60:
                     print("Parejas short limpias", round(time.time()-ti, 2), "segundos")
@@ -793,22 +814,22 @@ def ordenes_compra(exchange, symbol):
                     if not(pareja["venta"]['ejecutada']):
 
                         # Verificar la orden limite
-                        if 0.999*pareja["compra"]['price'] < prox_compra < 1.001*pareja["compra"]['price']:
+                        if 0.999*float(pareja["compra"]['price']) < prox_compra < 1.001*float(pareja["compra"]['price']):
                             orden_compra_puesta = True
                             
                         # Verificar la orden condicional
-                        if 0.999*pareja["compra"]['price'] < prox_venta < 1.001*pareja["compra"]['price']:
+                        if 0.999*float(pareja["compra"]['price']) < prox_venta < 1.001*float(pareja["compra"]['price']):
                             orden_condicional_compra_puesta = True
                 
                 # Cantidad de cada compra
-                if inverso:
-                    qty = round(cantidad_usdt)
-                else:
-                    qty = round((cantidad_usdt/precio_actual),decimales_moneda)
+                qty = round((cantidad_usdt/precio_actual),decimales_moneda)
                 
                 # Definir la cantidad según el múltiplo
                 if multiplo >= 1:
                     qty = round(qty/multiplo)*multiplo
+                
+                if inverso:
+                    qty = round(cantidad_usdt/lote)
                 
                 orden_compra = None
                 
@@ -819,25 +840,27 @@ def ordenes_compra(exchange, symbol):
                             orden_compra = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
                         else:
                             orden_compra = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
+                        
                         if orden_compra != None:
+                            time.sleep(3.06)
                             parejas_compra_venta.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
-                                                                    "beneficios": 0
+                                                                    "beneficios": "0"
                                                                     },
                                                         "compra": {
                                                                     "orderId": orden_compra['orderId'],
                                                                     "price": orden_compra['price'],
                                                                     "cantidad": orden_compra['qty'],
-                                                                    "monto": orden_compra['qty']*orden_compra['price'],
+                                                                    "monto": str(float(orden_compra['qty'])*float(orden_compra['price'])),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": "",
-                                                                    "price": prox_venta,
+                                                                    "price": str(prox_venta),
                                                                     "cantidad": orden_compra['qty'],
-                                                                    "monto": orden_compra['qty']*prox_venta,
+                                                                    "monto": str(float(orden_compra['qty'])*prox_venta),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -854,25 +877,27 @@ def ordenes_compra(exchange, symbol):
                             orden_compra = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_venta, side="BUY", leverage=apalancamiento)
                         else:
                             orden_compra = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_venta, side="BUY", leverage=apalancamiento)
+                        
                         if orden_compra != None:
+                            time.sleep(3.06)
                             parejas_compra_venta.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
-                                                                    "beneficios": 0
+                                                                    "beneficios": "0"
                                                                     },
                                                         "compra": {
                                                                     "orderId": orden_compra['orderId'],
                                                                     "price": orden_compra['price'],
                                                                     "cantidad": orden_compra['qty'],
-                                                                    "monto": orden_compra['qty']*orden_compra['price'],
+                                                                    "monto": str(float(orden_compra['qty'])*float(orden_compra['price'])),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
                                                         "venta": {
                                                                     "orderId": "",
-                                                                    "price": round(prox_venta*(1+ganancia_grid/100),decimales_precio),
+                                                                    "price": str(round(prox_venta*(1+ganancia_grid/100),decimales_precio)),
                                                                     "cantidad": orden_compra['qty'],
-                                                                    "monto": orden_compra['qty']*round(prox_venta*(1+ganancia_grid/100),decimales_precio),
+                                                                    "monto": str(float(orden_compra['qty'])*round(prox_venta*(1+ganancia_grid/100),decimales_precio)),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -881,7 +906,7 @@ def ordenes_compra(exchange, symbol):
                                                                     }
                                                         })
                             actualizar_pareja_long(exchange=exchange, symbol=symbol)
-                
+            
                 # Imprimir cambios
                 if orden_compra != None:
                     print("Grid Actual:")
@@ -901,42 +926,50 @@ def ordenes_compra(exchange, symbol):
 def ordenes_venta(exchange, symbol):
     try:
         while iniciar_estrategia:
-            
-            # Colocar la orden de compra
-            for compra_venta in parejas_compra_venta:
-                if compra_venta["compra"]['ejecutada'] and compra_venta["venta"]['orderId'] == "":
+
+            ti = time.time()
                         
-                    # Obtener posiciones
-                    if inverso:
-                        posiciones = inverse.obtener_posicion(exchange, activo)
-                    else:
-                        posiciones = future.obtener_posicion(exchange, activo)
+            # Obtener posiciones
+            if inverso:
+                posiciones = inverse.obtener_posicion(exchange, activo)
+            else:
+                posiciones = future.obtener_posicion(exchange, activo)
+            
+            # Obtener el tamaño y el precio de la posición
+            size = "0"
+            for posicion in posiciones:
+                
+                if exchange == "BYBIT":
+                    if posicion['positionIdx'] == 0:
+                        size = posicion['size']
+                        avgPrice = float(posicion['avgPrice'])
+                    if posicion['positionIdx'] == 1:
+                        size = posicion['size']
+                        avgPrice = float(posicion['avgPrice'])
+
+                if exchange == "BINANCE":
+                    if posicion['positionSide'] == "LONG":
+                        size = posicion['positionAmt']
+                        avgPrice = float(posicion['entryPrice'])
                     
-                    # Obtener el tamaño y el precio de la posición
-                    size = "0"
-                    for posicion in posiciones:
-                        if exchange == "BYBIT":
-                            if posicion['positionIdx'] == 0:
-                                size = posicion['size']
-                                avgPrice = float(posicion['avgPrice'])
-                            if posicion['positionIdx'] == 1:
-                                size = posicion['size']
-                                avgPrice = float(posicion['avgPrice'])
-                    
-                    if size != "0":
+            if size != "0" and posiciones != []:
+            
+                # Colocar la orden de compra
+                for compra_venta in parejas_compra_venta:
+                    if compra_venta["compra"]['ejecutada'] and compra_venta["venta"]['orderId'] == "":
                         
                         # Colocar TP
                         orden = None
-                        if precio_actual < compra_venta["venta"]['price']: #> 1.0011*avgPrice:
+                        if precio_actual < float(compra_venta["venta"]['price']): #> 1.0011*avgPrice:
                             if inverso:
-                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=str(compra_venta["venta"]['cantidad']))
+                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=compra_venta["venta"]['cantidad'])
                             else:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT",tpSize=str(compra_venta["venta"]['cantidad']))
-                        if precio_actual > compra_venta["venta"]['price']: #> 1.0011*avgPrice:
+                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=compra_venta["venta"]['cantidad'])
+                        if precio_actual > float(compra_venta["venta"]['price']): #> 1.0011*avgPrice:
                             if inverso:
-                                orden = inverse.cerrar_posicion(exchange, activo, "long", size=str(compra_venta["venta"]['cantidad']))['result']
+                                orden = inverse.cerrar_posicion(exchange, activo, "long", size=compra_venta["venta"]['cantidad'])['result']
                             else:
-                                orden = future.cerrar_posicion(exchange, activo, "long", size=str(compra_venta["venta"]['cantidad']))['result']
+                                orden = future.cerrar_posicion(exchange, activo, "long", size=compra_venta["venta"]['cantidad'])['result']
                         
                         # Colocar SL
                         '''
@@ -960,6 +993,9 @@ def ordenes_venta(exchange, symbol):
                             print("")
                             #print(json.dumps(parejas_compra_venta,indent=2))
 
+            if time.time()-ti < retraso_api:
+                time.sleep(retraso_api)
+    
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_venta()")
         print(e)
@@ -992,18 +1028,22 @@ def ordenes_venta_short(exchange, symbol):
                         if not(pareja["compra"]['ejecutada']):
                         
                             # Verificar orden limite
-                            if 0.999*pareja["venta"]['price'] < prox_venta < 1.001*pareja["venta"]['price']:
+                            if 0.999*float(pareja["venta"]['price']) < prox_venta < 1.001*float(pareja["venta"]['price']):
                                 orden_venta_puesta = True
                                 
                             # Verificar orden condicional
-                            if 0.999*pareja["venta"]['price'] < prox_compra < 1.001*pareja["venta"]['price']:
+                            if 0.999*float(pareja["venta"]['price']) < prox_compra < 1.001*float(pareja["venta"]['price']):
                                 orden_condicional_venta_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt_short/precio_actual),decimales_moneda)
+                
                 # Definir la cantidad según el múltiplo
                 if multiplo >= 1:
                     qty = round(qty/multiplo)*multiplo
+                
+                if inverso:
+                    qty = round(cantidad_usdt_short/lote)
                 
                 orden_venta = None
                 
@@ -1016,16 +1056,17 @@ def ordenes_venta_short(exchange, symbol):
                             orden_venta = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
                         
                         if orden_venta != None:
+                            time.sleep(3.06)
                             parejas_compra_venta_short.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
-                                                                    "beneficios": 0
+                                                                    "beneficios": "0"
                                                                     },
                                                         "compra": {
                                                                     "orderId": "",
-                                                                    "price": prox_compra,
+                                                                    "price": str(prox_compra),
                                                                     "cantidad": orden_venta['qty'],
-                                                                    "monto": orden_venta['qty']*prox_compra,
+                                                                    "monto": str(float(orden_venta['qty'])*prox_compra),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -1033,7 +1074,7 @@ def ordenes_venta_short(exchange, symbol):
                                                                     "orderId": orden_venta['orderId'],
                                                                     "price": orden_venta['price'],
                                                                     "cantidad": orden_venta['qty'],
-                                                                    "monto": orden_venta['qty']*orden_venta['price'],
+                                                                    "monto": str(float(orden_venta['qty'])*float(orden_venta['price'])),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -1052,16 +1093,17 @@ def ordenes_venta_short(exchange, symbol):
                             orden_venta = future.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_compra, side="SELL", leverage=apalancamiento)
                         
                         if orden_venta != None:
+                            time.sleep(3.06)
                             parejas_compra_venta_short.insert(0,{
                                                         "general": {
                                                                     "fecha": datetime.now().strftime("%Y-%m-%d - %I:%M:%S %p"),
-                                                                    "beneficios": 0
+                                                                    "beneficios": "0"
                                                                     },
                                                         "compra": {
                                                                     "orderId": "",
-                                                                    "price": round(prox_compra/(1+ganancia_grid/100),decimales_precio),
+                                                                    "price": str(round(prox_compra/(1+ganancia_grid/100),decimales_precio)),
                                                                     "cantidad": orden_venta['qty'],
-                                                                    "monto": orden_venta['qty']*round(prox_compra/(1+ganancia_grid/100),decimales_precio),
+                                                                    "monto": str(float(orden_venta['qty'])*round(prox_compra/(1+ganancia_grid/100),decimales_precio)),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -1069,7 +1111,7 @@ def ordenes_venta_short(exchange, symbol):
                                                                     "orderId": orden_venta['orderId'],
                                                                     "price": orden_venta['price'],
                                                                     "cantidad": orden_venta['qty'],
-                                                                    "monto": orden_venta['qty']*orden_venta['price'],
+                                                                    "monto": str(float(orden_venta['qty'])*float(orden_venta['price'])),
                                                                     "ejecutada": False,
                                                                     "fecha_ejecucion" : "-"
                                                                     },
@@ -1098,30 +1140,38 @@ def ordenes_venta_short(exchange, symbol):
 def ordenes_compra_short(exchange, symbol):
     try:
         while iniciar_estrategia:
-            
-            # Colocar la orden de compra y actualiza la pareja de compra_veta
-            for compra_venta in parejas_compra_venta_short:
-                if compra_venta["venta"]['ejecutada'] and compra_venta["compra"]['orderId'] == "":
+
+            ti = time.time()
                             
-                    # Obtener posiciones
-                    if inverso:
-                        posiciones = inverse.obtener_posicion(exchange, activo)
-                    else:
-                        posiciones = future.obtener_posicion(exchange, activo)
-                    
-                    # Obtener el tamaño y el precio de la posición
-                    size = "0"
-                    for posicion in posiciones:
-                        if exchange == "BYBIT":
-                            if posicion['positionIdx'] == 0:
-                                size = posicion['size']
-                                avgPrice = float(posicion['avgPrice'])
-                            if posicion['positionIdx'] == 2:
-                                size = posicion['size']
-                                avgPrice = float(posicion['avgPrice'])
-                    
-                    # Colocar el SL y el TP solo si existe una posición
-                    if size != "0":
+            # Obtener posiciones
+            if inverso:
+                posiciones = inverse.obtener_posicion(exchange, activo)
+            else:
+                posiciones = future.obtener_posicion(exchange, activo)
+            
+            # Obtener el tamaño y el precio de la posición
+            size = "0"
+            for posicion in posiciones:
+                
+                if exchange == "BYBIT":
+                    if posicion['positionIdx'] == 0:
+                        size = posicion['size']
+                        avgPrice = float(posicion['avgPrice'])
+                    if posicion['positionIdx'] == 2:
+                        size = posicion['size']
+                        avgPrice = float(posicion['avgPrice'])
+                
+                if exchange == "BINANCE":
+                    if posicion['positionSide'] == "SHORT":
+                        size = posicion['positionAmt']
+                        avgPrice = float(posicion['entryPrice'])
+            
+            # Colocar el SL y el TP solo si existe una posición
+            if size != "0" and posiciones != []:
+            
+                # Colocar la orden de compra y actualiza la pareja de compra_veta
+                for compra_venta in parejas_compra_venta_short:
+                    if compra_venta["venta"]['ejecutada'] and compra_venta["compra"]['orderId'] == "":
                             
                         # Colocar SL
                         '''
@@ -1138,16 +1188,16 @@ def ordenes_compra_short(exchange, symbol):
                         
                         # Colocar TP
                         orden = None
-                        if precio_actual > compra_venta["compra"]['price']: #< 0.999*avgPrice:
+                        if precio_actual > float(compra_venta["compra"]['price']): #< 0.999*avgPrice:
                             if inverso:
-                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=str(compra_venta["compra"]['cantidad']))
+                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=compra_venta["compra"]['cantidad'])
                             else:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=str(compra_venta["compra"]['cantidad']))
-                        if precio_actual < compra_venta["compra"]['price']: #< 0.999*avgPrice:
+                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=compra_venta["compra"]['cantidad'])
+                        if precio_actual < float(compra_venta["compra"]['price']): #< 0.999*avgPrice:
                             if inverso:
-                                orden = inverse.cerrar_posicion(exchange, activo, "short", size=str(compra_venta["compra"]['cantidad']))['result']
+                                orden = inverse.cerrar_posicion(exchange, activo, "short", size=compra_venta["compra"]['cantidad'])['result']
                             else:
-                                orden = future.cerrar_posicion(exchange, activo, "short", size=str(compra_venta["compra"]['cantidad']))['result']
+                                orden = future.cerrar_posicion(exchange, activo, "short", size=compra_venta["compra"]['cantidad'])['result']
                             
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
@@ -1158,6 +1208,9 @@ def ordenes_compra_short(exchange, symbol):
                             print("")
                             #print(json.dumps(parejas_compra_venta_short,indent=2))
 
+                    if time.time()-ti < retraso_api:
+                        time.sleep(retraso_api)
+                        
     except Exception as e:
         print("ERROR EN LA FUNCION ordenes_venta()")
         print(e)
@@ -1172,7 +1225,7 @@ def margen():
 
         # Verificar si no hay margen disponible para la compra
         if inverso:
-            margen_disponible = inverse.margen_disponible(exchange,activo)*apalancamiento
+            margen_disponible = inverse.margen_disponible(exchange,activo)*apalancamiento*precio_actual
         else:
             margen_disponible = future.margen_disponible(exchange)*apalancamiento
         
@@ -1265,10 +1318,13 @@ def mostrar_lista(data):
         else:
             draw.text((10, 10), f" - INFINITY  Future - {activo.upper()} - {datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p')} -", font=font, fill=text_color)
         draw.text((10, 30), f"Balance inicial:", font=font, fill=text_color)
-        draw.text((180, 30), f"{round(balance_inicial,2)} USDT", font=font, fill=text_color)
+        if inverso:
+            draw.text((180, 30), f"{round(balance_inicial,decimales_moneda)} {activo}", font=font, fill=text_color)
+        else:
+            draw.text((180, 30), f"{round(balance_inicial,2)} USDT", font=font, fill=text_color)
         draw.text((10, 50), f"Balance actual:", font=font, fill=text_color)
         if inverso:
-            draw.text((180, 50), f"{round(inverse.patrimonio(exchange,activo),2)} USDT", font=font, fill=text_color)
+            draw.text((180, 50), f"{round(inverse.patrimonio(exchange,activo),decimales_moneda)} {activo}", font=font, fill=text_color)
         else:
             draw.text((180, 50), f"{round(future.patrimonio(exchange),2)} USDT", font=font, fill=text_color)
         
@@ -1276,12 +1332,15 @@ def mostrar_lista(data):
         parejas_completadas = 0
         if data != []:
             for pareja in data:
-                ganancias_grid = ganancias_grid + pareja['general']['beneficios']
+                ganancias_grid = ganancias_grid + float(pareja['general']['beneficios'])
                 if pareja['compra']['ejecutada'] and pareja['venta']['ejecutada']:
                     parejas_completadas = parejas_completadas + 1
 
         draw.text((10, 70), f"Ganancias del grid:", font=font, fill=text_color)
-        draw.text((180, 70), f"{round(ganancias_grid,3)} USDT ({round(100*ganancias_grid/balance_inicial,2)}%) ({parejas_completadas}/{len(data)})", font=font, fill=greenlight_color)
+        if inverso:
+            draw.text((180, 70), f"{round(ganancias_grid,decimales_moneda)} {activo} ({round(100*ganancias_grid/balance_inicial,2)}%) ({parejas_completadas}/{len(data)})", font=font, fill=greenlight_color)
+        else:
+            draw.text((180, 70), f"{round(ganancias_grid,3)} USDT ({round(100*ganancias_grid/balance_inicial,2)}%) ({parejas_completadas}/{len(data)})", font=font, fill=greenlight_color)
 
         ganancia = ganancia_actual()
         if ganancia >= 0:
@@ -1289,19 +1348,25 @@ def mostrar_lista(data):
         else:
             color_ganancias = redlight_color
         draw.text((10, 90), f"Ganancia actual:", font=font, fill=text_color)
-        draw.text((180, 90), f"{round(balance_inicial*ganancia/100,3)} USDT ({round(ganancia,2)}%) ({round(riesgo_max,2)}%)", font=font, fill=color_ganancias)
+        if inverso:
+            draw.text((180, 90), f"{round(balance_inicial*ganancia/100,decimales_moneda)} {activo} ({round(ganancia,2)}%) ({round(riesgo_max,2)}%)", font=font, fill=color_ganancias)
+        else:
+            draw.text((180, 90), f"{round(balance_inicial*ganancia/100,3)} USDT ({round(ganancia,2)}%) ({round(riesgo_max,2)}%)", font=font, fill=color_ganancias)
 
         if data != []:
             y_text = 120
             for item in data:
                 general = item['general']
-                compra = item['compra']
+                compra = (item['compra'])
                 venta = item['venta']
 
                 draw.text((10, y_text), f"----------------------------------------------------------------------------------------------", font=font, fill=text_color)
                 y_text += 20
                 draw.text((10, y_text), f"{general['fecha']}", font=font, fill=text_color)
-                draw.text((180, y_text), f"+{round(general['beneficios'],3)}", font=font, fill=greenlight_color)
+                if inverso:
+                    draw.text((180, y_text), f"+{round(float(general['beneficios']),decimales_moneda)} {activo}", font=font, fill=greenlight_color)
+                else:
+                    draw.text((180, y_text), f"+{round(float(general['beneficios']),3)} USDT", font=font, fill=greenlight_color)
                 y_text += 20
                 draw.text((10, y_text), f"Compra Limit", font=font, fill=greenlight_color)
                 draw.text((180, y_text), f"Venta Limit", font=font, fill=redlight_color)
@@ -1309,11 +1374,15 @@ def mostrar_lista(data):
                 draw.text((10, y_text), f"Precio: {compra['price']} USDT", font=font, fill=text_color)
                 draw.text((180, y_text), f"Precio: {venta['price']} USDT", font=font, fill=text_color)
                 y_text += 20
-                draw.text((10, y_text), f"Cantidad: {compra['cantidad']} {activo.upper()}", font=font, fill=text_color)
-                draw.text((180, y_text), f"Cantidad: {venta['cantidad']} {activo.upper()}", font=font, fill=text_color)
+                if inverso:
+                    draw.text((10, y_text), f"Cantidad: {round(float(compra['cantidad'])*lote/precio_actual,decimales_moneda)} {activo.upper()}", font=font, fill=text_color)
+                    draw.text((180, y_text), f"Cantidad: {round(float(venta['cantidad'])*lote/precio_actual,decimales_moneda)} {activo.upper()}", font=font, fill=text_color)
+                else:
+                    draw.text((10, y_text), f"Cantidad: {compra['cantidad']} {activo.upper()}", font=font, fill=text_color)
+                    draw.text((180, y_text), f"Cantidad: {venta['cantidad']} {activo.upper()}", font=font, fill=text_color)
                 y_text += 20
-                draw.text((10, y_text), f"Monto: {round(compra['monto'],3)} USDT", font=font, fill=text_color)
-                draw.text((180, y_text), f"Monto: {round(venta['monto'],3)} USDT", font=font, fill=text_color)
+                draw.text((10, y_text), f"Monto: {round(float(compra['monto']),3)} USDT", font=font, fill=text_color)
+                draw.text((180, y_text), f"Monto: {round(float(venta['monto']),3)} USDT", font=font, fill=text_color)
                 y_text += 20
                 draw.text((10, y_text), f"{'Ejecutada' if compra['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
                 draw.text((180, y_text), f"{'Ejecutada' if venta['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
@@ -1332,7 +1401,7 @@ def mostrar_lista(data):
         #image.show()
 
         tf = time.time()
-        if tf-ti > 5.4:
+        if tf-ti > 10.8:
             print(f"Parejas mostradas en {tf-ti} Segundos")
             print("")
 
@@ -1369,14 +1438,13 @@ def imprimir_parejas():
 # -----------------------------------------------------
 def ganancia_actual():
     try:
-        
+        # Variables globales
+        global posiciones
+
         # Obtener posiciones
-        if inverso:
-            posiciones = inverse.obtener_posicion(exchange, activo)
-        else:
-            posiciones = future.obtener_posicion(exchange, activo)
         size = 0
         for posicion in posiciones:
+            
             if exchange == "BYBIT":
                 if posicion['positionIdx'] == 0:
                     size = size + float(posicion['size'])
@@ -1384,11 +1452,20 @@ def ganancia_actual():
                     size = size + float(posicion['size'])
                 if posicion['positionIdx'] == 2:
                     size = size + float(posicion['size'])
+            
+            if exchange == "BINANCE":
+                if posiciones != []:
+                    if posicion['positionSide'] == "LONG":
+                        size = size + float(posicion['positionAmt'])
+                    if posicion['positionSide'] == "SHORT":
+                        size = size + float(posicion['positionAmt'])
         
         # Comisión por cierre a market
-        comision_cierre = 0.001
+        comision_cierre = 0.1/100
         if exchange == "BYBIT":
-            comision_cierre = 0.001
+            comision_cierre = 0.1/100
+        if exchange == "BINANCE":
+            comision_cierre = 0.1/100
         
         if inverso:
             return 100*((inverse.patrimonio(exchange,activo)-size*comision_cierre) - balance_inicial)/balance_inicial
@@ -1422,7 +1499,6 @@ def cerrar_todo():
         for posicion in posiciones:
             
             if exchange == "BYBIT":
-                
                 # Long
                 if posicion['positionIdx'] == 0 and posicion['side'] == "Buy":
                     if posicion['size'] != "0":
@@ -1451,6 +1527,24 @@ def cerrar_todo():
                             inverse.cerrar_posicion(exchange, activo, "SHORT")
                         else:
                             future.cerrar_posicion(exchange, activo, "SHORT")
+            
+            if exchange == "BINANCE":
+                if posiciones != []:
+                    # Long
+                    if posicion['positionSide'] == "LONG":
+                        if posicion['notional'] != "0":
+                            if inverso:
+                                inverse.cerrar_posicion(exchange, activo, "LONG")
+                            else:
+                                future.cerrar_posicion(exchange, activo, "LONG")
+                    # Short
+                    if posicion['positionSide'] == "SHORT":
+                        if posicion['notional'] != "0":
+                            if inverso:
+                                inverse.cerrar_posicion(exchange, activo, "SHORT")
+                            else:
+                                future.cerrar_posicion(exchange, activo, "SHORT")
+        
         print("ORDENES Y POSICIONES CERRADAS!")
         print("")
     
@@ -1467,28 +1561,34 @@ def detener_estrategia():
     try:
 
         # Variables globales
-        global iniciar_estrategia, riesgo_max, pausa, balance_inicial
+        global iniciar_estrategia, riesgo_max, pausa, balance_inicial, parejas_compra_venta, parejas_compra_venta_short
 
+        ti = time.time()
+
+        # Ganancia actual
+        beneficio = ganancia_actual()
+        
         # Riesgo máximo alcanzado
-        riesgo_actual = ganancia_actual()
-        if 0 > riesgo_actual < riesgo_max:
-            riesgo_max = riesgo_actual
+        if 0 > beneficio < riesgo_max:
+            riesgo_max = beneficio
 
         # Ganancias del grid long
         ganancias_grid = 0
         if parejas_compra_venta != []:
             for pareja in parejas_compra_venta:
-                ganancias_grid = ganancias_grid + pareja['general']['beneficios']
+                ganancias_grid = ganancias_grid + float(pareja['general']['beneficios'])
         
         # Ganancias del grid short
         ganancias_grid_short = 0
         if parejas_compra_venta_short != []:
             for pareja in parejas_compra_venta_short:
-                ganancias_grid_short = ganancias_grid_short + pareja['general']['beneficios']
+                ganancias_grid_short = ganancias_grid_short + float(pareja['general']['beneficios'])
 
         # Detener estrategia por Take Profit
-        if ((ganancia_actual() > tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > tp) or ganancia_actual() > tp) and tp > 0:
+        if ((beneficio > tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > tp) or beneficio > tp) and tp > 0:
             pausa = True
+            parametros['pausa'] = True
+            json.dump(parametros, open(parametros_copia, "w"), indent=4)
             cerrar_todo()
             mostrar_lista(parejas_compra_venta)
             mostrar_lista(parejas_compra_venta_short)
@@ -1498,16 +1598,23 @@ def detener_estrategia():
             if inverso:
                 balance_inicial = inverse.patrimonio(exchange=exchange,symbol=activo)  
             else:
-                balance_inicial = future.patrimonio(exchange=exchange) 
+                balance_inicial = future.patrimonio(exchange=exchange)
+            # Inicializar las listas de parejas
+            parejas_compra_venta = []
+            parejas_compra_venta_short = []
 
         # Detener estrategia por Stop Loss    
-        if ganancia_actual() <= (-1)*(0.9*sl) and sl > 0:
+        if beneficio <= (-1)*(0.9*sl) and sl > 0:
             iniciar_estrategia = False
             cerrar_todo()
             mostrar_lista(parejas_compra_venta)
             mostrar_lista(parejas_compra_venta_short)
             print("ESTRATEGIA DETENIDA POR SL!!!")
             print("")
+
+        # Retraso por hiperactividad
+        if time.time()-ti < retraso_api:
+            time.sleep(retraso_api)
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN detener_estrategia()")
@@ -1696,7 +1803,10 @@ def detectar_tendencia(exchange, symbol):
 def direccion():
     try:
 
-        # Ganancia del grid
+        # Variables globales
+        global cantidad_usdt, cantidad_usdt_short, libro
+
+        # Invertir ganancias del grid
         if ganancia_grid_long > ganancia_grid_short:
             mayor = ganancia_grid_long
             menor = ganancia_grid_short
@@ -1705,29 +1815,31 @@ def direccion():
             menor = ganancia_grid_long
         
         # Cambiar la dirección a LONG
-        if tendencia_detector[0] == "ALCISTA":
+        if libro == "LONG" or (tendencia_detector[0] == "ALCISTA" and libro == ""):
             if tipo != "LONG":
                 if auto:
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "LONG"
-                    parametros['ganancia_long'] = mayor
-                    parametros['ganancia_short'] = menor
+                    if invertir_ganancias_grid:
+                        parametros['ganancia_long'] = mayor
+                        parametros['ganancia_short'] = menor
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a SHORT
-        if tendencia_detector[0] == "BAJISTA":
+        if libro == "SHORT" or (tendencia_detector[0] == "BAJISTA" and libro == ""):
             if tipo != "SHORT":
                 if auto:
                     print("Cambio de tendencia!", tendencia_detector[0])
                     print("")
                     parametros['direccion'] = "SHORT"
-                    parametros['ganancia_long'] = menor
-                    parametros['ganancia_short'] = mayor
+                    if invertir_ganancias_grid:
+                        parametros['ganancia_long'] = menor
+                        parametros['ganancia_short'] = mayor
                     json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
         # Cambiar la dirección a RANGO
-        if tendencia_detector[0] == "RANGO":
+        if tendencia_detector[0] == "RANGO" and libro == "":
             if tipo != "":
                 if auto:
                     print("Cambio de tendencia!", tendencia_detector[0])
@@ -1737,9 +1849,17 @@ def direccion():
 
         # Cancelar todas las ordenes short
         if tipo == "LONG":
-            for orden in ordenes_abiertas:  
+            for orden in ordenes_abiertas:
+                
                 if exchange == "BYBIT":
-                    if orden['positionIdx'] == 2 and not(orden['reduceOnly']):
+                    if orden['side'] == "Sell" and not(orden['reduceOnly']):
+                        if inverso:
+                            inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+                        else:
+                            future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+                
+                if exchange == "BINANCE":
+                    if orden['positionSide'] == "SHORT" and not(orden['reduceOnly']):
                         if inverso:
                             inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
                         else:
@@ -1748,45 +1868,21 @@ def direccion():
         # Cancelar todas las ordenes long
         if tipo == "SHORT":
             for orden in ordenes_abiertas:
+                
                 if exchange == "BYBIT":
-                    if orden['positionIdx'] == 1 and not(orden['reduceOnly']):
+                    if orden['side'] == "Buy" and not(orden['reduceOnly']):
                         if inverso:
                             inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
                         else:
                             future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
-    
-        # Libro de ordenes
-        porcentaje_distancia = 0.018 
-        tiempo_espera = 9*60
-        
-        if libro == "LONG" and umbral != 0:
-
-            if precio_actual > (1+porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
-                if not(auto):
-                    parametros['auto'] = True
-                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
-            else:
-                if auto:
-                    parametros['auto'] = False
-                    parametros['direccion'] = "LONG"
-                    parametros['ganancia_long'] = mayor
-                    parametros['ganancia_short'] = menor
-                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
-        
-        if libro == "SHORT" and umbral != 0:
-
-            if precio_actual < (1-porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
-                if not(auto):
-                    parametros['auto'] = True
-                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
-            else:
-                if auto:
-                    parametros['auto'] = False
-                    parametros['direccion'] = "SHORT"
-                    parametros['ganancia_long'] = menor
-                    parametros['ganancia_short'] = mayor
-                    json.dump(parametros, open(parametros_copia, "w"), indent=4)
-
+                
+                if exchange == "BINANCE":
+                    if orden['positionSide'] == "LONG" and not(orden['reduceOnly']):
+                        if inverso:
+                            inverse.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+                        else:
+                            future.cancelar_orden(exchange, activo, orderId=orden['orderId'])
+     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN direccion()")
         print(e)
@@ -1821,6 +1917,14 @@ def equilibrio():
                         avgPrice = float(posicion['avgPrice'])
                         #print("size long", size)
                         #print("")
+
+            if exchange == "BINANCE":
+                if posicion['positionSide'] == "LONG":
+                    if posicion['notional'] != "0":
+                        size = float(posicion['positionAmt'])
+                        avgPrice = float(posicion['entryPrice'])
+                        #print("size long", size)
+                        #print("")
         
         # Sumar todos los TP
         size_tp = 0
@@ -1829,6 +1933,10 @@ def equilibrio():
             if exchange == "BYBIT":
                 if orden['reduceOnly'] and orden['positionIdx'] == 1:
                     size_tp = size_tp + float(orden['qty'])
+            
+            if exchange == "BINANCE":
+                if orden['reduceOnly'] and orden['positionSide'] == "LONG":
+                    size_tp = size_tp + float(orden['origQty'])
         #print("tps long", size_tp)
         #print("")
 
@@ -1854,6 +1962,14 @@ def equilibrio():
                         avgPrice = float(posicion['avgPrice'])
                         #print("size short", size)
                         #print("")
+            
+            if exchange == "BINANCE":
+                if posicion['positionSide'] == "SHORT":
+                    if posicion['notional'] != "0":
+                        size = abs(float(posicion['positionAmt']))
+                        avgPrice = float(posicion['entryPrice'])
+                        #print("size short", size)
+                        #print("")
         
         # Sumar todos los TP
         size_tp = 0
@@ -1862,6 +1978,10 @@ def equilibrio():
             if exchange == "BYBIT":
                 if orden['reduceOnly'] and orden['positionIdx'] == 2:
                     size_tp = size_tp + abs(float(orden['qty']))
+            
+            if exchange == "BINANCE":
+                if orden['reduceOnly'] and orden['positionSide'] == "SHORT":
+                    size_tp = size_tp + float(orden['origQty'])
         #print("tps short", size_tp)
         #print("")
 
@@ -1887,7 +2007,7 @@ def equilibrio():
 #--------------------------------------------
 def auxiliar():
     try:
-        global precio_actual, ordenes_abiertas, cuenta
+        global precio_actual, ordenes_abiertas, posiciones, cuenta, apalancamiento, auto
         
         while iniciar_estrategia:
 
@@ -1905,6 +2025,26 @@ def auxiliar():
             else:
                 ordenes_abiertas = future.obtener_ordenes(exchange, activo)
 
+            # Obtener posiciones
+            if inverso:
+                posiciones = inverse.obtener_posicion(exchange, activo)
+            else:
+                posiciones = future.obtener_posicion(exchange, activo)
+
+            # Patrimonio actual
+            if inverso:
+                cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)*precio_actual
+            else:
+                cuenta = future.patrimonio(exchange=exchange)
+            
+            # Cambiar el apalancamiento
+            if apalancamiento != parametros['apalancamiento']:
+                apalancamiento = parametros['apalancamiento']
+                if inverso:
+                    inverse.apalancamiento(exchange,activo,apalancamiento)
+                else:
+                    future.apalancamiento(exchange,activo,apalancamiento)
+
             # Mantener margen
             margen()
 
@@ -1913,12 +2053,6 @@ def auxiliar():
 
             # Equilibrar posiciones y take profits
             #equilibrio()
-
-            # Patrimonio actual
-            if inverso:
-                cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)
-            else:
-                cuenta = future.patrimonio(exchange=exchange)
 
             if time.time()-ti > 9:
                 print("Funciones auxialeres ejecutadas en:", round(time.time()-ti,2), "Segundos")
@@ -1932,7 +2066,7 @@ def auxiliar():
 
 # # FUNCIÓN QUE CALCULA LA ACUMULACIÓN DE ÓRDENES EN EL LIBRO DE ORDENES DE BINANCE
 # -------------------------------------------------------------------------------
-def order_book(symbol, umbral):
+def order_book(symbol):
     try:
         from binance.client import Client
         import pygame
@@ -1948,6 +2082,8 @@ def order_book(symbol, umbral):
                                     tld="com"
                                 )
 
+        # Variables globales
+        global libro
 
         # FUNCIÓN QUE GENERA UN ARCHIVO DE AUDIO A PARTIR DE UN TEXTO
         #------------------------------------------------------------
@@ -2005,51 +2141,63 @@ def order_book(symbol, umbral):
                 # Definir el simbolo
                 symbol = symbol.upper()
                 
-                # Obtener las ordenes de compra
-                libro_compras = binance_client.futures_order_book(symbol=symbol, limit=1000)['bids']
+                if umbral != 0:
+                
+                    # ALCISTA
+                    # Obtener las ordenes de compra
+                    libro_compras = binance_client.futures_order_book(symbol=symbol, limit=1000)['bids']
 
-                # Decimales de la moneda
-                decimales_moneda = len((libro_compras[0][0]).split(".")[1])
+                    # Decimales de la moneda
+                    decimales_moneda = len((libro_compras[0][0]).split(".")[1])
 
-                cantidad_compra = 0
-                for order in libro_compras:
-                    cantidad_compra = cantidad_compra + float(order[1])
+                    # Sumar la cantidad de ordenes de compra
+                    cantidad_compra = 0
+                    for order in libro_compras:
+                        cantidad_compra = cantidad_compra + float(order[1])
+                   
+                    # Emitir la alerta
+                    if cantidad_compra*precio_actual > 1000000*umbral:
+                        pausa = False
+                        parametros['pausa'] = False
+                        json.dump(parametros, open(parametros_copia, "w"), indent=4)
+                        libro = "LONG"
+                        precio = precio_actual
+                        tiempo = time.time()
+                        print("")
+                        print("Acumulación de ordenes de compra")
+                        print(f"{libro_compras[-1][0]} - {libro_compras[0][0]} ({round(float(libro_compras[0][0]) - float(libro_compras[-1][0]),decimales_moneda)})")
+                        print(int(cantidad_compra), symbol.split("USDT")[0], ",", int(cantidad_compra*precio_actual), "USDT")
+                        print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
+                        print("")
+                        texto_audio(f"Acumulación de órdenes de compra en {symbol.split('USDT')[0]}")
+                        reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
 
-                if cantidad_compra > umbral and umbral != 0:
-                    pausa = False
-                    libro = "LONG"
-                    precio = precio_actual
-                    tiempo = time.time()
-                    print("")
-                    print("Acumulación de ordenes de compra")
-                    print(f"{libro_compras[-1][0]} - {libro_compras[0][0]} ({round(float(libro_compras[0][0]) - float(libro_compras[-1][0]),decimales_moneda)})")
-                    print(int(cantidad_compra), symbol.split("USDT")[0])
-                    print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
-                    print("")
-                    #texto_audio(f"Acumulación de órdenes de compra en {symbol.split('USDT')[0]}")
-                    #reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
+                    # BAJISTA
+                    # Obtener las ordenes de venta
+                    libro_ventas = binance_client.futures_order_book(symbol=symbol, limit=1000)['asks']
 
-                # Obtener las ordenes de venta
-                libro_ventas = binance_client.futures_order_book(symbol=symbol, limit=1000)['asks']
+                    # Sumar la cantidad de ordenes de venta
+                    cantidad_venta = 0
+                    for order in libro_ventas:
+                        cantidad_venta = cantidad_venta + float(order[1])
 
-                cantidad_venta = 0
-                for order in libro_ventas:
-                    cantidad_venta = cantidad_venta + float(order[1])
-
-                if cantidad_venta > umbral and umbral != 0:
-                    pausa = False
-                    libro = "SHORT"
-                    precio = precio_actual
-                    tiempo = time.time()
-                    print("")
-                    print("Acumulación de ordenes de venta")
-                    print(f"{libro_ventas[0][0]} - {libro_ventas[-1][0]} ({round(float(libro_ventas[-1][0]) - float(libro_ventas[0][0]),decimales_moneda)})")
-                    print(int(cantidad_venta), symbol.split("USDT")[0])
-                    print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
-                    print("")
-                    #texto_audio(f"Acumulación de órdenes de venta en {symbol.split('USDT')[0]}")
-                    #reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
-            
+                    # Emitir la alerta
+                    if cantidad_venta*precio_actual > 1000000*umbral:
+                        pausa = False
+                        parametros['pausa'] = False
+                        json.dump(parametros, open(parametros_copia, "w"), indent=4)
+                        libro = "SHORT"
+                        precio = precio_actual
+                        tiempo = time.time()
+                        print("")
+                        print("Acumulación de ordenes de venta")
+                        print(f"{libro_ventas[0][0]} - {libro_ventas[-1][0]} ({round(float(libro_ventas[-1][0]) - float(libro_ventas[0][0]),decimales_moneda)})")
+                        print(int(cantidad_venta), symbol.split("USDT")[0], ",", int(cantidad_venta*precio_actual), "USDT")
+                        print(datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p'))
+                        print("")
+                        texto_audio(f"Acumulación de órdenes de venta en {symbol.split('USDT')[0]}")
+                        reproducir_audio("future/estrategias/infinity/salida/alerta_voz.mp3")
+                
             except Exception as e:
                 print("ERROR EN LA FUNCIÓN alerta_ordenes()")
                 print(e)
@@ -2057,11 +2205,29 @@ def order_book(symbol, umbral):
         # ---------------------------------------------------------------------------------------------
 
         print(f"Monitoreo del Order Book de {symbol}")
-        print("")
+        print("")        
+            
 
+        porcentaje_distancia = 0.018 
+        tiempo_espera = 9*60
         while True:
+
+            ti = time.time()
+
             alerta_ordenes(symbol=symbol+"USDT",umbral=umbral)
-            time.sleep(3.06)
+            
+            # Detener el libro
+            if libro == "LONG":
+                if precio_actual > (1+porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
+                    libro = ""
+            
+            if libro == "SHORT":
+                if precio_actual < (1-porcentaje_distancia)*precio or time.time()-tiempo > tiempo_espera:
+                    libro = ""
+            
+            time.sleep(5.4)
+            if time.time() - ti < retraso_api:
+                time.sleep(retraso_api)
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN order_book()")
@@ -2070,7 +2236,10 @@ def order_book(symbol, umbral):
 # -------------------------------------------------------------------------------
 
 # Balance inicial
-balance_inicial = cuenta
+if inverso:
+    balance_inicial = inverse.patrimonio(exchange=exchange,symbol=activo)
+else:
+    balance_inicial = future.patrimonio(exchange=exchange)
 
 # Iniciar estrategia
 iniciar_estrategia = False
@@ -2084,9 +2253,13 @@ else:
 
 # Margen disponible
 if inverso:
-    margen_disponible = future.margen_disponible(exchange)*apalancamiento
+    margen_disponible = future.margen_disponible(exchange)*apalancamiento*precio_actual
 else:
     margen_disponible = future.margen_disponible(exchange)*apalancamiento
+
+# Inicializar posiciones y ordenes abiertas
+posiciones = []
+ordenes_abiertas = []
             
 # Decimales del precio
 decimales_precio = len(str(precio_actual).split(".")[-1])
@@ -2096,10 +2269,12 @@ if precio_actual < 2:
     decimales_moneda = 0
 if 2 < precio_actual < 100:
     decimales_moneda = 1
-if 100 < precio_actual < 5000:
+if 100 < precio_actual < 1000:
     decimales_moneda = 2
-if precio_actual > 5000:
+if 1000 < precio_actual < 5000:
     decimales_moneda = 3
+if precio_actual > 5000:
+    decimales_moneda = 4
 
 # Definir el multiplo
 multiplo = 0
@@ -2136,11 +2311,8 @@ hilo_actualizar_grid = threading.Thread(target=actualizar_grid)
 hilo_actualizar_grid.daemon = True
 hilo_actualizar_grid.start()
 
-# Cantidad de cada compra en USDT
-cantidad_usdt, cantidad_usdt_short = parametros()
-
 # Iniciar estrategia
-iniciar_estrategia = True
+iniciar_estrategia = parametros()
 
 # Iniciar hilo del precio actual
 if inverso:
@@ -2211,7 +2383,7 @@ precio = 0
 tiempo = 0
 
 # Iniciar Hilo que monitorea el libro de ordenes de Binance
-hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,umbral))
+hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,))
 hilo_libro_ordenes.daemon = True
 hilo_libro_ordenes.start()
 
@@ -2222,33 +2394,26 @@ hilo_auxiliar.start()
 
 while iniciar_estrategia:
     try:
+        ti = time.time()
 
         # PARAMETROS DE LA ESTRATEGIA
         # ---------------------------
-        parametros = json.load(open(parametros_copia, "r"))                                                 # Abrir el archivo parametros.json y cargar su contenido
-        if apalancamiento != parametros['apalancamiento']:
-            apalancamiento = parametros['apalancamiento']                                                           # Se recomienda un apalancamiento muy bajo para esta estrategia (<=3x)
-            if inverso:
-                inverse.apalancamiento(exchange,activo,apalancamiento)
-            else:
-                future.apalancamiento(exchange,activo,apalancamiento)
+        parametros = json.load(open(parametros_copia, "r"))
         precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-        ganancia_grid = float(parametros['distancia_grid'])+0.11                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+        ganancia_grid = float(parametros['distancia_grid'])+0.155                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
         tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
         sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
         tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
-        if inverso and exchange == "BYBIT":
-            auto = False
-        else:
-            auto = parametros['auto']
         pausa = parametros['pausa']
         ganancia_grid_long = float(parametros['ganancia_long'])                                               # Ganancias por cada grid long
         ganancia_grid_short = float(parametros['ganancia_short'])                                                # Ganancias por cada grid short
+        invertir_ganancias_grid = parametros['invertir_ganancias_grid']
         cantidad_usdt = cuenta*ganancia_grid_long/parametros['distancia_grid']                              # Importe en USDT para cada compra del long
         cantidad_usdt_short = cuenta*ganancia_grid_short/parametros['distancia_grid']                       # Importe en USDT para cada compra del short
         condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
         condicional_short = parametros['condicional_short']                                                 # Activar condicional de SHORT
         umbral = parametros['umbral_libro']
+        auto = parametros['auto']
         # ---------------------------
             
         # Consultar precio actual
@@ -2307,7 +2472,7 @@ while iniciar_estrategia:
 
         # Verificar que el hilo libro ordenes este activo
         if not(hilo_libro_ordenes.is_alive()):
-            hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,umbral))
+            hilo_libro_ordenes = threading.Thread(target=order_book, args=(activo,))
             hilo_libro_ordenes.daemon = True
             hilo_libro_ordenes.start()
 
@@ -2347,6 +2512,11 @@ while iniciar_estrategia:
                 hilo_ordenes_compra_short.daemon = True
                 hilo_ordenes_compra_short.start()
     
+
+        # Retraso por hiperactividad
+        if time.time() - ti < retraso_api:
+            time.sleep(retraso_api)
+
     except Exception as e:
         print("ERROR EN EL PROGRAMA PRINCIPAL")
         print(e)
