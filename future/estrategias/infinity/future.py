@@ -254,7 +254,7 @@ def obtener_ordenes(exchange, symbol, orderId=""):
 
 # FUNCIÓN QUE BUSCA LA INFO DE TODAS LAS ORDENES CERRADAS
 # -------------------------------------------------------
-def obtener_historial_ordenes(exchange, symbol, orderId=""):
+def obtener_historial_ordenes(exchange, symbol, orderId="", limit=100):
     try:
 
         exchange = exchange.upper()
@@ -265,7 +265,7 @@ def obtener_historial_ordenes(exchange, symbol, orderId=""):
 
         # BINANCE
         if exchange == "BINANCE":
-            return binance_.obtener_historial_ordenes(symbol=symbol)
+            return binance_.obtener_historial_ordenes(symbol=symbol,limit=limit)
 
         # BYBIT
         if exchange == "BYBIT":
@@ -389,7 +389,7 @@ def obtener_posicion(exchange, symbol):
 
 # FUNCIÓN QUE CIERRA UNA POSICION
 # -------------------------------
-def cerrar_posicion(exchange, symbol, positionSide):
+def cerrar_posicion(exchange, symbol, positionSide, size=""):
     try:
 
         exchange = exchange.upper()
@@ -408,7 +408,7 @@ def cerrar_posicion(exchange, symbol, positionSide):
 
         # BYBIT
         if exchange == "BYBIT":
-            return bybit.cerrar_posicion(symbol, positionSide)
+            return bybit.cerrar_posicion(symbol, positionSide, size=size)
 
         # BITGET
         if exchange == "BITGET":
@@ -501,11 +501,12 @@ def take_profit(exchange, symbol, positionSide, stopPrice, type, tpSize=""):
 
         # Mensaje
         print(f"Colocando Take Profit al {positionSide} de {symbol} en {exchange}")
+        print(f"cantidad: {tpSize}, precio: {stopPrice}")
         print("")
 
         # BINANCE
         if exchange == "BINANCE":
-            return binance_.take_profit(symbol, positionSide, stopPrice, type)
+            return binance_.take_profit(symbol, positionSide, stopPrice, type, tpSize=tpSize)
 
         # BYBIT
         if exchange == "BYBIT":
@@ -632,6 +633,51 @@ def apalancamiento_max(exchange, symbol):
         print("")
 # -------------------------------------------------------
 
+# FUNCIÓN QUE CAMBIA EL APALANCAMIENTO DE UN TICK
+# ------------------------------------------------------
+def apalancamiento(exchange, symbol, leverage):
+    try:
+
+        exchange = exchange.upper()
+        symbol = symbol.upper()
+
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # BINANCE
+        if exchange == "BINANCE":
+            binance_.apalancamiento(symbol=symbol,leverage=leverage)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            bybit.apalancamiento(symbol=symbol,leverage=leverage)
+
+        # BITGET
+        if exchange == "BITGET":
+            bitget.apalancameinto(symbol=symbol,leverage=leverage)
+
+        # BINGX
+        if exchange == "BINGX":
+            bingx.apalancameinto(symbol=symbol,leverage=leverage)
+
+        # OKX
+        if exchange == "OKX":
+            okx_.apalancameinto(symbol=symbol,leverage=leverage)
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            kucoin.apalancameinto(symbol=symbol,leverage=leverage)
+
+        # GATEIO
+        if exchange == "GATIO":
+            gateio.apalancameinto(symbol=symbol,leverage=leverage)
+    
+    except Exception as e:
+        print(f"ERROR CAMBIANDO EL APALANCAMIENTO DE {symbol}")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
 # FUNCIÓN QUE OBTIENE EL PATRIMONIO DE LA CUENTA
 # ----------------------------------------------------
 def patrimonio(exchange):
@@ -714,15 +760,47 @@ def margen_disponible(exchange):
         print("")
 # ----------------------------------------
 
+# FUNCIÓN QUE OBTIENE EL BALANCE TOTAL DE LA CUENTA
+# -------------------------------------------------
+def balance_total(exchange):
+    try:
 
-#print(precio_actual_activo(exchange="okx", symbol="BTC"))
-#nueva_orden(exchange="bybit", symbol="ustc", order_type="limit", quantity=300, price=0.019, side="buy", leverage=200)
-#cancelar_ordenes(exchange="gateio", symbol="ordi")
-#print(json.dumps(obtener_ordenes(exchange="okx", symbol="not"), indent=2))
-#cancelar_orden(exchange="gateio", symbol="ordi", orderId=487285852363)
-#print(json.dumps(obtener_posicion(exchange="gateio", symbol="not"),indent=2))
-#cerrar_posicion("gateio", "rats", "long")
-#stop_loss(exchange="okx", symbol="ordi", positionSide="long", stopPrice=32)
-#take_profit("gateio", "rats", "long", 0.000115, "limit")
-#trailing_stop(exchange="bitget", symbol="not", positionSide="short", activationPrice=0.015, callbackRate=1)
-#print("")
+        exchange = exchange.upper()
+
+        # BINANCE
+        if exchange == "BINANCE":
+            return binance_.balance_total()
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit.balance_total()
+
+        # BITGET
+        if exchange == "BITGET":
+            return bitget.balance_total()
+
+        # BINGX
+        if exchange == "BINGX":
+            return bingx.balance_total()
+
+        # OKX
+        if exchange == "OKX":
+            return okx_.balance_total()
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            return kucoin.balance_total()
+
+        # GATEIO
+        if exchange == "GATIO":
+            return gateio.balance_total()
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL BALANCE TOTAL DE LA CUENTA")
+        print(e)
+        print("")
+# ----------------------------------------
+
+
+#orden = obtener_historial_ordenes("BINANCE","1000rats")
+#print(json.dumps(orden, indent=2))
