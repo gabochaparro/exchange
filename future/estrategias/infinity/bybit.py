@@ -7,8 +7,8 @@ import time
 # Definir la session para Bybit
 bybit_session = HTTP(
                     testnet=False,
-                    api_key=credenciales.bybit_subcuenta04_api_key,
-                    api_secret=credenciales.bybit_subcuenta04_api_secret,
+                    api_key=credenciales.bybit_subcuenta01_api_key,
+                    api_secret=credenciales.bybit_subcuenta01_api_secret,
                 )
 
 
@@ -36,6 +36,26 @@ def apalancameinto_max(symbol):
         # Obtener el apalancamiento máximo
         max_leverage = bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]['leverageFilter']['maxLeverage']
         return int(float(max_leverage))
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
+# FUNCIÓN QUE CAMBIA EL APALANCAMIENTO DE UN TICK
+# ------------------------------------------------------
+def apalancamiento(symbol,leverage):
+    try:
+        
+        # Cambia el apalancamiento
+        max_leverage = apalancameinto_max(symbol=symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
+        apalancamiento_actual = (bybit_session.get_positions(category="linear", symbol=symbol)["result"]["list"][0]["leverage"])
+        #print("apalancamiento actual:", apalancamiento_actual)
+        if apalancamiento_actual != str(leverage):
+            bybit_session.set_leverage(category="linear", symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
     
     except Exception as e:
         print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
@@ -206,7 +226,7 @@ def obtener_posicion(symbol):
 
 # FUNCIÓN QUE CIERRA UNA POSICION
 # -------------------------------
-def cerrar_posicion(symbol, positionSide):
+def cerrar_posicion(symbol, positionSide, size=""):
     try:
         
         # Definir el lado segun la posición
@@ -217,6 +237,10 @@ def cerrar_posicion(symbol, positionSide):
         if positionSide == "SHORT":
             side = "Buy"
             positionIdx = 2
+
+        # Definir la cantidad
+        if size =="":
+            size = 0
             
         # Cerrar posición
         print("Cerrando posición...")
@@ -225,7 +249,7 @@ def cerrar_posicion(symbol, positionSide):
                                     symbol= symbol,
                                     side=side,
                                     orderType="Market",
-                                    qty="0",
+                                    qty=str(size),
                                     reduceOnly=True,
                                     closeOnTrigger=True,
                                     positionIdx=positionIdx
@@ -267,13 +291,13 @@ def stop_loss(symbol, positionSide, stopPrice, slSize=""):
                                         symbol=symbol,
                                         stopLoss=str(stopPrice),
                                         tpslMode="Partial",
-                                        slSize=slSize,
+                                        slSize=str(slSize),
                                         positionIdx=positionSide
                                         )
         
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['orderStatus'] == "Untriggered" and 0.999*stopPrice <= float(orden['triggerPrice']) <= 1.001*stopPrice and orden['reduceOnly'] == True:
+            if orden['orderStatus'] == "Untriggered" and 0.999*float(stopPrice) <= float(orden['triggerPrice']) <= 1.001*float(stopPrice) and orden['reduceOnly'] == True:
         
                 print(f"Stop Loss Colocado en {orden['triggerPrice']}.")
                 print("")
@@ -299,11 +323,17 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
         if positionSide == "LONG":
             positionSide = 1
             if tpSize == "":
-                tpSize = obtener_posicion(symbol=symbol)[0]['size']
+                posiciones = obtener_posicion(symbol=symbol)
+                for posicion in posiciones:
+                    if posicion['positionIdx'] == positionSide:
+                        tpSize = posicion['size']
         if positionSide == "SHORT":
             positionSide = 2
             if tpSize == "":
-                tpSize = obtener_posicion(symbol=symbol)[1]['size']
+                posiciones = obtener_posicion(symbol=symbol)
+                for posicion in posiciones:
+                    if posicion['positionIdx'] == positionSide:
+                        tpSize = posicion['size']
 
         if type.upper() == "MARKET":
             type = "Market"
@@ -311,9 +341,8 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
             orden = bybit_session.set_trading_stop(
                                         category="linear",
                                         symbol=symbol,
-                                        takeProfit=str(stopPrice),
                                         tpslMode="Partial",
-                                        tpSize=tpSize,
+                                        tpSize=str(tpSize),
                                         tpOrderType=type,
                                         positionIdx=positionSide
                                         )
@@ -327,22 +356,22 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                                         takeProfit=str(stopPrice),
                                         tpLimitPrice=str(stopPrice),
                                         tpslMode="Partial",
-                                        tpSize=tpSize,
+                                        tpSize=str(tpSize),
                                         tpOrderType=type,
                                         positionIdx=positionSide
                                         )
         
-        
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['orderStatus'] == "Untriggered" and 0.999*stopPrice <= float(orden['triggerPrice']) <= 1.001*stopPrice and orden['reduceOnly'] == True:
+            if orden['orderStatus'] == "Untriggered" and 0.999*float(stopPrice) <= float(orden['triggerPrice']) <= 1.001*float(stopPrice) and orden['reduceOnly'] == True:
                 
                 print(f"Take Profit Colocado en {stopPrice}.")
                 print("")
 
                 return {
                 "orderId": orden["orderId"],
-                "price": orden['price']
+                "price": orden['price'],
+                "qty": orden['qty']
                 }
     
     except Exception as e:
@@ -406,3 +435,18 @@ def margen_disponible():
         print(e)
         print("")
 # ----------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL BALANCE TOTAL DE LA CUENTA
+# -------------------------------------------------
+def balance_total():
+    try:
+        return float(bybit_session.get_wallet_balance(accountType="UNIFIED")['result']['list'][0]['totalWalletBalance'])
+    
+    except Exception as e:
+        print("ERROR OBTENIENDO EL BALANCE TOTAL")
+        print(e)
+        print("")
+# ----------------------------------------------------
+
+#orden = take_profit("1000RATSUSDT","LONG", 0.17720, "LIMIT")
+#print(json.dumps(orden, indent=2))
