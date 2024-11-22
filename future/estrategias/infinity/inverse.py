@@ -507,7 +507,7 @@ def take_profit(exchange, symbol, positionSide, stopPrice, type, tpSize=""):
 
         # BINANCE
         if exchange == "BINANCE":
-            return binance_inverse.take_profit(symbol, positionSide, stopPrice, type)
+            return binance_inverse.take_profit(symbol, positionSide, stopPrice, type, tpSize=tpSize)
 
         # BYBIT
         if exchange == "BYBIT":
@@ -777,7 +777,7 @@ def margen_disponible(exchange, symbol):
 #orden = obtener_posicion(exchange="bybit", symbol="btc")
 #cerrar_posicion("gateio", "rats", "long")
 #orden = stop_loss(exchange="bybit", symbol="btc", positionSide="short", stopPrice=66700)
-#orden = take_profit("bybit", "btc", "short", 65000, "limit")
+#orden = take_profit("binance", "eth", "short", 2840, "limit", 1)
 #orden = trailing_stop(exchange="bybit", symbol="btc", positionSide="short", activationPrice=65000, callbackRate=1)
 #orden = apalancamiento_max("binance","eth")
 #print(json.dumps(orden,indent=2))
