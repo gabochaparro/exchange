@@ -53,9 +53,9 @@ def apalancameinto(symbol,leverage):
         max_leverage = apalancameinto_max(symbol=symbol)
         if leverage > max_leverage:
             leverage = max_leverage
-        apalancamiento_actual = (bybit_session.get_positions(category="inverse", symbol=symbol)["result"]["list"][0]["leverage"])
+        apalancamiento_actual = float(bybit_session.get_positions(category="inverse", symbol=symbol)["result"]["list"][0]["leverage"])
         #print("apalancamiento actual:", apalancamiento_actual)
-        if apalancamiento_actual != str(leverage):
+        if round(apalancamiento_actual,2) != round(float(leverage),2):
             bybit_session.set_leverage(category="inverse", symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
     
     except Exception as e:
@@ -73,9 +73,9 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         max_leverage = apalancameinto_max(symbol=symbol)
         if leverage > max_leverage:
             leverage = max_leverage
-        apalancamiento_actual = (bybit_session.get_positions(category=category, symbol=symbol)["result"]["list"][0]["leverage"])
+        apalancamiento_actual = float(bybit_session.get_positions(category=category, symbol=symbol)["result"]["list"][0]["leverage"])
         #print("apalancamiento actual:", apalancamiento_actual)
-        if apalancamiento_actual != str(leverage):
+        if round(apalancamiento_actual,2) != round(float(leverage),2):
             bybit_session.set_leverage(category=category, symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
 
         # Definir el lado para el modo hedge
@@ -92,6 +92,10 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
             if side == "SELL":
                 positionSide = 2
                 triggerDirection = 2
+
+        # Definir la cantidad exacta que permite bybit
+        cantidad_paso = float(bybit_session.get_instruments_info(category=category, symbol=symbol)['result']['list'][0]['lotSizeFilter']['qtyStep'])
+        quantity = round(quantity/cantidad_paso)*cantidad_paso
 
         # Coloca la orden "LIMIT"
         if order_type.upper() == "LIMIT":
