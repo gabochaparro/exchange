@@ -66,3 +66,5 @@ def precio_actual_activo(symbol):
         print(e)
         print("")
 #----------------------------------------------
+
+#precio_actual_activo("BTCUSDT")
