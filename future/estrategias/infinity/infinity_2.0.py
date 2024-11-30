@@ -93,7 +93,7 @@ if inverso:
 else:
     future.apalancamiento(exchange,activo,apalancamiento)
 precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-comision_grid = 0.155
+comision_grid = 0.11
 ganancia_grid = parametros['distancia_grid']+comision_grid                                                  # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
 # Obtener e, monto de la cuenta en USDT
 if inverso:
@@ -119,7 +119,7 @@ invertir_ganancias_grid = parametros['invertir_ganancias_grid']
 if exchange == "BINANCE":
     retraso_api = 7.92
 else:
-    retraso_api = 0.9
+    retraso_api = 1.8
 if parametros['descarga_breakeven']:
     breakeven = True
 else:
@@ -328,7 +328,7 @@ def actualizar_pareja_long(exchange, symbol):
         for pareja in parejas_compra_venta:
             if historial_ordenes != None:
                 
-                # Obtener la orden de compra
+                # Recorrer el historial de ordenes
                 for orden in historial_ordenes:
                     
                     # Obtener la orden de compra
@@ -368,7 +368,7 @@ def actualizar_pareja_long(exchange, symbol):
                                 #print(json.dumps(parejas_compra_venta,indent=2))
                                 break
                 
-                # Obtener la orden de venta
+                # Recorrer el historial de ordenes
                 for orden in historial_ordenes:
                     
                     # Obtener la orden de venta
@@ -915,10 +915,16 @@ def ordenes_compra(exchange, symbol):
                         # Verificar la orden limite
                         if 0.999*float(pareja["compra"]['price']) < prox_compra < 1.001*float(pareja["compra"]['price']):
                             orden_compra_puesta = True
-                            
+                        for orden in ordenes_abiertas:
+                            if orden['reduceOnly'] and 0.999*prox_venta < float(orden['price']) < 1.001*prox_venta:
+                                orden_compra_puesta = True
+                        
                         # Verificar la orden condicional
                         if 0.999*float(pareja["compra"]['price']) < prox_venta < 1.001*float(pareja["compra"]['price']):
                             orden_condicional_compra_puesta = True
+                        for orden in ordenes_abiertas:
+                            if orden['reduceOnly'] and 0.999*(prox_venta*(1+ganancia_grid/100)) < float(orden['price']) < 1.001*(prox_venta*(1+ganancia_grid/100)):
+                                orden_condicional_compra_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt/precio_actual),decimales_moneda)
@@ -1059,8 +1065,9 @@ def ordenes_venta(exchange, symbol):
                         size = posicion['positionAmt']
                         avgPrice = float(posicion['entryPrice'])
                 
-                if not(breakeven):
-                    avgPrice = 0
+            # Descarga en breakeven
+            if not(breakeven):
+                avgPrice = 0
 
             if size != "0" and posiciones != []:
             
@@ -1082,12 +1089,12 @@ def ordenes_venta(exchange, symbol):
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                         
-                        # Cerrar a mercado
                         if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
+                            prox_compra, prox_venta = prox_compra_venta()
                             if inverso:
-                                orden = inverse.cerrar_posicion(exchange, activo, "long", size=cantidad)['result']
+                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
                             else:
-                                orden = future.cerrar_posicion(exchange, activo, "long", size=cantidad)['result']
+                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
                         
                         # Colocar SL
                         '''
@@ -1148,10 +1155,16 @@ def ordenes_venta_short(exchange, symbol):
                             # Verificar orden limite
                             if 0.999*float(pareja["venta"]['price']) < prox_venta < 1.001*float(pareja["venta"]['price']):
                                 orden_venta_puesta = True
+                            for orden in ordenes_abiertas:
+                                if orden['reduceOnly'] and 0.999*prox_compra < float(orden['price']) < 1.001*prox_compra:
+                                    orden_venta_puesta = True
                                 
                             # Verificar orden condicional
                             if 0.999*float(pareja["venta"]['price']) < prox_compra < 1.001*float(pareja["venta"]['price']):
                                 orden_condicional_venta_puesta = True
+                            for orden in ordenes_abiertas:
+                                if orden['reduceOnly'] and 0.999*(prox_compra/(1+ganancia_grid/100)) < float(orden['price']) < 1.001*(prox_compra/(1+ganancia_grid/100)):
+                                    orden_condicional_venta_puesta = True
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt_short/precio_actual),decimales_moneda)
@@ -1291,9 +1304,10 @@ def ordenes_compra_short(exchange, symbol):
                     if posicion['positionSide'] == "SHORT":
                         size = posicion['positionAmt']
                         avgPrice = float(posicion['entryPrice'])
-                
-                if not(breakeven):
-                    avgPrice = 1000000000
+            
+            # Descarga en breakeven
+            if not(breakeven):
+                avgPrice = 1000000000
             
             # Colocar el SL y el TP solo si existe una posición
             if size != "0" and posiciones != []:
@@ -1329,12 +1343,12 @@ def ordenes_compra_short(exchange, symbol):
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=cantidad)
                         
-                        # Cerrar a mercado
                         if precio_actual < float(compra_venta["compra"]['price']) < 0.999*avgPrice:
+                            prox_compra, prox_venta = prox_compra_venta()
                             if inverso:
-                                orden = inverse.cerrar_posicion(exchange, activo, "short", size=cantidad)['result']
+                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
                             else:
-                                orden = future.cerrar_posicion(exchange, activo, "short", size=cantidad)['result']
+                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
                             
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
@@ -1870,7 +1884,6 @@ def detectar_tendencia(exchange, symbol):
         def tendencia(velas):
             try:
                 # Incializar variables
-                velas = velas
                 vela_inicial_apertura = float(velas[0][1])
                 vela_medio_apertura = float(velas[1][1])
                 vela_medio_cierre = float(velas[1][4])
@@ -2544,7 +2557,7 @@ while iniciar_estrategia:
         # ---------------------------
         parametros = json.load(open(parametros_copia, "r"))
         precio_referencia = parametros['precio_referencia']                                                 # Precio de referencia
-        ganancia_grid = float(parametros['distancia_grid'])+0.155                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
+        ganancia_grid = float(parametros['distancia_grid'])+comision_grid                                                   # Distancia en porcentaje entre cada grilla (ganancia + comisiones)
         tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
         sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
         tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
