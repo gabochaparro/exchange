@@ -925,6 +925,13 @@ def ordenes_compra(exchange, symbol):
                             if orden['reduceOnly'] and 0.999*(prox_venta*(1+distancia_grid/100)) < float(orden['price']) < 1.001*(prox_venta*(1+distancia_grid/100)):
                                 orden_condicional_compra_puesta = True
                 
+                if precio_actual == 0:
+                    # Consultar precio actual
+                    if inverso:
+                        precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                    else:
+                        precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+                
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt/precio_actual),decimales_moneda)
                 
@@ -1164,6 +1171,13 @@ def ordenes_venta_short(exchange, symbol):
                             for orden in ordenes_abiertas:
                                 if orden['reduceOnly'] and 0.999*(prox_compra/(1+distancia_grid/100)) < float(orden['price']) < 1.001*(prox_compra/(1+distancia_grid/100)):
                                     orden_condicional_venta_puesta = True
+                
+                if precio_actual == 0:
+                    # Consultar precio actual
+                    if inverso:
+                        precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                    else:
+                        precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
                 
                 # Cantidad de cada compra
                 qty = round((cantidad_usdt_short/precio_actual),decimales_moneda)
@@ -1621,7 +1635,7 @@ def imprimir_parejas():
 def ganancia_actual():
     try:
         # Variables globales
-        global posiciones
+        global posiciones, precio_actual
 
         # Obtener posiciones
         size = 0
@@ -1650,6 +1664,13 @@ def ganancia_actual():
         if exchange == "BINANCE":
             comision_cierre = 0.1/100
         
+        if precio_actual == 0:
+            # Consultar precio actual
+            if inverso:
+                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+            else:
+                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+
         if inverso:
             return 100*((inverse.patrimonio(exchange,activo)-(size/precio_actual)*comision_cierre) - balance_inicial)/balance_inicial
         else:
