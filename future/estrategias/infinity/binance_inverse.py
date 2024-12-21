@@ -1,11 +1,14 @@
-import credenciales
 from binance.cm_futures import CMFutures
 import json
 import time
 
+
+# Obtener credenciales
+credenciales = json.load(open("future/estrategias/infinity/credenciales.json","r"))
+
 binance_client = CMFutures(
-                            key=credenciales.binance_api_key,
-                            secret=credenciales.binance_api_secret
+                            key=credenciales['api_key'],
+                            secret=credenciales['api_secret']
                             )
 
 

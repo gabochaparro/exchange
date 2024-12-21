@@ -32,10 +32,11 @@ def actualizar_interfaz():
     entries.clear()
     botones_booleanos.clear()
 
-    if data['inverso']:
-        base_coin = data['activo'].upper()
-    else:
-        base_coin = "USDT"
+    if "inverso" in data:
+        if data['inverso']:
+            base_coin = data['activo'].upper()
+        else:
+            base_coin = "USDT"
 
     for i, (clave, valor) in enumerate(data.items()):
 

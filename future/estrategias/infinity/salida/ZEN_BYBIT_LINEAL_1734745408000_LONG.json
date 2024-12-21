@@ -1,0 +1,14 @@
+{
+    "fecha_inicio": "1734745408000",
+    "exchange": "BYBIT",
+    "activo": "ZEN",
+    "inverso": false,
+    "balance_inicial": "92.74615664",
+    "balance_actual": "3.6361431787107494",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "1.473006806419837",
+    "riesgo_maximo": "-4.264607206692757",
+    "cantidad_parejeas_long": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}

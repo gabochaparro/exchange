@@ -1,0 +1,14 @@
+{
+    "fecha_inicio": "1734744801000",
+    "exchange": "BYBIT",
+    "activo": "1000PEPE",
+    "inverso": false,
+    "balance_inicial": "92.78368673",
+    "balance_actual": "5398.757745024946",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "1.4460893474781285",
+    "riesgo_maximo": "-4.265709209763796",
+    "cantidad_parejeas_long": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}

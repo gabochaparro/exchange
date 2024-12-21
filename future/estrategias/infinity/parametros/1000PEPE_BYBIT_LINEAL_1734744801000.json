@@ -1,13 +1,13 @@
 {
     "exchange": "BYBIT",
-    "activo": "zen",
+    "activo": "1000PEPE",
     "direccion": "SHORT",
     "inverso": false,
-    "auto": false,
+    "auto": true,
     "pausa": false,
     "apalancamiento": 9,
     "precio_referencia": 0,
-    "distancia_grid": 2.7,
+    "distancia_grid": 0.72,
     "ganancia_long": 0,
     "ganancia_short": 0.108,
     "descarga_breakeven": false,
@@ -15,6 +15,10 @@
     "condicional_long": true,
     "condicional_short": true,
     "umbral_libro": 0,
-    "tp": 1,
-    "sl": 9.9
+    "tp": 0,
+    "sl": 9.9,
+    "balance_inicial": "92.78368673",
+    "balance_actual": "94.19078455",
+    "beneficio_max": "2.17918904848415",
+    "riesgo_max": "-4.265709209763796"
 }

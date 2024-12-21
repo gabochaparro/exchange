@@ -16,6 +16,5 @@ python-bingx==1.0.0
 python-bitget==1.0.7
 python-okx==0.3.0
 requests==2.31.0
-ta-lib==0.5.1
 websocket-client==1.7.0
 websockets==12.0

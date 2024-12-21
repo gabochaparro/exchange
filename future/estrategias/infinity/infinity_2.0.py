@@ -886,8 +886,10 @@ def limpiar_parejas_short():
 # --------------------------------------------------
 def ordenes_compra(exchange, symbol):
     try:
+        global precio_actual
         nueva_compra = 0
         nueva_venta = 0
+        
         while iniciar_estrategia:
 
             if (tipo == "" or tipo == "LONG" or tipo == "RANGO") and not(pausa):
@@ -1137,8 +1139,10 @@ def ordenes_venta(exchange, symbol):
 # --------------------------------------------------
 def ordenes_venta_short(exchange, symbol):
     try:
+        global precio_actual
         nueva_compra = 0
         nueva_venta = 0
+        
         while iniciar_estrategia:
 
             if (tipo == "" or tipo == "SHORT" or tipo == "RANGO") and not(pausa):
@@ -1803,10 +1807,6 @@ def detener_estrategia():
             cerrar_todo()
             print("ESTRATEGIA PAUSADA POR TP!!!")
             print("")
-            if inverso:
-                balance_inicial = inverse.patrimonio(exchange=exchange,symbol=activo)  
-            else:
-                balance_inicial = future.patrimonio(exchange=exchange)
 
         # Detener estrategia por Stop Loss    
         if beneficio <= (-1)*(0.9*sl) and sl > 0:
@@ -2222,14 +2222,14 @@ def auxiliar():
             # Consultar precio actual
             if inverso:
                 precio_actual = inverse_ws.precio_actual
-            if precio_actual == 0:
-                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
-                time.sleep(0.9)
+                if precio_actual == 0:
+                    precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                    time.sleep(0.9)
             else:
                 precio_actual = future_ws.precio_actual
-            if precio_actual == 0:
-                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
-                time.sleep(0.9)
+                if precio_actual == 0:
+                    precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+                    time.sleep(0.9)
             
             # Obtener ordenes abiertas
             if inverso:
@@ -2661,12 +2661,19 @@ while iniciar_estrategia:
             umbral = int(parametros['umbral_libro'])
             auto = parametros['auto']
             breakeven = parametros['descarga_breakeven']
-            cantidad_usdt = cuenta*ganancia_grid_long/distancia_grid                              # Importe en USDT para cada compra del long
-            cantidad_usdt_short = cuenta*ganancia_grid_short/distancia_grid                       # Importe en USDT para cada compra del short
             # ---------------------------
 
         except Exception as e:
             print("ERROR LEYENDO PARAMETROS")
+            print(e)
+            print("")
+        
+        # Calcular importes
+        try:
+            cantidad_usdt = cuenta*ganancia_grid_long/distancia_grid                              # Importe en USDT para cada long
+            cantidad_usdt_short = cuenta*ganancia_grid_short/distancia_grid                       # Importe en USDT para cada short
+        except Exception as e:
+            print("ERROR CALCULANDO IMPORTES")
             print(e)
             print("")
             
@@ -2676,7 +2683,6 @@ while iniciar_estrategia:
             if precio_actual == 0:
                 precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
                 time.sleep(0.9)
-
         else:
             precio_actual = future_ws.precio_actual
             if precio_actual == 0:

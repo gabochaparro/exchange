@@ -1,14 +1,16 @@
 
-import credenciales
 from binance.client import Client
 import json
 import time
 
 
+# Obtener credenciales
+credenciales = json.load(open("future/estrategias/infinity/credenciales.json","r"))
+
 # Definir el cliente para Binance
 binance_client = Client(
-                            api_key=credenciales.binance_api_key,
-                            api_secret=credenciales.binance_api_secret,
+                            api_key=credenciales['api_key'],
+                            api_secret=credenciales['api_secret'],
                             tld="com"
                         )
 

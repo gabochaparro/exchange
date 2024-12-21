@@ -1,14 +1,16 @@
-import credenciales
 from pybit.unified_trading import HTTP
 import json
 import time
 
 
+# Obtener credenciales
+credenciales = json.load(open("future/estrategias/infinity/credenciales.json","r"))
+
 # Definir la session para Bybit
 bybit_session = HTTP(
                     testnet=False,
-                    api_key=credenciales.bybit_subcuenta01_api_key,
-                    api_secret=credenciales.bybit_subcuenta01_api_secret,
+                    api_key=credenciales['api_key'],
+                    api_secret=credenciales['api_secret'],
                 )
 
 
@@ -533,6 +535,7 @@ def cambiar_margen(symbol,tradeMode):
         print("")
 # ------------------------------------
 
+#orden = patrimonio()
 #orden = nueva_orden("BTCUSDT","LIMIT",0.0014,103500,"BUY",18)
 #orden = take_profit("IOUSDT","SHORT",3.75,"LIMIT",1)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")
