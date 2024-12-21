@@ -4,38 +4,13 @@
     "activo": "1000PEPE",
     "inverso": false,
     "balance_inicial": "92.78368673",
-    "balance_actual": "5394.057159688132",
+    "balance_actual": "5362.654000921076",
     "ganancias_del_grid": "9.486753080000012",
-    "ganancia_actual": "0.6576214758264445",
+    "ganancia_actual": "0.38719769892894235",
     "riesgo_maximo": "-4.265709209763796",
-    "cantidad_parejeas_long": "41",
+    "cantidad_parejeas_long": "40",
     "parejas_completadas": "38",
     "parejas": [
-        {
-            "general": {
-                "fecha": "2024-12-21 - 04:37:25 PM",
-                "beneficios": "0"
-            },
-            "compra": {
-                "orderId": "",
-                "price": "0.0170494892393137",
-                "cantidad": "700.0",
-                "monto": "11.93464246751959",
-                "ejecutada": false,
-                "fecha_ejecucion": "-"
-            },
-            "venta": {
-                "orderId": "02fc4adc-7595-429f-99d1-7d7488e38fb7",
-                "price": "0.017191",
-                "cantidad": "700.0",
-                "monto": "12.033700000000001",
-                "ejecutada": false,
-                "fecha_ejecucion": "-"
-            },
-            "sl": {
-                "orderId": ""
-            }
-        },
         {
             "general": {
                 "fecha": "2024-12-21 - 04:36:09 PM",

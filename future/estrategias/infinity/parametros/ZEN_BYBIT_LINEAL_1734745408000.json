@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
     "activo": "zen",
-    "direccion": "RANGO",
+    "direccion": "LONG",
     "inverso": false,
     "auto": true,
     "pausa": false,
@@ -18,7 +18,7 @@
     "tp": 0,
     "sl": 9.9,
     "balance_inicial": "92.74615664",
-    "balance_actual": "93.31488289",
+    "balance_actual": "93.11546473",
     "beneficio_max": "2.4676707293474376",
     "riesgo_max": "-4.264607206692757"
 }
