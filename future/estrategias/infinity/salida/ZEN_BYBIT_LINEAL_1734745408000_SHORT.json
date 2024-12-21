@@ -4,33 +4,33 @@
     "activo": "ZEN",
     "inverso": false,
     "balance_inicial": "92.74615664",
-    "balance_actual": "3.5393553761648606",
-    "ganancias_del_grid": "7.820188319001102",
-    "ganancia_actual": "0.7223314412913034",
+    "balance_actual": "3.4610514383663182",
+    "ganancias_del_grid": "8.0338530290011",
+    "ganancia_actual": "0.6571010186066912",
     "riesgo_maximo": "-4.264607206692757",
     "cantidad_parejeas_long": "19",
-    "parejas_completadas": "14",
+    "parejas_completadas": "15",
     "parejas": [
         {
             "general": {
                 "fecha": "2024-12-21 - 11:25:21 AM",
-                "beneficios": "0"
+                "beneficios": "0.21366470999999976"
             },
             "compra": {
-                "orderId": "",
-                "price": "25.383717537204554",
+                "orderId": "3559b665-69e6-463c-89c3-5f0e6f0a5fdc",
+                "price": "25.383",
                 "cantidad": "0.3",
-                "monto": "7.615115261161366",
-                "ejecutada": false,
-                "fecha_ejecucion": "-"
+                "monto": "7.6149",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-21 - 01:49:12 PM"
             },
             "venta": {
                 "orderId": "d0c45758-c57b-499b-9e60-fd534864b76b",
-                "price": "26.097",
+                "price": "26.096",
                 "cantidad": "0.3",
-                "monto": "7.8291",
-                "ejecutada": false,
-                "fecha_ejecucion": "-"
+                "monto": "7.828799999999999",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-21 - 11:33:21 AM"
             },
             "sl": {
                 "orderId": ""

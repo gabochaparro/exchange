@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
     "activo": "1000PEPE",
-    "direccion": "SHORT",
+    "direccion": "RANGO",
     "inverso": false,
     "auto": true,
     "pausa": false,
@@ -18,7 +18,7 @@
     "tp": 0,
     "sl": 9.9,
     "balance_inicial": "92.78368673",
-    "balance_actual": "94.19078455",
-    "beneficio_max": "2.17918904848415",
+    "balance_actual": "93.28937159",
+    "beneficio_max": "2.4407613663704275",
     "riesgo_max": "-4.265709209763796"
 }
