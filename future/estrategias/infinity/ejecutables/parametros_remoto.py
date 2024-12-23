@@ -106,18 +106,18 @@ def main():
         subir_archivo_remoto(directorio_remoto)
 
     root = tk.Tk()
-    root.title("Gestión de Archivos SFTP")
+    root.title("Parametros EC2")
 
     frame = ttk.Frame(root, padding=10)
     frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-    ttk.Label(frame, text="Selecciona el tipo de parámetros:").grid(row=0, column=0, sticky=tk.W)
+    ttk.Label(frame, text="Tipo de parámetros:").grid(row=0, column=0, sticky=tk.W)
 
     opcion_parametros = tk.StringVar(value="Parametros_Iniciales")
     ttk.Radiobutton(frame, text="Parametros Iniciales", variable=opcion_parametros, value="Iniciales").grid(row=1, column=0, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Parametros En Vivo", variable=opcion_parametros, value="Live").grid(row=2, column=0, sticky=tk.W)
+    ttk.Radiobutton(frame, text="Parametros Vivos", variable=opcion_parametros, value="Live").grid(row=2, column=0, sticky=tk.W)
 
-    ttk.Button(frame, text="Cargar Archivos", command=cargar_archivos).grid(row=3, column=0, pady=5, sticky=tk.W)
+    ttk.Button(frame, text="Selecionar Archivos", command=cargar_archivos).grid(row=3, column=0, pady=5, sticky=tk.W)
 
     lista_archivos_var = tk.StringVar(value=[])
     lista_archivos = tk.Listbox(frame, listvariable=lista_archivos_var, height=10, width=50)
