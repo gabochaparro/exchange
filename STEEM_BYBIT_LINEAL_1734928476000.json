@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
     "activo": "STEEM",
-    "direccion": "",
+    "direccion": "LONG",
     "inverso": false,
     "auto": false,
     "pausa": false,
@@ -16,5 +16,9 @@
     "condicional_short": true,
     "umbral_libro": 0,
     "tp": 3.06,
-    "sl": 9.9
+    "sl": 9.9,
+    "balance_inicial": "97.28802783",
+    "balance_actual": "97.39846715",
+    "beneficio_max": "0.309187735335342",
+    "riesgo_max": "-0.370170860724301"
 }

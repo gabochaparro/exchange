@@ -4,10 +4,19 @@ from tkinter import filedialog, messagebox
 import threading
 import time
 import os
+import paramiko  # Para conexión SFTP
+
+# Configuración global para EC2
+EC2_HOST = "ec2-15-228-57-72.sa-east-1.compute.amazonaws.com"  # Dirección de tu instancia EC2
+EC2_PORT = 22  # Puerto SSH (22 por defecto)
+EC2_USER = "ubuntu"  # Usuario para conectar a EC2
+EC2_KEY_PATH = "future/estrategias/infinity/clave_pen_ec2_01.pem"  # Ruta a tu llave privada
+PARAMETROS = "/home/ubuntu/exchange/future/estrategias/infinity"  # Directorio en EC2 donde están los parametros iniciales
+PARAMETROS_LIVE = "/home/ubuntu/exchange/future/estrategias/infinity/parametros"  # Directorio en EC2 donde están los parametros en vivo
 
 # Función para cargar el archivo JSON
 def cargar_json():
-    global data, ruta_archivo, ultima_modificacion, nombre_archivo, ventana, frame_editor
+    global data, ruta_archivo, ultima_modificacion, nombre_archivo, ventana
     try:
         archivo = filedialog.askopenfilename(
             title="Seleccionar archivo JSON",
@@ -173,8 +182,11 @@ ventana.geometry("396x720")
 ventana.resizable(True, True)
 
 # Botones de carga y guardado
-boton_cargar = tk.Button(ventana, text="Cargar", command=cargar_json)
-boton_cargar.pack(pady=5)
+boton_abrir = tk.Button(ventana, text="Abrir Local", command=cargar_json)
+boton_abrir.pack(pady=5)
+
+boton_abrir_ec = tk.Button(ventana, text="Abrir Servidor", command=cargar_json)
+boton_abrir_ec.pack(pady=5)
 
 boton_guardar = tk.Button(ventana, text="Guardar", command=guardar_json)
 boton_guardar.pack(pady=5)
@@ -218,6 +230,7 @@ ruta_archivo = None
 ultima_modificacion = None
 entries = {}  # Para campos editables no booleanos
 botones_booleanos = {}  # Para botones toggle
+ruta_archivo = None  # Para carga y descarga remota
 
 # Iniciar el monitoreo en un hilo aparte
 hilo_monitoreo = threading.Thread(target=monitorear_cambios, daemon=True)

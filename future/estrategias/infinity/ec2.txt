@@ -1,0 +1,1 @@
+ssh -i "clave_pen_ec2_01.pem" ubuntu@ec2-15-228-57-72.sa-east-1.compute.amazonaws.com
