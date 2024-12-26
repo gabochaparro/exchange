@@ -182,11 +182,8 @@ ventana.geometry("396x720")
 ventana.resizable(True, True)
 
 # Botones de carga y guardado
-boton_abrir = tk.Button(ventana, text="Abrir Local", command=cargar_json)
+boton_abrir = tk.Button(ventana, text="Abrir", command=cargar_json)
 boton_abrir.pack(pady=5)
-
-boton_abrir_ec = tk.Button(ventana, text="Abrir Servidor", command=cargar_json)
-boton_abrir_ec.pack(pady=5)
 
 boton_guardar = tk.Button(ventana, text="Guardar", command=guardar_json)
 boton_guardar.pack(pady=5)

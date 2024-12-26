@@ -1483,17 +1483,20 @@ def mostrar_lista(data):
                     parejas_completadas = parejas_completadas + 1
 
         # Crea un archivo json con la info de las parejas
+        if inverso:
+            cuenta = cuenta/precio_actual
         salida = {
                         'fecha_inicio': str(fecha_inicio),
                         'exchange': exchange,
                         'activo': activo,
                         'inverso': inverso,
                         'balance_inicial': str(balance_inicial),
-                        'balance_actual': str(cuenta/precio_actual),
+                        'balance_actual': str(cuenta),
                         'ganancias_del_grid': str(ganancias_grid),
                         'ganancia_actual': str(ganancia),
                         'riesgo_maximo': str(riesgo_max),
-                        'cantidad_parejeas_long': str(len(data)),
+                        'beneficio_maximo': str(beneficio_max),
+                        'cantidad_parejeas': str(len(data)),
                         'parejas_completadas': str(parejas_completadas),
                         'parejas': data
                         }
@@ -1510,97 +1513,11 @@ def mostrar_lista(data):
                 ruta = f'future/estrategias/infinity/salida/{activo}_{exchange}_INVERSO_{fecha_inicio}_SHORT.json'
             else:
                 ruta = f'future/estrategias/infinity/salida/{activo}_{exchange}_LINEAL_{fecha_inicio}_SHORT.json'
-            json.dump(salida, open(ruta, "w"), indent=4)
-
-        # Crear una imagen en blanco
-        img_width, img_height = 450, 300*(len(data)+1)
-        background_color = (35, 35, 40)
-        text_color = (200, 200, 200)
-        greenlight_color = (0, 255, 0)
-        redlight_color = (255, 0, 0)
-        image = Image.new('RGB', (img_width, img_height), color=background_color)
-
-        # Configurar el objeto de dibujo y la fuente
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.load_default()  # Puedes cambiar esto por una fuente específica si lo deseas
-
-        # Dibujar los datos en la imagen
-        if inverso:
-            draw.text((10, 10), f" - INFINITY  Future Inverso - {activo.upper()} - {datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p')} -", font=font, fill=text_color)
-        else:
-            draw.text((10, 10), f" - INFINITY  Future - {activo.upper()} - {datetime.now().strftime('%Y-%m-%d - %I:%M:%S %p')} -", font=font, fill=text_color)
-        draw.text((10, 30), f"Balance inicial:", font=font, fill=text_color)
-        if inverso:
-            draw.text((180, 30), f"{round(balance_inicial,8)} {activo}", font=font, fill=text_color)
-        else:
-            draw.text((180, 30), f"{round(balance_inicial,2)} USDT", font=font, fill=text_color)
-        draw.text((10, 50), f"Balance actual:", font=font, fill=text_color)
-        if inverso:
-            draw.text((180, 50), f"{round(inverse.patrimonio(exchange,activo),8)} {activo}", font=font, fill=text_color)
-        else:
-            draw.text((180, 50), f"{round(future.patrimonio(exchange),2)} USDT", font=font, fill=text_color)
-
-        draw.text((10, 70), f"Ganancias del grid:", font=font, fill=text_color)
-        if inverso:
-            draw.text((180, 70), f"{round(ganancias_grid,decimales_moneda)} {activo} ({round(100*ganancias_grid/balance_inicial,2)}%) ({parejas_completadas}/{len(data)})", font=font, fill=greenlight_color)
-        else:
-            draw.text((180, 70), f"{round(ganancias_grid,3)} USDT ({round(100*ganancias_grid/balance_inicial,2)}%) ({parejas_completadas}/{len(data)})", font=font, fill=greenlight_color)
-
-        if ganancia >= 0:
-            color_ganancias = greenlight_color
-        else:
-            color_ganancias = redlight_color
-        draw.text((10, 90), f"Ganancia actual:", font=font, fill=text_color)
-        if inverso:
-            draw.text((180, 90), f"{round(balance_inicial*ganancia/100,decimales_moneda)} {activo} ({round(ganancia,2)}%) ({round(riesgo_max,2)}%)", font=font, fill=color_ganancias)
-        else:
-            draw.text((180, 90), f"{round(balance_inicial*ganancia/100,3)} USDT ({round(ganancia,2)}%) ({round(riesgo_max,2)}%)", font=font, fill=color_ganancias)
-
-        if data != []:
-            y_text = 120
-            for item in data:
-                general = item['general']
-                compra = (item['compra'])
-                venta = item['venta']
-
-                draw.text((10, y_text), f"----------------------------------------------------------------------------------------------", font=font, fill=text_color)
-                y_text += 20
-                draw.text((10, y_text), f"{general['fecha']}", font=font, fill=text_color)
-                if inverso:
-                    draw.text((180, y_text), f"+{round(float(general['beneficios']),decimales_moneda)} {activo}", font=font, fill=greenlight_color)
-                else:
-                    draw.text((180, y_text), f"+{round(float(general['beneficios']),3)} USDT", font=font, fill=greenlight_color)
-                y_text += 20
-                draw.text((10, y_text), f"Compra Limit", font=font, fill=greenlight_color)
-                draw.text((180, y_text), f"Venta Limit", font=font, fill=redlight_color)
-                y_text += 20
-                draw.text((10, y_text), f"Precio: {round(float(compra['price']),3)} USDT", font=font, fill=text_color)
-                draw.text((180, y_text), f"Precio: {round(float(venta['price']),3)} USDT", font=font, fill=text_color)
-                y_text += 20
-                draw.text((10, y_text), f"Cantidad: {compra['cantidad']} {activo.upper()}", font=font, fill=text_color)
-                draw.text((180, y_text), f"Cantidad: {venta['cantidad']} {activo.upper()}", font=font, fill=text_color)
-                y_text += 20
-                draw.text((10, y_text), f"Monto: {round(float(compra['monto']),3)} USDT", font=font, fill=text_color)
-                draw.text((180, y_text), f"Monto: {round(float(venta['monto']),3)} USDT", font=font, fill=text_color)
-                y_text += 20
-                draw.text((10, y_text), f"{'Ejecutada' if compra['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
-                draw.text((180, y_text), f"{'Ejecutada' if venta['ejecutada'] else 'Pendiente'}", font=font, fill=text_color)
-                y_text += 20
-                draw.text((10, y_text), f"{compra['fecha_ejecucion']}", font=font, fill=text_color)
-                draw.text((180, y_text), f"{venta['fecha_ejecucion']}", font=font, fill=text_color)
-                y_text += 30  # Espacio entre bloques de datos
-
-        # Guardar la imagen
-        if data == parejas_compra_venta:
-            image.save(f'future/estrategias/infinity/salida/{activo}_{exchange}_{fecha_inicio}_long.png')
-        if data == parejas_compra_venta_short:
-            image.save(f'future/estrategias/infinity/salida/{activo}_{exchange}_{fecha_inicio}_short.png')
-
-        tf = time.time()
-        if tf-ti > 10.8:
-            print(f"Parejas mostradas en {tf-ti} Segundos")
-            print("")
-
+            json.dump(salida, open(ruta, "w"), indent=4)        
+        
+        if time.time()-ti < retraso_api:
+                time.sleep(retraso_api)
+    
     except Exception as e:
         print("ERROR EN LA FUNCIÓN mostrar_lista()")
         print(e)
