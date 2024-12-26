@@ -712,7 +712,7 @@ def limpiar_parejas_long():
                             
                             if not(orden_puesta):
                                 actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                time.sleep(3.6)
+                                time.sleep(3.06)
                                 actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if not(pareja['compra']['ejecutada']):
                                     if pareja in parejas_compra_venta:
@@ -725,7 +725,6 @@ def limpiar_parejas_long():
                             
                         if ordenes_abiertas != []:
                             
-                            time.sleep(3.06)
                             orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
@@ -734,6 +733,9 @@ def limpiar_parejas_long():
                                     orden_puesta = True
                             
                             if not(orden_puesta):
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
+                                time.sleep(3.06)
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
                                     if pareja in parejas_compra_venta:
                                         parejas_compra_venta.remove(pareja)
@@ -841,7 +843,7 @@ def limpiar_parejas_short():
                             
                             if not(orden_puesta):
                                 actualizar_pareja_short(exchange=exchange, symbol=activo)
-                                time.sleep(3.6)
+                                time.sleep(3.06)
                                 actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if not(pareja['venta']['ejecutada']):
                                     if pareja in parejas_compra_venta_short:
@@ -854,7 +856,6 @@ def limpiar_parejas_short():
                         
                         if ordenes_abiertas != []:
                             
-                            time.sleep(3.06)
                             orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
@@ -863,6 +864,9 @@ def limpiar_parejas_short():
                                     orden_puesta = True
                             
                             if not(orden_puesta):
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
+                                time.sleep(3.06)
+                                actualizar_pareja_long(exchange=exchange, symbol=activo)
                                 if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
                                     if pareja in parejas_compra_venta:
                                         parejas_compra_venta.remove(pareja)
@@ -1119,6 +1123,7 @@ def ordenes_venta(exchange, symbol):
                         
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
+                            time.sleep(3.06)
                             compra_venta["venta"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)
@@ -1369,6 +1374,7 @@ def ordenes_compra_short(exchange, symbol):
                             
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
+                            time.sleep(3.06)
                             compra_venta["compra"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)
@@ -1483,15 +1489,16 @@ def mostrar_lista(data):
                     parejas_completadas = parejas_completadas + 1
 
         # Crea un archivo json con la info de las parejas
+        balance_actual = cuenta
         if inverso:
-            cuenta = cuenta/precio_actual
+            balance_actual = cuenta/precio_actual
         salida = {
                         'fecha_inicio': str(fecha_inicio),
                         'exchange': exchange,
                         'activo': activo,
                         'inverso': inverso,
                         'balance_inicial': str(balance_inicial),
-                        'balance_actual': str(cuenta),
+                        'balance_actual': str(balance_actual),
                         'ganancias_del_grid': str(ganancias_grid),
                         'ganancia_actual': str(ganancia),
                         'riesgo_maximo': str(riesgo_max),
