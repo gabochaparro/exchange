@@ -2166,17 +2166,6 @@ def auxiliar():
             else:
                 cuenta = future.patrimonio(exchange=exchange)
             
-            if not(cuenta*0.998 < monitor < cuenta*1.001):
-                monitor = cuenta
-                parametros['balance_inicial'] = str(balance_inicial)
-                if inverso:
-                    parametros['balance_actual'] = str(cuenta/precio_actual)
-                else:
-                    parametros['balance_actual'] = str(cuenta)
-                parametros['beneficio_max'] = str(beneficio_max)
-                parametros['riesgo_max'] = str(riesgo_max)
-                json.dump(parametros, open(parametros_copia, "w"), indent=4)
-            
             # Mantener margen
             margen()
 

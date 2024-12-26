@@ -97,7 +97,7 @@ def actualizar_interfaz(data):
     for datos in data['parejas']:
         ganancia = float(datos['general']['beneficios'])
         ganancia_color = COLOR_POSITIVO if ganancia >= 0 else COLOR_NEGATIVO
-        info_grid = f"{datos['general']['fecha']} --- +{round(ganancia, 8)} {data['activo'] if data['inverso'] else 'USDT'}"
+        info_grid = f"{datos['general']['fecha']}   ---   +{round(ganancia, 8)} {data['activo'] if data['inverso'] else 'USDT'}"
 
         datos_compra = [
             f"Precio: {datos['compra']['price']}",
