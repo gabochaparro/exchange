@@ -1554,13 +1554,13 @@ def imprimir_parejas():
         while iniciar_estrategia:
 
             # Mostrar parejas Long
-            if parejas_compra_venta != parejas_long or not(cuenta*0.999 < monitor < cuenta*1.0008):
+            if parejas_compra_venta != parejas_long or cuenta != monitor:
                 parejas_long = parejas_compra_venta.copy()
                 monitor = cuenta
                 mostrar_lista(parejas_compra_venta)
             
             # Mostrar parejas Short
-            if parejas_compra_venta_short != parejas_short or not(cuenta*0.999 < monitor < cuenta*1.0008):
+            if parejas_compra_venta_short != parejas_short or cuenta != monitor:
                 parejas_short = parejas_compra_venta_short.copy()
                 monitor = cuenta
                 mostrar_lista(parejas_compra_venta_short)

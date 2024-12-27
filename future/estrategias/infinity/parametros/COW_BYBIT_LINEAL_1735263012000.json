@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
-    "activo": "btc",
-    "direccion": "SHORT",
+    "activo": "cow",
+    "direccion": "RANGO",
     "inverso": false,
     "auto": true,
     "pausa": false,
@@ -9,12 +9,12 @@
     "precio_referencia": 0,
     "distancia_grid": 0.63,
     "ganancia_long": 0,
-    "ganancia_short": 0,
+    "ganancia_short": 0.063,
     "descarga_breakeven": false,
     "invertir_ganancias_grid": false,
     "condicional_long": true,
     "condicional_short": true,
     "umbral_libro": 0,
-    "tp": 3.06,
+    "tp": 0,
     "sl": 9
 }
