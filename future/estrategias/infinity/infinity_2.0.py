@@ -344,6 +344,7 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
+                                mostrar_lista(parejas_compra_venta)
                                 break
                                 
                         # BINANCE
@@ -361,6 +362,7 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 #print(json.dumps(parejas_compra_venta,indent=2))
+                                mostrar_lista(parejas_compra_venta)
                                 break
                 
                 # Recorrer el historial de ordenes
@@ -387,7 +389,6 @@ def actualizar_pareja_long(exchange, symbol):
                                     pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
                                 else:
                                     pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
-                                #print(json.dumps(parejas_compra_venta,indent=2))
                                 
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -397,6 +398,9 @@ def actualizar_pareja_long(exchange, symbol):
                                     else:
                                         future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                         print("SL Cancelado.")
+                                
+                                #print(json.dumps(parejas_compra_venta,indent=2))
+                                mostrar_lista(parejas_compra_venta)
                                 break
                                 
                         # BINANCE
@@ -417,7 +421,6 @@ def actualizar_pareja_long(exchange, symbol):
                                     pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
                                 else:
                                     pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
-                                #print(json.dumps(parejas_compra_venta,indent=2))
                                 
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -428,6 +431,8 @@ def actualizar_pareja_long(exchange, symbol):
                                         future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                         print("SL Cancelado.")
                                 
+                                #print(json.dumps(parejas_compra_venta,indent=2))
+                                mostrar_lista(parejas_compra_venta)
                                 break
                             
                     # Obtener la orden de sl
@@ -452,6 +457,7 @@ def actualizar_pareja_long(exchange, symbol):
                                         parejas_compra_venta.remove(pareja)
                                         print("Pareja removida.", pareja)
                                         print("")
+                        mostrar_lista(parejas_compra_venta)
                         break
 
         if time.time()-ti < retraso_api:
@@ -505,7 +511,6 @@ def actualizar_pareja_short(exchange, symbol):
                                     pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
                                 else:
                                     pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
-                                #print(json.dumps(parejas_compra_venta_short,indent=2))
                                     
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -515,6 +520,8 @@ def actualizar_pareja_short(exchange, symbol):
                                         future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                     print("SL Cancelado.")
                                 
+                                #print(json.dumps(parejas_compra_venta_short,indent=2))
+                                mostrar_lista(parejas_compra_venta_short)
                                 break
                                 
                         # BINANCE
@@ -535,7 +542,6 @@ def actualizar_pareja_short(exchange, symbol):
                                     pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
                                 else:
                                     pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
-                                #print(json.dumps(parejas_compra_venta,indent=2))
                                         
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -545,6 +551,8 @@ def actualizar_pareja_short(exchange, symbol):
                                         future.cancelar_orden(exchange, activo, orderId=pareja['sl']['orderId'])
                                     print("SL Cancelado.")
                                 
+                                #print(json.dumps(parejas_compra_venta_short,indent=2))
+                                mostrar_lista(parejas_compra_venta_short)
                                 break
                 
                 # Obtener la orden de venta
@@ -568,6 +576,7 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 #print(json.dumps(parejas_compra_venta_short,indent=2))
+                                mostrar_lista(parejas_compra_venta_short)
                                 
                                 break
                                 
@@ -585,7 +594,8 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['venta']['cantidad'] = str(cantidad)
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
-                                #print(json.dumps(parejas_compra_venta,indent=2))
+                                #print(json.dumps(parejas_compra_venta_short,indent=2))
+                                mostrar_lista(parejas_compra_venta_short)
                                 
                                 break
                             
@@ -611,6 +621,8 @@ def actualizar_pareja_short(exchange, symbol):
                                         parejas_compra_venta.remove(pareja)
                                         print("Pareja removida.", pareja)
                                         print("")
+                                        mostrar_lista(parejas_compra_venta_short)
+                                        break
 
         if time.time()-ti < retraso_api:
             time.sleep(retraso_api)
@@ -1542,13 +1554,13 @@ def imprimir_parejas():
         while iniciar_estrategia:
 
             # Mostrar parejas Long
-            if parejas_compra_venta != parejas_long or not(cuenta*0.998 < monitor < cuenta*1.001):
+            if parejas_compra_venta != parejas_long or not(cuenta*0.999 < monitor < cuenta*1.0008):
                 parejas_long = parejas_compra_venta.copy()
                 monitor = cuenta
                 mostrar_lista(parejas_compra_venta)
             
             # Mostrar parejas Short
-            if parejas_compra_venta_short != parejas_short or not(cuenta*0.998 < monitor < cuenta*1.001):
+            if parejas_compra_venta_short != parejas_short or not(cuenta*0.999 < monitor < cuenta*1.0008):
                 parejas_short = parejas_compra_venta_short.copy()
                 monitor = cuenta
                 mostrar_lista(parejas_compra_venta_short)

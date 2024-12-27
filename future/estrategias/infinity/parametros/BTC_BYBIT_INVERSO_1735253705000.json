@@ -4,7 +4,7 @@
     "direccion": "LONG",
     "inverso": true,
     "auto": false,
-    "pausa": false,
+    "pausa": true,
     "apalancamiento": 9,
     "precio_referencia": 90900,
     "distancia_grid": 0.108,
