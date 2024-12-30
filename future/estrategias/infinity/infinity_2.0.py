@@ -1137,7 +1137,7 @@ def ordenes_venta(exchange, symbol):
                         
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
-                            time.sleep(3.06)
+                            time.sleep(1.08)
                             compra_venta["venta"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)
@@ -1389,7 +1389,7 @@ def ordenes_compra_short(exchange, symbol):
                                 
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
-                            time.sleep(3.06)
+                            time.sleep(1.08)
                             compra_venta["compra"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)

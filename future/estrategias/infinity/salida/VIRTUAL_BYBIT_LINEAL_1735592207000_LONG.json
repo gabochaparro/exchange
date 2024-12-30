@@ -1,0 +1,15 @@
+{
+    "fecha_inicio": "1735592207000",
+    "exchange": "BYBIT",
+    "activo": "VIRTUAL",
+    "inverso": false,
+    "balance_inicial": "12.06924904",
+    "balance_actual": "12.28890847",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "1.6828346098988067",
+    "riesgo_maximo": "-0.3313723154394373",
+    "beneficio_maximo": "2.669870253998819",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}
