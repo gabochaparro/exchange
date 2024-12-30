@@ -1,12 +1,12 @@
 {
     "exchange": "BYBIT",
     "activo": "10000sats",
-    "direccion": "LONG",
+    "direccion": "SHORT",
     "inverso": false,
     "auto": true,
-    "pausa": false,
-    "apalancamiento": 3,
-    "precio_referencia": 0.001797,
+    "pausa": true,
+    "apalancamiento": 9,
+    "precio_referencia": 0,
     "distancia_grid": 0.27,
     "ganancia_long": 0.027,
     "ganancia_short": 0,
@@ -16,9 +16,5 @@
     "condicional_short": true,
     "umbral_libro": 0,
     "tp": 0,
-    "sl": 54,
-    "balance_inicial": "85.92075503",
-    "balance_actual": "84.45959647",
-    "beneficio_max": "1.2909781689100772",
-    "riesgo_max": "-3.8326250262235386"
+    "sl": 54
 }

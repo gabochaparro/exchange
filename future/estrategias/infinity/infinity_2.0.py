@@ -97,6 +97,7 @@ umbral = parametros['umbral_libro']
 auto = parametros['auto']
 invertir_ganancias_grid = parametros['invertir_ganancias_grid']
 breakeven = parametros['descarga_breakeven']
+reiniciar_parejas = parametros['reiniciar_parejas']
 # ---------------------------
 
 # Cambiar el apalancamiento
@@ -707,19 +708,19 @@ def limpiar_parejas_long():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*float(pareja['compra']['price']) <= float(orden['price']) <= 1.001*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']):
+                                if 0.99*float(pareja['compra']['price']) <= float(orden['price']) <= 1.01*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']):
                                     orden_puesta = True
                                 
                                 if exchange == "BYBIT":
                                     # Verificar si hay una orden condicional
                                     if orden['triggerPrice'] != "":
-                                        if 0.999*float(pareja['compra']['price']) <= float(orden['triggerPrice']) <= 1.001*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']) :
+                                        if 0.99*float(pareja['compra']['price']) <= float(orden['triggerPrice']) <= 1.01*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and not(orden['reduceOnly']) :
                                             orden_puesta = True
                                 
                                 if exchange == "BINANCE":
                                     # Verificar si hay una orden condicional
                                     if orden['stopPrice'] != "":
-                                        if 0.999*float(pareja['compra']['price']) <= float(orden['stopPrice']) <= 1.001*float(pareja['compra']['price']) and orden['side'] == "BUY" and not(orden['reduceOnly']) :
+                                        if 0.99*float(pareja['compra']['price']) <= float(orden['stopPrice']) <= 1.01*float(pareja['compra']['price']) and orden['side'] == "BUY" and not(orden['reduceOnly']) :
                                             orden_puesta = True
                             
                             if not(orden_puesta):
@@ -741,7 +742,7 @@ def limpiar_parejas_long():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*float(pareja['venta']['price']) <= float(orden['price']) <= 1.001*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
+                                if 0.99*float(pareja['venta']['price']) <= float(orden['price']) <= 1.01*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
                                     orden_puesta = True
                             
                             if not(orden_puesta):
@@ -838,19 +839,19 @@ def limpiar_parejas_short():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*float(pareja['venta']['price']) <= float(orden['price']) <= 1.001*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
+                                if 0.99*float(pareja['venta']['price']) <= float(orden['price']) <= 1.01*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
                                     orden_puesta = True
                                 
                                 
                                 # Verificar si hay una orden condicional
                                 if exchange == "BYBIT":
                                     if orden['triggerPrice'] != "":
-                                        if 0.999*float(pareja['venta']['price']) <= float(orden['triggerPrice']) <= 1.001*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
+                                        if 0.99*float(pareja['venta']['price']) <= float(orden['triggerPrice']) <= 1.01*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
                                             orden_puesta = True
                                 
                                 if exchange == "BINANCE":
                                     if orden['stopPrice'] != "":
-                                        if 0.999*float(pareja['venta']['price']) <= float(orden['stopPrice']) <= 1.001*float(pareja['venta']['price']) and orden['side'] == "SELL" and not(orden['reduceOnly']):
+                                        if 0.99*float(pareja['venta']['price']) <= float(orden['stopPrice']) <= 1.01*float(pareja['venta']['price']) and orden['side'] == "SELL" and not(orden['reduceOnly']):
                                             orden_puesta = True
                             
                             if not(orden_puesta):
@@ -872,7 +873,7 @@ def limpiar_parejas_short():
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
-                                if 0.999*float(pareja['compra']['price']) <= float(orden['price']) <= 1.001*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and orden['reduceOnly']:
+                                if 0.99*float(pareja['compra']['price']) <= float(orden['price']) <= 1.01*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and orden['reduceOnly']:
                                     orden_puesta = True
                             
                             if not(orden_puesta):
@@ -1113,13 +1114,14 @@ def ordenes_venta(exchange, symbol):
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                         
-                        if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
-                            prox_compra, prox_venta = prox_compra_venta()
-                            if inverso:
-                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
-                            else:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
-                        
+                        else:
+                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
+                                prox_compra, prox_venta = prox_compra_venta()
+                                if inverso:
+                                    orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
+                                else:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
+                            
                         # Colocar SL
                         '''
                         if ganancia_actual() < -3*parametros['ganancia_grid_long'] and precio_actual > 1.0001*compra_venta["compra"]['price']/(1+ganancia_grid/100):
@@ -1377,13 +1379,14 @@ def ordenes_compra_short(exchange, symbol):
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=cantidad)
                         
-                        if precio_actual < float(compra_venta["compra"]['price']) < 0.999*avgPrice:
-                            prox_compra, prox_venta = prox_compra_venta()
-                            if inverso:
-                                orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
-                            else:
-                                orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
-                            
+                        else:
+                            if precio_actual < float(compra_venta["compra"]['price']) < 0.999*avgPrice:
+                                prox_compra, prox_venta = prox_compra_venta()
+                                if inverso:
+                                    orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
+                                else:
+                                    orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
+                                
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:
                             time.sleep(3.06)
@@ -2207,6 +2210,11 @@ def auxiliar():
                         future.apalancamiento(exchange,activo,apalancamiento)
                     apalancamiento = parametros['apalancamiento']
 
+            # Reiniciar las parejas
+            if reiniciar_parejas:
+                parejas_compra_venta = []
+                parejas_compra_venta_short = []
+            
             # Equilibrar posiciones y take profits
             #equilibrio()
 
@@ -2586,6 +2594,7 @@ while iniciar_estrategia:
             umbral = int(parametros['umbral_libro'])
             auto = parametros['auto']
             breakeven = parametros['descarga_breakeven']
+            reiniciar_parejas = parametros['reiniciar_parejas']
             # ---------------------------
 
         except Exception as e:
