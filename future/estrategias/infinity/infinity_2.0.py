@@ -1351,28 +1351,15 @@ def ordenes_compra_short(exchange, symbol):
                 # Colocar la orden de compra y actualiza la pareja de compra_veta
                 for compra_venta in parejas_compra_venta_short:
                     if compra_venta["venta"]['ejecutada'] and compra_venta["compra"]['orderId'] == "":
-                            
-                        # Colocar SL
-                        '''
-                        if ganancia_actual() < -3*parametros['ganancia_grid_short'] and precio_actual < 0.999*compra_venta["venta"]['price']*(1+ganancia_grid/100):
-                            if qty != "":
-                                orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["venta"]['price']*(1+ganancia_grid/100),slSize=qty)
-                            
-                            # Verificar que la respuesta sea válida antes de modificar la pareja
-                            if orden_sl != None:
-                                compra_venta["sl"]['orderId'] = orden_sl['orderId']
-                                print(json.dumps(parejas_compra_venta_short,indent=2))
-                                print("")
-                                '''
                         
                         # Definir cantidad
-                        orden = None
                         if inverso:
                             cantidad = round(float(compra_venta["compra"]['cantidad'])*float(compra_venta["venta"]['price'])/lote)*lote
                         else:
                             cantidad = compra_venta["compra"]['cantidad']
                         
                         # Colocar TP
+                        orden = None
                         if precio_actual > float(compra_venta["compra"]['price']) < 0.999*avgPrice:
                             if inverso:
                                 orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=cantidad)
@@ -1386,6 +1373,19 @@ def ordenes_compra_short(exchange, symbol):
                                     orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
                                 else:
                                     orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
+                            
+                        # Colocar SL
+                        '''
+                        if ganancia_actual() < -3*parametros['ganancia_grid_short'] and precio_actual < 0.999*compra_venta["venta"]['price']*(1+ganancia_grid/100):
+                            if qty != "":
+                                orden_sl = future.stop_loss(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["venta"]['price']*(1+ganancia_grid/100),slSize=qty)
+                            
+                            # Verificar que la respuesta sea válida antes de modificar la pareja
+                            if orden_sl != None:
+                                compra_venta["sl"]['orderId'] = orden_sl['orderId']
+                                print(json.dumps(parejas_compra_venta_short,indent=2))
+                                print("")
+                                '''
                                 
                         # Verificar que la respuesta sea válida antes de modificar la pareja
                         if orden != None:

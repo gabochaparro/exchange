@@ -1,0 +1,15 @@
+{
+    "fecha_inicio": "1735568742000",
+    "exchange": "BYBIT",
+    "activo": "AIXBT",
+    "inverso": false,
+    "balance_inicial": "13.43974864",
+    "balance_actual": "13.68380846",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "1.5972864950843444",
+    "riesgo_maximo": "-5.431529781943893",
+    "beneficio_maximo": "2.2217786061213154",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}
