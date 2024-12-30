@@ -1550,22 +1550,14 @@ def mostrar_lista(data):
 # ------------------------------------------------
 def imprimir_parejas():
     try:
-        parejas_long = copy.deepcopy(parejas_compra_venta)
-        parejas_short = copy.deepcopy(parejas_compra_venta_short)
         monitor = cuenta
         
         while iniciar_estrategia:
 
-            # Mostrar parejas Long
-            if parejas_compra_venta != parejas_long or cuenta != monitor:
-                parejas_long = parejas_compra_venta.copy()
+            # Mostrar parejas
+            if monitor != cuenta:
                 monitor = cuenta
                 mostrar_lista(parejas_compra_venta)
-            
-            # Mostrar parejas Short
-            if parejas_compra_venta_short != parejas_short or cuenta != monitor:
-                parejas_short = parejas_compra_venta_short.copy()
-                monitor = cuenta
                 mostrar_lista(parejas_compra_venta_short)
 
 
@@ -2214,6 +2206,8 @@ def auxiliar():
             if reiniciar_parejas:
                 parejas_compra_venta = []
                 parejas_compra_venta_short = []
+                parametros['reiniciar_parejas'] = False
+                json.dump(parametros, open(parametros_copia, "w"), indent=4)
             
             # Equilibrar posiciones y take profits
             #equilibrio()
