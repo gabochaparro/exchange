@@ -4,7 +4,7 @@
     "direccion": "SHORT",
     "inverso": false,
     "auto": false,
-    "pausa": false,
+    "pausa": true,
     "apalancamiento": 18,
     "precio_referencia": 0,
     "distancia_grid": 0.81,
@@ -15,7 +15,7 @@
     "condicional_long": true,
     "condicional_short": true,
     "umbral_libro": 0,
-    "tp": 7.2,
-    "sl": 3.6,
+    "tp": 4.05,
+    "sl": 2.025,
     "reiniciar_parejas": false
 }

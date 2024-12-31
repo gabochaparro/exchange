@@ -702,9 +702,9 @@ def limpiar_parejas_long():
                     # Limpiar la lista por falta de orden
                     if not(pareja['compra']['ejecutada']):
                         
+                        orden_puesta = False
                         if ordenes_abiertas != []:
                             
-                            orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
@@ -723,37 +723,36 @@ def limpiar_parejas_long():
                                         if 0.99*float(pareja['compra']['price']) <= float(orden['stopPrice']) <= 1.01*float(pareja['compra']['price']) and orden['side'] == "BUY" and not(orden['reduceOnly']) :
                                             orden_puesta = True
                             
-                            if not(orden_puesta):
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                time.sleep(3.06)
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                if not(pareja['compra']['ejecutada']):
-                                    if pareja in parejas_compra_venta:
-                                        parejas_compra_venta.remove(pareja)
-                                        print("Pareja long removida!", pareja)
-                                        print("")
+                        if not(orden_puesta):
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            time.sleep(3.06)
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            if not(pareja['compra']['ejecutada']):
+                                if pareja in parejas_compra_venta:
+                                    parejas_compra_venta.remove(pareja)
+                                    print("Pareja long removida por falta de orden!", pareja)
+                                    print("")
                     
                     # Limpiar la lista por falta de TP
                     if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']) and pareja['venta']['orderId'] != "":
                             
+                        orden_puesta = False
                         if ordenes_abiertas != []:
-                            
-                            orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
                                 if 0.99*float(pareja['venta']['price']) <= float(orden['price']) <= 1.01*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
                                     orden_puesta = True
                             
-                            if not(orden_puesta):
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                time.sleep(3.06)
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
-                                    if pareja in parejas_compra_venta:
-                                        parejas_compra_venta.remove(pareja)
-                                        print("Pareja long removida por falta de TP!", pareja)
-                                        print("")
+                        if not(orden_puesta):
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            time.sleep(3.06)
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            if pareja['compra']['ejecutada'] and not(pareja['venta']['ejecutada']):
+                                if pareja in parejas_compra_venta:
+                                    parejas_compra_venta.remove(pareja)
+                                    print("Pareja long removida por falta de TP!", pareja)
+                                    print("")
 
                 if time.time()-ti < retraso_api:
                     time.sleep(retraso_api)
@@ -832,16 +831,15 @@ def limpiar_parejas_short():
                     # Limpiar la lista por falta de orden
                     if not(pareja['venta']['ejecutada']):
                         
+                        orden_puesta = False
                         if ordenes_abiertas != []:
                             
                             # Verificar si estan puestas las ordenes
-                            orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
                                 if 0.99*float(pareja['venta']['price']) <= float(orden['price']) <= 1.01*float(pareja['venta']['price']) and orden['side'].upper() == "SELL" and not(orden['reduceOnly']):
                                     orden_puesta = True
-                                
                                 
                                 # Verificar si hay una orden condicional
                                 if exchange == "BYBIT":
@@ -854,37 +852,37 @@ def limpiar_parejas_short():
                                         if 0.99*float(pareja['venta']['price']) <= float(orden['stopPrice']) <= 1.01*float(pareja['venta']['price']) and orden['side'] == "SELL" and not(orden['reduceOnly']):
                                             orden_puesta = True
                             
-                            if not(orden_puesta):
-                                actualizar_pareja_short(exchange=exchange, symbol=activo)
-                                time.sleep(3.06)
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                if not(pareja['venta']['ejecutada']):
-                                    if pareja in parejas_compra_venta_short:
-                                        parejas_compra_venta_short.remove(pareja)
-                                        print("Pareja short removida!", pareja)
-                                        print("")
+                        if not(orden_puesta):
+                            actualizar_pareja_short(exchange=exchange, symbol=activo)
+                            time.sleep(3.06)
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            if not(pareja['venta']['ejecutada']):
+                                if pareja in parejas_compra_venta_short:
+                                    parejas_compra_venta_short.remove(pareja)
+                                    print("Pareja short removida!", pareja)
+                                    print("")
                 
                     # Limpiar la lista por falta de TP
                     if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']) and pareja['compra']['orderId'] != "":
                         
+                        orden_puesta = False
                         if ordenes_abiertas != []:
                             
-                            orden_puesta = False
                             for orden in ordenes_abiertas:
                                 
                                 # Verificar si hay una orden limite
                                 if 0.99*float(pareja['compra']['price']) <= float(orden['price']) <= 1.01*float(pareja['compra']['price']) and orden['side'].upper() == "BUY" and orden['reduceOnly']:
                                     orden_puesta = True
                             
-                            if not(orden_puesta):
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                time.sleep(3.06)
-                                actualizar_pareja_long(exchange=exchange, symbol=activo)
-                                if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
-                                    if pareja in parejas_compra_venta:
-                                        parejas_compra_venta.remove(pareja)
-                                        print("Pareja short removida por falta de TP!", pareja)
-                                        print("")
+                        if not(orden_puesta):
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            time.sleep(3.06)
+                            actualizar_pareja_long(exchange=exchange, symbol=activo)
+                            if pareja['venta']['ejecutada'] and not(pareja['compra']['ejecutada']):
+                                if pareja in parejas_compra_venta:
+                                    parejas_compra_venta.remove(pareja)
+                                    print("Pareja short removida por falta de TP!", pareja)
+                                    print("")
                 
                 if time.time()-ti < retraso_api:
                     time.sleep(retraso_api)
@@ -1101,13 +1099,13 @@ def ordenes_venta(exchange, symbol):
                     if compra_venta["compra"]['ejecutada'] and compra_venta["venta"]['orderId'] == "":
                         
                         # Definir la cantidad
-                        orden = None
                         if inverso:
                             cantidad = round(float(compra_venta["venta"]['cantidad'])*float(compra_venta["venta"]['price'])/lote)*lote
                         else:
                             cantidad = compra_venta["venta"]['cantidad']
                         
                         # Colocar TP
+                        orden = None
                         if precio_actual < float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
                             if inverso:
                                 orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
