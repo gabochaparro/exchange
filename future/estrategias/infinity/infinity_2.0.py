@@ -1104,16 +1104,25 @@ def ordenes_venta(exchange, symbol):
                         else:
                             cantidad = compra_venta["venta"]['cantidad']
                         
+                        # Determinar si hay una orden de TP
+                        orden_puesta = False
+                        if ordenes_abiertas != []:
+                            for orden in ordenes_abiertas:
+                                
+                                # Verificar si hay una orden limite
+                                if 0.99*float(compra_venta['venta']['price']) <= float(orden['price']) <= 1.01*float(compra_venta['venta']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
+                                    orden_puesta = True
+                        
                         # Colocar TP
                         orden = None
-                        if precio_actual < float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
+                        if precio_actual < float(compra_venta["venta"]['price']) > 1.0011*avgPrice and not(orden_puesta):
                             if inverso:
                                 orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                         
                         else:
-                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
+                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice and not(orden_puesta):
                                 prox_compra, prox_venta = prox_compra_venta()
                                 if inverso:
                                     orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
@@ -1355,6 +1364,15 @@ def ordenes_compra_short(exchange, symbol):
                             cantidad = round(float(compra_venta["compra"]['cantidad'])*float(compra_venta["venta"]['price'])/lote)*lote
                         else:
                             cantidad = compra_venta["compra"]['cantidad']
+                        
+                        # Determinar si hay una orden de TP
+                        orden_puesta = False
+                        if ordenes_abiertas != []:
+                            for orden in ordenes_abiertas:
+                                
+                                # Verificar si hay una orden limite
+                                if 0.99*float(compra_venta['compra']['price']) <= float(orden['price']) <= 1.01*float(compra_venta['compra']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
+                                    orden_puesta = True
                         
                         # Colocar TP
                         orden = None

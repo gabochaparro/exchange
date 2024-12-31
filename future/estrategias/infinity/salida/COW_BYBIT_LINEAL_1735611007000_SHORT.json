@@ -1,0 +1,66 @@
+{
+    "fecha_inicio": "1735611007000",
+    "exchange": "BYBIT",
+    "activo": "COW",
+    "inverso": false,
+    "balance_inicial": "12.56141326",
+    "balance_actual": "12.78966013",
+    "ganancias_del_grid": "0.1326539199999996",
+    "ganancia_actual": "1.8127640997618084",
+    "riesgo_maximo": "-0.40135698871194275",
+    "beneficio_maximo": "1.8359161125155081",
+    "cantidad_parejeas": "2",
+    "parejas_completadas": "2",
+    "parejas": [
+        {
+            "general": {
+                "fecha": "2024-12-30 - 09:55:21 PM",
+                "beneficios": "0.0671260799999997"
+            },
+            "compra": {
+                "orderId": "6ce0cad5-d2a7-4c4c-8b35-c6da5371cbfa",
+                "price": "0.9091",
+                "cantidad": "8",
+                "monto": "7.2728",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-30 - 10:07:38 PM"
+            },
+            "venta": {
+                "orderId": "c4c256a9-d5f1-487b-bc44-0e7f3a3e2fd1",
+                "price": "0.9175",
+                "cantidad": "8",
+                "monto": "7.34",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-30 - 10:04:07 PM"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        },
+        {
+            "general": {
+                "fecha": "2024-12-30 - 09:26:12 PM",
+                "beneficios": "0.06552783999999988"
+            },
+            "compra": {
+                "orderId": "6284a1f4-8550-425e-9944-9eb84333d142",
+                "price": "0.909",
+                "cantidad": "8",
+                "monto": "7.272",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-30 - 09:54:51 PM"
+            },
+            "venta": {
+                "orderId": "f4b83e35-5623-4b44-80bd-62c56eb3ee11",
+                "price": "0.9172",
+                "cantidad": "8",
+                "monto": "7.3376",
+                "ejecutada": true,
+                "fecha_ejecucion": "2024-12-30 - 09:32:09 PM"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        }
+    ]
+}

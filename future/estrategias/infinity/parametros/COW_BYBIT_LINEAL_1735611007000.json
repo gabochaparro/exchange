@@ -4,7 +4,7 @@
     "direccion": "SHORT",
     "inverso": false,
     "auto": false,
-    "pausa": false,
+    "pausa": true,
     "apalancamiento": 18,
     "precio_referencia": 0,
     "distancia_grid": 0.81,
