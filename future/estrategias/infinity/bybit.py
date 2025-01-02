@@ -413,7 +413,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
         createdTime = orden['time']
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['createdTime'] == str(createdTime) and 0.99*float(stopPrice) <= float(orden['price']) <= 1.01*float(stopPrice) and orden['reduceOnly'] == True:
+            if orden['createdTime'] == str(createdTime):
                 
                 print(f"Take Profit Colocado en {orden['price']}.")
                 print("")
@@ -423,6 +423,15 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                 "price": orden['price'],
                 "qty": orden['qty']
                 }
+                
+        print(f"Take Profit Colocado en {stopPrice}.")
+        print("")
+
+        return {
+        "orderId": "-",
+        "price": str(stopPrice),
+        "qty": str(tpSize)
+        }
     
     except Exception as e:
         print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")

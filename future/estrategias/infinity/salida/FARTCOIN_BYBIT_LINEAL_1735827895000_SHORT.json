@@ -1,0 +1,15 @@
+{
+    "fecha_inicio": "1735827895000",
+    "exchange": "BYBIT",
+    "activo": "FARTCOIN",
+    "inverso": false,
+    "balance_inicial": "12.93528826",
+    "balance_actual": "12.73339224",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "-1.5503927393729378",
+    "riesgo_maximo": "-1.7662226415663977",
+    "beneficio_maximo": "3.060745551564538",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}

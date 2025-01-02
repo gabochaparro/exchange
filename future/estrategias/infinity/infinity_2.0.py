@@ -859,7 +859,7 @@ def limpiar_parejas_short():
                             if not(pareja['venta']['ejecutada']):
                                 if pareja in parejas_compra_venta_short:
                                     parejas_compra_venta_short.remove(pareja)
-                                    print("Pareja short removida!", pareja)
+                                    print("Pareja short removida por falta de orden!", pareja)
                                     print("")
                 
                     # Limpiar la lista por falta de TP
@@ -1104,25 +1104,16 @@ def ordenes_venta(exchange, symbol):
                         else:
                             cantidad = compra_venta["venta"]['cantidad']
                         
-                        # Determinar si hay una orden de TP
-                        orden_puesta = False
-                        if ordenes_abiertas != []:
-                            for orden in ordenes_abiertas:
-                                
-                                # Verificar si hay una orden limite
-                                if 0.99*float(compra_venta['venta']['price']) <= float(orden['price']) <= 1.01*float(compra_venta['venta']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
-                                    orden_puesta = True
-                        
                         # Colocar TP
-                        orden = None
-                        if precio_actual < float(compra_venta["venta"]['price']) > 1.0011*avgPrice and not(orden_puesta):
+                        orden = ""
+                        if precio_actual < float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
                             if inverso:
                                 orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                             else:
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                         
                         else:
-                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice and not(orden_puesta):
+                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
                                 prox_compra, prox_venta = prox_compra_venta()
                                 if inverso:
                                     orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
@@ -1143,8 +1134,9 @@ def ordenes_venta(exchange, symbol):
                                 '''
                         
                         # Verificar que la respuesta sea válida antes de modificar la pareja
-                        if orden != None:
-                            time.sleep(1.08)
+                        if orden != "":
+                            time.sleep(3.6)
+                            print("AQUI", orden)
                             compra_venta["venta"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)
@@ -1365,17 +1357,8 @@ def ordenes_compra_short(exchange, symbol):
                         else:
                             cantidad = compra_venta["compra"]['cantidad']
                         
-                        # Determinar si hay una orden de TP
-                        orden_puesta = False
-                        if ordenes_abiertas != []:
-                            for orden in ordenes_abiertas:
-                                
-                                # Verificar si hay una orden limite
-                                if 0.99*float(compra_venta['compra']['price']) <= float(orden['price']) <= 1.01*float(compra_venta['compra']['price']) and orden['side'].upper() == "SELL" and orden['reduceOnly']:
-                                    orden_puesta = True
-                        
                         # Colocar TP
-                        orden = None
+                        orden = ""
                         if precio_actual > float(compra_venta["compra"]['price']) < 0.999*avgPrice:
                             if inverso:
                                 orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=cantidad)
@@ -1404,8 +1387,9 @@ def ordenes_compra_short(exchange, symbol):
                                 '''
                                 
                         # Verificar que la respuesta sea válida antes de modificar la pareja
-                        if orden != None:
-                            time.sleep(1.08)
+                        if orden != "":
+                            time.sleep(3.6)
+                            print("AQUI", orden)
                             compra_venta["compra"]['orderId'] = orden['orderId']
                             print("Grid Actual:")
                             print(grid)

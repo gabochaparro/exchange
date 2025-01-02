@@ -1,13 +1,13 @@
 {
     "exchange": "BYBIT",
-    "activo": "fartcoin",
-    "direccion": "LONG",
+    "activo": "XLM",
+    "direccion": "SHORT",
     "inverso": false,
     "auto": true,
     "pausa": false,
     "apalancamiento": 27,
     "precio_referencia": 0,
-    "distancia_grid": 0.9,
+    "distancia_grid": 0.27,
     "ganancia_long": 0.36,
     "ganancia_short": 0,
     "descarga_breakeven": false,
@@ -15,7 +15,7 @@
     "condicional_long": true,
     "condicional_short": true,
     "umbral_libro": 0,
-    "tp": 3.6,
+    "tp": 5.4,
     "sl": 1.8,
     "reiniciar_parejas": false
 }

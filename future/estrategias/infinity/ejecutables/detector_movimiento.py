@@ -5,7 +5,6 @@ import pygame
 from gtts import gTTS
 from datetime import datetime
 from colorama import init, Fore
-import asyncio
 import pandas as pd
 
 
@@ -194,7 +193,7 @@ def texto_audio(texto):
 
 # FUNCIÓN PARA REPRODUCIR SONIDOS
 #--------------------------------
-async def reproducir_audio(audio):
+def reproducir_audio(audio):
     try:
         pygame.mixer.init()
         pygame.mixer.music.load(audio)
@@ -207,7 +206,7 @@ async def reproducir_audio(audio):
 
 #FUNCIÓN QUE ENVIA LAS ALERTAS
 #------------------------------------------------
-async def alertas(tick):
+def alertas(tick):
     try:
         
         porcentaje_precios = porcentaje_precio(tick)
@@ -224,7 +223,7 @@ async def alertas(tick):
                     print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
                     print("")
                     texto_audio("Movimiento bajista en " + str(tick))
-                    await reproducir_audio('alerta_voz.mp3')
+                    reproducir_audio('alerta_voz.mp3')
 
                 
                 # LONG
@@ -235,7 +234,7 @@ async def alertas(tick):
                     print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
                     print("")
                     texto_audio("Movimiento alcista en " + str(tick))
-                    await reproducir_audio('alerta_voz.mp3')
+                    reproducir_audio('alerta_voz.mp3')
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE ENVIA LAS ALERTAS. (alertas())")
@@ -262,30 +261,17 @@ while iniciar:
             for tick in ticks:
                 i = i + 1
                 #print (i, tick)
-                alerta =  asyncio.run(alertas(tick))
-                '''
-                # Gestionando errores
-                if alerta == "ERROR":
-                    ii = ii + 1
-                    if ii >= 3:
-                        print("ERROR EN LA BUSQUEDA")
-                        print("Esperando tiempo de recuperación,", tiempo_recuperacion, "Segundos...")
-                        print("")
-                        time.sleep(tiempo_recuperacion)
-                        ii = 0
-                        print("Buscando...")
-                        print("")
-                #--------------------
-                '''
+                alertas(tick)
                 time.sleep(tiempo_de_iteracion)
             print("Siguiente búsqueda en", tiempo_de_espera, "Segundos...")
             time.sleep(tiempo_de_espera)
+        
         except Exception as e:
             texto_audio("Error en la búsqueda, esperando " + str(tiempo_recuperacion) + " Segundos...")
             print("ERROR EN LA BUSQUEDA")
             print(e)
             print("Esperando tiempo de recuperación.", tiempo_recuperacion, "Segundos...")
             print("")
-            asyncio.run(reproducir_audio('alerta_voz.mp3'))
+            reproducir_audio('alerta_voz.mp3')
             time.sleep(tiempo_recuperacion)
 #'''
