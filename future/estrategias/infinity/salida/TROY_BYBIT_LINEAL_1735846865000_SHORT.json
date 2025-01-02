@@ -1,0 +1,15 @@
+{
+    "fecha_inicio": "1735846865000",
+    "exchange": "BYBIT",
+    "activo": "TROY",
+    "inverso": false,
+    "balance_inicial": "13.71689455",
+    "balance_actual": "13.53196715",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "-1.5558114063069726",
+    "riesgo_maximo": "-1.6634538464101472",
+    "beneficio_maximo": "1.1255724787940542",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}

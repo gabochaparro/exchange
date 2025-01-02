@@ -3,6 +3,7 @@ from pybit.unified_trading import HTTP
 import time
 import pygame
 from gtts import gTTS
+from mutagen.mp3 import MP3
 from datetime import datetime
 from colorama import init, Fore
 import asyncio
@@ -168,6 +169,8 @@ def porcentaje_precio(tick):
 #------------------------------------------------------------
 def texto_audio(texto):
     try:
+        # Variables globales
+        global duracion
         # Eliminar la palabra "USDT"
         texto = texto.replace("USDT", "")
         
@@ -182,6 +185,9 @@ def texto_audio(texto):
         
         # Generar el archivo de audio
         tts.save("alerta_voz.mp3")
+                
+        # Duracion del audio
+        duracion = MP3("alerta_voz.mp3").info.length
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE GENERA UN ARCHIVO DE AUDIO A PARTIR DE UN TEXTO. (texto_audio())")
@@ -194,11 +200,12 @@ def texto_audio(texto):
 
 # FUNCIÓN PARA REPRODUCIR SONIDOS
 #--------------------------------
-async def reproducir_audio(audio):
+def reproducir_audio(audio):
     try:
         pygame.mixer.init()
         pygame.mixer.music.load(audio)
         pygame.mixer.music.play()
+        time.sleep(duracion)
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE REPRODUCE AUDIO")
         print(e)
@@ -207,7 +214,7 @@ async def reproducir_audio(audio):
 
 #FUNCIÓN QUE ENVIA LAS ALERTAS
 #------------------------------------------------
-async def alertas(tick):
+def alertas(tick):
     try:
         
         porcentaje_precios = porcentaje_precio(tick)
@@ -224,7 +231,7 @@ async def alertas(tick):
                     print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
                     print("")
                     texto_audio("Movimiento bajista en " + str(tick))
-                    await reproducir_audio('alerta_voz.mp3')
+                    reproducir_audio('alerta_voz.mp3')
 
                 
                 # LONG
@@ -235,7 +242,7 @@ async def alertas(tick):
                     print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
                     print("")
                     texto_audio("Movimiento alcista en " + str(tick))
-                    await reproducir_audio('alerta_voz.mp3')
+                    reproducir_audio('alerta_voz.mp3')
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE ENVIA LAS ALERTAS. (alertas())")
@@ -262,24 +269,11 @@ while iniciar:
             for tick in ticks:
                 i = i + 1
                 #print (i, tick)
-                alerta =  asyncio.run(alertas(tick))
-                '''
-                # Gestionando errores
-                if alerta == "ERROR":
-                    ii = ii + 1
-                    if ii >= 3:
-                        print("ERROR EN LA BUSQUEDA")
-                        print("Esperando tiempo de recuperación,", tiempo_recuperacion, "Segundos...")
-                        print("")
-                        time.sleep(tiempo_recuperacion)
-                        ii = 0
-                        print("Buscando...")
-                        print("")
-                #--------------------
-                '''
+                alertas(tick)
                 time.sleep(tiempo_de_iteracion)
             print("Siguiente búsqueda en", tiempo_de_espera, "Segundos...")
             time.sleep(tiempo_de_espera)
+        
         except Exception as e:
             texto_audio("Error en la búsqueda, esperando " + str(tiempo_recuperacion) + " Segundos...")
             print("ERROR EN LA BUSQUEDA")

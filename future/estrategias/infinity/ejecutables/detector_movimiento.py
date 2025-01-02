@@ -3,8 +3,10 @@ from pybit.unified_trading import HTTP
 import time
 import pygame
 from gtts import gTTS
+from mutagen.mp3 import MP3
 from datetime import datetime
 from colorama import init, Fore
+import asyncio
 import pandas as pd
 
 
@@ -167,6 +169,8 @@ def porcentaje_precio(tick):
 #------------------------------------------------------------
 def texto_audio(texto):
     try:
+        # Variables globales
+        global duracion
         # Eliminar la palabra "USDT"
         texto = texto.replace("USDT", "")
         
@@ -181,6 +185,9 @@ def texto_audio(texto):
         
         # Generar el archivo de audio
         tts.save("alerta_voz.mp3")
+                
+        # Duracion del audio
+        duracion = MP3("alerta_voz.mp3").info.length
     
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE GENERA UN ARCHIVO DE AUDIO A PARTIR DE UN TEXTO. (texto_audio())")
@@ -198,6 +205,7 @@ def reproducir_audio(audio):
         pygame.mixer.init()
         pygame.mixer.music.load(audio)
         pygame.mixer.music.play()
+        time.sleep(duracion)
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE REPRODUCE AUDIO")
         print(e)
@@ -272,6 +280,6 @@ while iniciar:
             print(e)
             print("Esperando tiempo de recuperación.", tiempo_recuperacion, "Segundos...")
             print("")
-            reproducir_audio('alerta_voz.mp3')
+            asyncio.run(reproducir_audio('alerta_voz.mp3'))
             time.sleep(tiempo_recuperacion)
 #'''
