@@ -85,8 +85,8 @@ def actualizar_interfaz(data):
     info_general = [
         f"Balance inicial: {round(float(data['balance_inicial']), redondear)} {'USDT' if not data['inverso'] else data['activo']}",
         f"Balance actual: {round(float(data['balance_actual']), redondear)} {'USDT' if not data['inverso'] else data['activo']}",
-        f"Ganancias del grid: {round(float(data['balance_inicial'])*float(data['ganancias_del_grid'])/100, redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(float(data['ganancias_del_grid']), 2)}%) - ({data['parejas_completadas']}/{data['cantidad_parejeas']})",
-        f"Ganancia actual: {round(float(data['balance_actual'])-float(data['balance_inicial']), redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(float(data['ganancia_actual']), 2)}%) - ({round(float(data['beneficio_maximo']), 2)}% / {round(float(data['riesgo_maximo']), 2)}%)"
+        f"Ganancias del grid: {round(float(data['ganancias_del_grid']), redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(100*float(data['ganancias_del_grid'])/float(data['balance_inicial']), 2)}%)   ({data['parejas_completadas']}/{data['cantidad_parejeas']})",
+        f"Ganancia actual: {round(float(data['balance_actual'])-float(data['balance_inicial']), redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(float(data['ganancia_actual']), 2)}%)   ({round(float(data['beneficio_maximo']), 2)}% / {round(float(data['riesgo_maximo']), 2)}%)"
     ]
 
     for info in info_general:

@@ -410,6 +410,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                     reduceOnly=True
                 )
 
+        print (json.dumps(orden, indent=2))
         createdTime = orden['time']
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
@@ -546,6 +547,6 @@ def cambiar_margen(symbol,tradeMode):
 
 #orden = patrimonio()
 #orden = nueva_orden("BTCUSDT","LIMIT",0.0014,103500,"BUY",18)
-#orden = take_profit("IOUSDT","SHORT",3.75,"LIMIT",1)
+#orden = take_profit("FARTCOINUSDT","LONG",1.55,"LIMIT",1)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")
 #print(json.dumps(orden, indent=2))
