@@ -5,10 +5,12 @@ gate_api
 gTTS
 kucoin_futures_python
 mutagen
+pandas
 paramiko
 Pillow
 pybit
 pygame
+pyinstaller
 python_binance
 python_bitget
 python_okx
