@@ -1,0 +1,66 @@
+{
+    "fecha_inicio": "1736252504000",
+    "exchange": "BYBIT",
+    "activo": "SPX",
+    "inverso": false,
+    "balance_inicial": "15.08025499",
+    "balance_actual": "14.82988196",
+    "ganancias_del_grid": "0.0",
+    "ganancia_actual": "-1.8213144948950208",
+    "riesgo_maximo": "-1.7261123248420636",
+    "beneficio_maximo": "0.1491080887883556",
+    "cantidad_parejeas": "2",
+    "parejas_completadas": "0",
+    "parejas": [
+        {
+            "general": {
+                "fecha": "2025-01-07 - 08:46:38 AM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "5c308ff7-87bf-4cea-b93e-fd225083f12d",
+                "price": "1.3798",
+                "cantidad": "4",
+                "monto": "5.5192",
+                "ejecutada": true,
+                "fecha_ejecucion": "2025-01-07 - 08:47:38 AM"
+            },
+            "venta": {
+                "orderId": "-",
+                "price": "1.3935339599999998",
+                "cantidad": "4.0",
+                "monto": "5.574135839999999",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        },
+        {
+            "general": {
+                "fecha": "2025-01-07 - 07:36:15 AM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "a1f3a815-c3f2-4c68-b9d9-1a48e08cd1a3",
+                "price": "1.3935",
+                "cantidad": "4",
+                "monto": "5.574",
+                "ejecutada": true,
+                "fecha_ejecucion": "2025-01-07 - 07:36:41 AM"
+            },
+            "venta": {
+                "orderId": "34adc2a1-86df-446d-8819-c27f6f2f5532",
+                "price": "1.4076",
+                "cantidad": "4.0",
+                "monto": "5.6304",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        }
+    ]
+}

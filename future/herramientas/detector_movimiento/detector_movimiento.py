@@ -206,6 +206,8 @@ def reproducir_audio(audio):
         pygame.mixer.music.load(audio)
         pygame.mixer.music.play()
         time.sleep(duracion)
+        pygame.mixer.music.unload()  # Liberar el archivo después de reproducir
+        pygame.mixer.quit()  # Finalizar el mixer
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE REPRODUCE AUDIO")
         print(e)

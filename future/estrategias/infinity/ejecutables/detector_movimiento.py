@@ -6,7 +6,6 @@ from gtts import gTTS
 from mutagen.mp3 import MP3
 from datetime import datetime
 from colorama import init, Fore
-import asyncio
 import pandas as pd
 
 
@@ -206,6 +205,8 @@ def reproducir_audio(audio):
         pygame.mixer.music.load(audio)
         pygame.mixer.music.play()
         time.sleep(duracion)
+        pygame.mixer.music.unload()  # Liberar el archivo después de reproducir
+        pygame.mixer.quit()  # Finalizar el mixer
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE REPRODUCE AUDIO")
         print(e)
@@ -280,6 +281,6 @@ while iniciar:
             print(e)
             print("Esperando tiempo de recuperación.", tiempo_recuperacion, "Segundos...")
             print("")
-            asyncio.run(reproducir_audio('alerta_voz.mp3'))
+            reproducir_audio('alerta_voz.mp3')
             time.sleep(tiempo_recuperacion)
 #'''

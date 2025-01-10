@@ -1,0 +1,15 @@
+{
+    "fecha_inicio": "1736252504000",
+    "exchange": "BYBIT",
+    "activo": "SPX",
+    "inverso": false,
+    "balance_inicial": "15.08025499",
+    "balance_actual": "14.82988196",
+    "ganancias_del_grid": "0",
+    "ganancia_actual": "-1.8398856662834204",
+    "riesgo_maximo": "-1.7261123248420636",
+    "beneficio_maximo": "0.1491080887883556",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": []
+}
