@@ -2142,9 +2142,7 @@ def equilibrio():
 #--------------------------------------------
 def auxiliar():
     try:
-        global precio_actual, ordenes_abiertas, posiciones, cuenta, apalancamiento, auto, parametros, grid, breakeven, parejas_compra_venta, parejas_compra_venta_short
-        
-        monitor = cuenta
+        global precio_actual, ordenes_abiertas, posiciones, cuenta, apalancamiento, auto, parametros, grid, breakeven, parejas_compra_venta, parejas_compra_venta_short, pausa
 
         while iniciar_estrategia:
 
@@ -2183,7 +2181,7 @@ def auxiliar():
             # Mantener margen
             margen()
 
-            # Gestionar la  dirección
+            # Gestionar la dirección
             direccion()
 
             # Cambiar el apalancamiento
@@ -2204,6 +2202,7 @@ def auxiliar():
 
             # Reiniciar las parejas
             if reiniciar_parejas:
+                pausa = True
                 parejas_compra_venta = []
                 parejas_compra_venta_short = []
                 parametros['reiniciar_parejas'] = False
