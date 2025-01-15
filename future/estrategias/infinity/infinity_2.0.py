@@ -1841,7 +1841,7 @@ def detectar_tendencia(exchange, symbol):
                 return velas
             
             except Exception as e:
-                print("ERROR EN LA FUNCIÓN. obtener_velas_precio()")
+                print("ERROR EN LA FUNCIÓN: obtener_velas_precio()")
                 print(e)
                 print("")
                 velas = []
@@ -1852,14 +1852,13 @@ def detectar_tendencia(exchange, symbol):
         # -----------------------------------
         def serie_velas():
             try:
-                global serie
                 lista_velas = []
                 for intervalo in intervalos:
                     lista_velas.append(obtener_velas_precio(symbol,intervalo))
                 
-                serie = lista_velas
                 #print("Nueva Serie de Velas")
-                time.sleep(60)
+                return lista_velas
+            
             except Exception as e:
                 print("ERROR EN LA FUNCIÓN velas()")
                 print(e)
@@ -1870,16 +1869,17 @@ def detectar_tendencia(exchange, symbol):
         # --------------------------------------------------
         def tendencia(velas):
             try:
-                # Incializar variables
-                vela_inicial_apertura = float(velas[0][1])
-                vela_medio_apertura = float(velas[1][1])
-                vela_medio_cierre = float(velas[1][4])
-                vela_final_cierre = future_ws.precio_actual
-                
-                if (vela_medio_cierre > vela_inicial_apertura) and (vela_final_cierre > vela_medio_apertura):
-                    return "ALCISTA"
-                if (vela_medio_cierre < vela_inicial_apertura) and (vela_final_cierre < vela_medio_apertura):
-                    return "BAJISTA"
+                if len(velas) > 2:
+                    # Inicializar variables
+                    vela_inicial_apertura = float(velas[0][1])
+                    vela_medio_apertura = float(velas[1][1])
+                    vela_medio_cierre = float(velas[1][4])
+                    vela_final_cierre = precio_actual
+                    
+                    if (vela_medio_cierre > vela_inicial_apertura) and (vela_final_cierre > vela_medio_apertura):
+                        return "ALCISTA"
+                    if (vela_medio_cierre < vela_inicial_apertura) and (vela_final_cierre < vela_medio_apertura):
+                        return "BAJISTA"
                 
                 return "RANGO"
             
@@ -1914,16 +1914,8 @@ def detectar_tendencia(exchange, symbol):
                 print("ERROR EN LA FUNCIÓN detector()")
         # ----------------------------------------
 
-        serie_velas()
-        hilo_serie = threading.Thread(target=serie_velas)
-        hilo_serie.daemon = True
-        hilo_serie.start()
-        
         while iniciar_estrategia:
-            if not(hilo_serie.is_alive()):
-                hilo_serie = threading.Thread(target=serie_velas)
-                hilo_serie.daemon = True
-                hilo_serie.start()
+            serie = serie_velas()
             tendencia_detector = detector(serie)
             time.sleep(1)
 

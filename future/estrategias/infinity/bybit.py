@@ -410,11 +410,11 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                     reduceOnly=True
                 )
 
-        print (json.dumps(orden, indent=2))
+        #print (json.dumps(orden, indent=2))
         createdTime = orden['time']
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
-            if orden['createdTime'] == str(createdTime):
+            if 0.99*float(createdTime) <= float(orden['createdTime']) <= 1.01*float(createdTime) and orden['orderStatus'] == "Untriggered" and orden['reduceOnly'] == True:
                 
                 print(f"Take Profit Colocado en {orden['price']}.")
                 print("")

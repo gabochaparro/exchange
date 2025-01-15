@@ -37,7 +37,7 @@ def precio_actual_activo(symbol):
             global precio_actual
             print("### WS BYBIT: Precio actual Cerrado ###")
             precio_actual = 0
-            print(precio_actual)
+            #print(precio_actual)
 
         def on_open(ws):
             print("### WS BYBIT: Precio Actual Abierto ###")
@@ -52,7 +52,7 @@ def precio_actual_activo(symbol):
                                     )
         
         def ping():
-            while precio_actual != 0:
+            while True:
                 time.sleep(36)
                 ws.send(json.dumps({'op': 'ping'}))
                 #print("Ping Enviado")

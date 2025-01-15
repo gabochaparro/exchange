@@ -3,6 +3,13 @@ import json
 import ssl
 import time
 import threading
+from pybit.unified_trading import HTTP# Definir la session para Bybit
+
+bybit_session = HTTP(
+                    testnet=False,
+                    api_key='',
+                    api_secret='',
+                )
 
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
@@ -28,6 +35,7 @@ def precio_actual_activo(symbol):
             # Recibir el mensaje del precio actual
             if "data" in data_precio_actual:
                 precio_actual = float(data_precio_actual['data'][0]['p'])
+                #time.sleep(1)
                 #print(precio_actual)
 
         def on_error(ws, error):
@@ -52,11 +60,11 @@ def precio_actual_activo(symbol):
                                     )
         
         def ping():
-            while precio_actual != 0:
+            while True:
                 time.sleep(36)
                 ws.send(json.dumps({'op': 'ping'}))
                 #print("Ping Enviado")
-        
+
         threading.Thread(target=ping).start()
         
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})

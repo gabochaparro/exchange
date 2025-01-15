@@ -7,16 +7,16 @@ bybit_api_key = '1NCW0rD8IsNNbEAWp4'
 bybit_api_secret = 'jg16h4DgUzNKw1tJp3U0IDpHcRQ8ELXR3c81'
 
 # Inserta tus claves de API de ByBit (SUBCUENTA01) futuros aquí
-bybit_subcuenta01_api_key = 'b29u0sXD6jk2oyGmgx'
-bybit_subcuenta01_api_secret = 'i98MvaFSf475NXNJdbavvAXNUeIiroRwNV46'
+bybit_subcuenta01_api_key = 'ow6RbnPWu90X8sErNX'
+bybit_subcuenta01_api_secret = 'OPNvkoRqGiXp7QmcldzKGPuTZ6Q8QX0yOwhM'
 
 # Inserta tus claves de API de BYBIT futuros aquí
-bybit_subcuenta04_api_key = '1K3hIlW88E9DMmBiPz'
-bybit_subcuenta04_api_secret = 'XCHvcqdjF1k2h4fk56u9P8VjmIT5xGaczv25'
+bybit_subcuenta02_api_key = 'BagUl3MnSuParWWjdn'
+bybit_subcuenta02_api_secret = 'pSjSB58qNlA7c5i1mUQaM72hyXQJQQwK6r29'
 
 # Inserta tus claves de API de BYBIT futuros aquí
-bybit_subcuenta05_api_key = 'dLyuaJW8extoYecFvd'
-bybit_subcuenta05_api_secret = 'CFzMBzyEZy140mJWvivOpFcROd9Ddt05E4QS'
+bybit_subcuenta03_api_key = 'm75CiXUhBLiyIPCOLb'
+bybit_subcuenta03_api_secret = 'BScTn41mKCS3CvpMCScf9TYfOSEWiR4sfm97'
 
 # Inserta tus claves de API de BITGET futuros aquí
 bitget_api_key = "bg_5edea92dbb19848ce1729b19dee73de9"

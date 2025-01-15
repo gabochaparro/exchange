@@ -111,7 +111,7 @@ def actualizar_interfaz():
         else:  # Otros tipos (int, float, etc.) como campos editables
             if 'beneficio_max' != clave != 'riesgo_max':
                 entry = tk.Entry(frame_editor, width=9)
-                entry.insert(0, str(valor).upper())
+                entry.insert(0, str(valor))
                 entry.grid(row=i + 2, column=1, padx=1.8, pady=1.8)
                 entries[clave] = entry
 
