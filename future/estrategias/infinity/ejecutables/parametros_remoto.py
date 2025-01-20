@@ -11,6 +11,7 @@ EC2_USER = "ubuntu"  # Usuario para conectar a EC2
 EC2_KEY_PATH = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/clave_pen_ec2_01.pem"  # Ruta a tu llave privada
 PARAMETROS = "/home/ubuntu/exchange/future/estrategias/infinity"  # Directorio en EC2 donde están los parametros iniciales
 PARAMETROS_LIVE = "/home/ubuntu/exchange/future/estrategias/infinity/parametros"  # Directorio en EC2 donde están los parametros en vivo
+SALIDA = "/home/ubuntu/exchange/future/estrategias/infinity/salida" # Directorio en EC2 donde están las salidas
 
 # Variables globales
 ruta_archivo = None
@@ -85,13 +86,23 @@ def subir_archivo_remoto(directorio_remoto):
 def main():
     def cargar_archivos():
         parametros = opcion_parametros.get()
-        directorio_remoto = PARAMETROS_LIVE if parametros == "Live" else PARAMETROS
+        if parametros == "Live":
+            directorio_remoto = PARAMETROS_LIVE
+        elif parametros == "Iniciales":
+            directorio_remoto = PARAMETROS
+        else:
+            directorio_remoto = SALIDA
         archivos = listar_archivos_remotos(directorio_remoto)
         lista_archivos_var.set(archivos)
 
     def descargar_archivo():
         parametros = opcion_parametros.get()
-        directorio_remoto = PARAMETROS_LIVE if parametros == "Live" else PARAMETROS
+        if parametros == "Live":
+            directorio_remoto = PARAMETROS_LIVE
+        elif parametros == "Iniciales":
+            directorio_remoto = PARAMETROS
+        else:
+            directorio_remoto = SALIDA
         seleccion = lista_archivos.curselection()  # Obtener el índice seleccionado
         if seleccion:
             archivo = lista_archivos.get(seleccion[0])  # Obtener el archivo seleccionado
@@ -116,15 +127,16 @@ def main():
     opcion_parametros = tk.StringVar(value="Parametros_Iniciales")
     ttk.Radiobutton(frame, text="Parametros Iniciales", variable=opcion_parametros, value="Iniciales").grid(row=1, column=0, sticky=tk.W)
     ttk.Radiobutton(frame, text="Parametros Vivos", variable=opcion_parametros, value="Live").grid(row=2, column=0, sticky=tk.W)
+    ttk.Radiobutton(frame, text="Salida", variable=opcion_parametros, value="Salida").grid(row=3, column=0, sticky=tk.W)
 
-    ttk.Button(frame, text="Selecionar Archivos", command=cargar_archivos).grid(row=3, column=0, pady=5, sticky=tk.W)
+    ttk.Button(frame, text="Selecionar Archivos", command=cargar_archivos).grid(row=4, column=0, pady=5, sticky=tk.W)
 
     lista_archivos_var = tk.StringVar(value=[])
     lista_archivos = tk.Listbox(frame, listvariable=lista_archivos_var, height=10, width=50)
-    lista_archivos.grid(row=4, column=0, pady=5, sticky=tk.W)
+    lista_archivos.grid(row=5, column=0, pady=5, sticky=tk.W)
 
-    ttk.Button(frame, text="Descargar Archivo", command=descargar_archivo).grid(row=5, column=0, pady=5, sticky=tk.W)
-    ttk.Button(frame, text="Subir Archivo", command=subir_archivo).grid(row=6, column=0, pady=5, sticky=tk.W)
+    ttk.Button(frame, text="Descargar Archivo", command=descargar_archivo).grid(row=6, column=0, pady=5, sticky=tk.W)
+    ttk.Button(frame, text="Subir Archivo", command=subir_archivo).grid(row=7, column=0, pady=5, sticky=tk.W)
 
     root.mainloop()
 

@@ -474,7 +474,7 @@ def margen_disponible(symbol):
     try:
         
         symbol = symbol.upper().split("USD")[0].upper()
-        return float(bybit_session.get_wallet_balance(accountType="UNIFIED", coin=symbol)['result']['list'][0]['coin'][0]['availableToWithdraw'])
+        return bybit_session.get_wallet_balance(accountType="UNIFIED", coin=symbol)['result']['list'][0]['coin']#[0]['availableToWithdraw'])
     
     except Exception as e:
         print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
