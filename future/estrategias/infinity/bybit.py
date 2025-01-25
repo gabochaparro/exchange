@@ -546,6 +546,7 @@ def cambiar_margen(symbol,tradeMode):
 # ------------------------------------
 
 #orden = patrimonio()
+#orden = margen_disponible()
 #orden = nueva_orden("BTCUSDT","LIMIT",0.0014,103500,"BUY",18)
 #orden = take_profit("FARTCOINUSDT","LONG",1.55,"LIMIT",1)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")

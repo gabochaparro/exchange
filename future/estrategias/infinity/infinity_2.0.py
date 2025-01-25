@@ -1728,7 +1728,7 @@ def detener_estrategia():
                 ganancias_grid_short = ganancias_grid_short + float(pareja['general']['beneficios'])
 
         # Detener estrategia por Take Profit
-        if ((beneficio > tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > tp) or beneficio > tp) and tp > 0:
+        if ((beneficio > tp and 100*(ganancias_grid+ganancias_grid_short)/balance_inicial > tp) or beneficio > tp) and tp != float(0):
             pausa = True
             parametros['pausa'] = True
             json.dump(parametros, open(parametros_copia, "w"), indent=4)
@@ -1740,7 +1740,7 @@ def detener_estrategia():
             print("")
 
         # Detener estrategia por Stop Loss    
-        if beneficio <= (-1)*(0.9*sl) and sl > 0:
+        if beneficio <= (-1)*(0.9*sl) and sl != float(0):
             iniciar_estrategia = False
             cerrar_todo()
             mostrar_lista(parejas_compra_venta)

@@ -474,7 +474,7 @@ def margen_disponible(symbol):
     try:
         
         symbol = symbol.upper().split("USD")[0].upper()
-        return bybit_session.get_wallet_balance(accountType="UNIFIED", coin=symbol)['result']['list'][0]['coin']#[0]['availableToWithdraw'])
+        return float(bybit_session.get_wallet_balance(accountType="UNIFIED", coin=symbol)['result']['list'][0]['coin'][0]['equity'])
     
     except Exception as e:
         print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
@@ -526,5 +526,6 @@ def cambiar_margen(symbol,tradeMode):
 #orden = stop_loss("BTCUSD", "SHORT", 66700)
 #orden = take_profit("BTCUSD", "SHORT", 65223.00, "LIMIT",2)
 #orden = trailing_stop("BTCUSD", "SHORT", 65223.00, 0.36)
+#orden = patrimonio('ethusd')
 #orden = margen_disponible("ethusd")
 #print(json.dumps(orden,indent=2))
