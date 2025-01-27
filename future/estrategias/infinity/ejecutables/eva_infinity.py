@@ -6,10 +6,15 @@ import time
 import os
 from datetime import datetime
 import glob
+import subprocess
+import platform
 
 # Directorios
 directorio_credenciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/credenciales.json"
 parametros_iniciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros_infinity_2.0.json"
+carpeta_parametros = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros/*"
+carpeta_salida = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/salida/*"
+ruta_infinity = "/Users/gabochaparro/Desktop/Infinity 20"
 
 # Colores personalizados
 COLOR_FONDO = "#1e1e2f"
@@ -29,9 +34,9 @@ def cargar_parametros_json(ruta):
             nombre_archivo = archivo.split("/")[-1]
             ventana.title(f"Eva Infinity 2.0 - {nombre_archivo.split(".json")[0]}")
             # Borrar contenido previo
-            for widget in header_center.winfo_children():
+            for widget in header_top.winfo_children():
                 widget.destroy()
-            header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
+            header_label = ttk.Label(header_top, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
             header_label.pack(anchor="center")
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -152,9 +157,6 @@ def monitorear_cambios_parametros():
     while True:
         if ruta_archivo:
             try:
-                # Especifica la ruta de la carpeta parametros
-                carpeta_parametros = 'future/estrategias/infinity/parametros/*'
-
                 # Usa glob para obtener todos los archivos dentro de la carpeta
                 archivos_parametros = glob.glob(carpeta_parametros)
 
@@ -185,9 +187,6 @@ def monitorear_cambios_parametros():
 def cargar_json_salida():
     global RUTA_JSON_LONG
     try:
-        # Especifica la ruta de la carpeta salida
-        carpeta_salida = 'future/estrategias/infinity/salida/*'
-
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
 
@@ -235,9 +234,6 @@ def cargar_json_salida():
 def cargar_json_salida_short():
     global RUTA_JSON_SHORT
     try:
-        # Especifica la ruta de la carpeta salida
-        carpeta_salida = 'future/estrategias/infinity/salida/*'
-
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
 
@@ -280,7 +276,7 @@ def cargar_json_salida_short():
         return None
 
 def crear_interfaz():
-    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG, RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT, header_left, header_center
+    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG, RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT, header_left, header_top
     # Crear la ventana principal
     ventana = tk.Tk()
     nombre_archivo = "Eva Future Infinity"
@@ -292,17 +288,21 @@ def crear_interfaz():
     estilo.configure("TFrame", background="#1e1e2e")
     estilo.configure("Header.TLabel", background="#1e1e2e", foreground=COLOR_TITULO, font=("Arial", 12, "bold"))
     estilo.configure("Content.TLabel", background="#1e1e2e", foreground="#ffffff", font=("Arial", 10))
-    
+    estilo.configure("Custom.TFrame", borderwidth=6, relief="solid", background="black")
+
     # Frame del header
     header = ttk.Frame(ventana, height=80, relief="raised")
     header.pack(side="top", fill="x")
 
     # Subframes dentro del header
-    header_center = ttk.Frame(header, relief="flat")
-    header_center.pack(side="top", fill="x", padx=10, pady=10)
+    header_top = ttk.Frame(header, relief="flat")
+    header_top.pack(side="top", fill="x", padx=10, pady=10)
     
     header_left = ttk.Frame(header, width=200, relief="flat")
     header_left.pack(side="left", fill="x", padx=10, pady=3)
+    
+    header_center = ttk.Frame(header, width=200, relief="flat")
+    header_center.pack(side="left", fill="x", padx=10, pady=3, expand=True)
 
     header_right = ttk.Frame(header, width=200, relief="flat")
     header_right.pack(side="right", fill="x", padx=10)
@@ -317,9 +317,21 @@ def crear_interfaz():
     ganancia_actual = ttk.Label(header_left, text="Ganancia actual: - USDT (0%) (0% / 0%)", style="Content.TLabel")
     ganancia_actual.pack(anchor="w", pady=2)
 
-    # Título principal en el header central
-    header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} -", style="Header.TLabel")
+    # Título principal en el header top
+    header_label = ttk.Label(header_top, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} -", style="Header.TLabel")
     header_label.pack(anchor="center")
+
+    # Botón para correr el infinity 2.0 en el header central
+    def correr_infinity():
+        if platform.system() == "Windows":
+            os.startfile(ruta_infinity)
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.run(["open", ruta_infinity])
+        else:  # Linux
+            subprocess.run(["xdg-open", ruta_infinity])
+    
+    boton_infinity = ttk.Button(header_center, text=f"CORRER INFINITY 2.0", command=correr_infinity)
+    boton_infinity.pack()
 
     # Entradas para API Key y API Secret en el header derecho
     try:

@@ -1,19 +1,21 @@
-import tkinter as tk
+import os
+import subprocess
+import platform
 
-# Crear ventana principal
-root = tk.Tk()
-root.title("Botón con Estilo Mejorado")
+# Ruta al archivo
+ruta_archivo = "/Users/gabochaparro/Desktop/Infinity 20"
 
-# Crear un frame para organizar los widgets
-frame = tk.Frame(root)
-frame.pack(padx=10, pady=10)
+def abrir_archivo(ruta_archivo):
+    """
+    Abre un archivo simulando un doble clic.
 
-# Botón que ocupa dos filas y tiene un estilo mejorado
-boton = tk.Button(
-    frame,
-    text="Guardar\nCredenciales"  # Texto en dos líneas
-)
-boton.grid(row=0, column=0, rowspan=2)  # Ocupa dos filas
+    :param ruta_archivo: Ruta completa del archivo a abrir.
+    """
+    if platform.system() == "Windows":
+        os.startfile(ruta_archivo)
+    elif platform.system() == "Darwin":  # macOS
+        subprocess.run(["open", ruta_archivo])
+    else:  # Linux
+        subprocess.run(["xdg-open", ruta_archivo])
 
-# Iniciar el bucle principal
-root.mainloop()
+abrir_archivo(ruta_archivo)

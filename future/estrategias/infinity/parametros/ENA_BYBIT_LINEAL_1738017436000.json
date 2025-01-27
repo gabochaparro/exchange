@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
-    "activo": "ena",
-    "direccion": "SHORT",
+    "activo": "ENA",
+    "direccion": "LONG",
     "inverso": false,
     "auto": true,
     "pausa": false,
