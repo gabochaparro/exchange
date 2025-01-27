@@ -346,12 +346,22 @@ def crear_interfaz():
 
     def correr_infinity():
         if platform.system() == "Windows":
-            os.startfile(ruta_infinity)
+            if opcion_seleccionada.get() == "local":
+                os.startfile(ruta_infinity)
+            else:
+                os.startfile(ruta_infinity_servidor)
+        
         elif platform.system() == "Darwin":  # macOS
-            subprocess.run(["open", ruta_infinity])
+            if opcion_seleccionada.get() == "local":
+                subprocess.run(["open", ruta_infinity])
+            else:
+                subprocess.run(["open", ruta_infinity_servidor])
+        
         else:  # Linux
-            subprocess.run(["xdg-open", ruta_infinity])
-        print(opcion_seleccionada.get())
+            if opcion_seleccionada.get() == "local":
+                subprocess.run(["xdg-open", ruta_infinity])
+            else:
+                subprocess.run(["xdg-open", ruta_infinity_servidor])
     
     boton_infinity = ttk.Button(header_center, text=f"CORRER INFINITY 2.0", command=correr_infinity)
     boton_infinity.pack()
