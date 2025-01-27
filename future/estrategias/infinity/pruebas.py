@@ -1,21 +1,37 @@
-import os
-import subprocess
-import platform
+import tkinter as tk
 
-# Ruta al archivo
-ruta_archivo = "/Users/gabochaparro/Desktop/Infinity 20"
+# Crear ventana principal
+root = tk.Tk()
+root.title("Selector de opciones - Tkinter")
+root.geometry("300x200")
 
-def abrir_archivo(ruta_archivo):
-    """
-    Abre un archivo simulando un doble clic.
+# Variable para almacenar la opción seleccionada
+opcion_seleccionada = tk.StringVar(value="local")  # Inicializa sin selección
 
-    :param ruta_archivo: Ruta completa del archivo a abrir.
-    """
-    if platform.system() == "Windows":
-        os.startfile(ruta_archivo)
-    elif platform.system() == "Darwin":  # macOS
-        subprocess.run(["open", ruta_archivo])
-    else:  # Linux
-        subprocess.run(["xdg-open", ruta_archivo])
+# Etiqueta de la pregunta
+pregunta = tk.Label(root, text="¿Cuál es la capital de Francia?", font=("Arial", 12))
+pregunta.pack(pady=10)
 
-abrir_archivo(ruta_archivo)
+# Opciones como botones de radio
+opciones = [("Local", "local"), ("Servidor", "remoto")]
+
+for texto, valor in opciones:
+    boton = tk.Radiobutton(
+        root,
+        text=texto,               # Texto mostrado
+        value=valor,              # Valor asociado a la opción
+        variable=opcion_seleccionada,  # Vincula la selección a la variable
+        font=("Arial", 10),
+        indicatoron=True  # Muestra el indicador circular
+    )
+    boton.pack(anchor="w", padx=20)
+
+# Botón para mostrar la opción seleccionada
+def mostrar_seleccion():
+    seleccion = opcion_seleccionada.get()
+
+boton_mostrar = tk.Button(root, text="Mostrar selección", command=mostrar_seleccion)
+boton_mostrar.pack(pady=10)
+
+# Iniciar el bucle de la aplicación
+root.mainloop()

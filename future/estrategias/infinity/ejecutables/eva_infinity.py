@@ -15,6 +15,7 @@ parametros_iniciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONE
 carpeta_parametros = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros/*"
 carpeta_salida = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/salida/*"
 ruta_infinity = "/Users/gabochaparro/Desktop/Infinity 20"
+ruta_infinity_servidor = ""
 
 # Colores personalizados
 COLOR_FONDO = "#1e1e2f"
@@ -322,6 +323,27 @@ def crear_interfaz():
     header_label.pack(anchor="center")
 
     # Botón para correr el infinity 2.0 en el header central
+    header_radiobutton = ttk.Frame(header_center, width=200, relief="flat")
+    header_radiobutton.pack(padx=10, pady=3)
+    
+    # Variable para almacenar la opción seleccionada
+    opcion_seleccionada = tk.StringVar(value="local")  # Inicializa sin selección
+
+    # Opciones como botones de radio
+    opciones = [("Local", "local"), ("Servidor", "remoto")]
+    i=0
+    for texto, valor in opciones:
+        boton = tk.Radiobutton(
+            header_radiobutton,
+            text=texto,               # Texto mostrado
+            value=valor,              # Valor asociado a la opción
+            variable=opcion_seleccionada,  # Vincula la selección a la variable
+            font=("Arial", 10),
+            indicatoron=True  # Muestra el indicador circular
+        )
+        boton.grid(row=0, column=i)
+        i=i+1
+
     def correr_infinity():
         if platform.system() == "Windows":
             os.startfile(ruta_infinity)
@@ -329,6 +351,7 @@ def crear_interfaz():
             subprocess.run(["open", ruta_infinity])
         else:  # Linux
             subprocess.run(["xdg-open", ruta_infinity])
+        print(opcion_seleccionada.get())
     
     boton_infinity = ttk.Button(header_center, text=f"CORRER INFINITY 2.0", command=correr_infinity)
     boton_infinity.pack()
