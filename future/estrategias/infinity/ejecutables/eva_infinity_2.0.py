@@ -4,15 +4,6 @@ from tkinter import filedialog, messagebox
 import threading
 import time
 import os
-import paramiko  # Para conexión SFTP
-
-# Configuración global para EC2
-EC2_HOST = "ec2-15-228-57-72.sa-east-1.compute.amazonaws.com"  # Dirección de tu instancia EC2
-EC2_PORT = 22  # Puerto SSH (22 por defecto)
-EC2_USER = "ubuntu"  # Usuario para conectar a EC2
-EC2_KEY_PATH = "future/estrategias/infinity/clave_pen_ec2_01.pem"  # Ruta a tu llave privada
-PARAMETROS = "/home/ubuntu/exchange/future/estrategias/infinity"  # Directorio en EC2 donde están los parametros iniciales
-PARAMETROS_LIVE = "/home/ubuntu/exchange/future/estrategias/infinity/parametros"  # Directorio en EC2 donde están los parametros en vivo
 
 # Función para cargar el archivo JSON
 def cargar_json():

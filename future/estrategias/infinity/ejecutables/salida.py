@@ -173,12 +173,14 @@ hilo_monitor = threading.Thread(target=monitorizar_cambios, daemon=True)
 hilo_monitor.start()
 
 # Cargar datos iniciales
+'''
 if RUTA_JSON == "" or not RUTA_JSON:
     seleccionar_archivo()
+'''
 data_inicial = cargar_json()
 if data_inicial:
     actualizar_interfaz(data_inicial)
-'''
+
 # Botón para seleccionar archivo
 boton_seleccionar_archivo = tk.Button(
     root,
@@ -188,5 +190,5 @@ boton_seleccionar_archivo = tk.Button(
     fg=COLOR_FONDO
 )
 boton_seleccionar_archivo.pack(pady=5)
-'''
+
 root.mainloop()
