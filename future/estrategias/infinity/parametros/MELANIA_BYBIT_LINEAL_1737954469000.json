@@ -1,10 +1,10 @@
 {
     "exchange": "BYBIT",
     "activo": "melania",
-    "direccion": "LONG",
+    "direccion": "RANGO",
     "inverso": false,
     "auto": true,
-    "pausa": false,
+    "pausa": true,
     "apalancamiento": 9,
     "precio_referencia": 0,
     "distancia_grid": 0.9,
@@ -15,7 +15,7 @@
     "condicional_long": true,
     "condicional_short": true,
     "umbral_libro": 0,
-    "tp": 6.12,
-    "sl": -1.8,
+    "tp": 3.06,
+    "sl": 2.7,
     "reiniciar_parejas": false
 }

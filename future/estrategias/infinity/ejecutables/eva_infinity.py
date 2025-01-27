@@ -5,7 +5,11 @@ import threading
 import time
 import os
 from datetime import datetime
+import glob
 
+# Directorios
+directorio_credenciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/credenciales.json"
+parametros_iniciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros_infinity_2.0.json"
 
 # Colores personalizados
 COLOR_FONDO = "#1e1e2f"
@@ -17,27 +21,23 @@ COLOR_POSITIVO = "#00ff00"
 COLOR_NEGATIVO = "#ff0000"
 
 # Función para cargar el archivo JSON
-def cargar_parametros_json():
+def cargar_parametros_json(ruta):
     global data, ruta_archivo, ultima_modificacion, nombre_archivo
     try:
-        archivo = filedialog.askopenfilename(
-            title="Seleccionar archivo JSON",
-            filetypes=[("Archivos JSON", "*.json")]
-        )
+        archivo = ruta
         if archivo:
             nombre_archivo = archivo.split("/")[-1]
-            ventana.title(f"Eva Infinity 2.0 - {nombre_archivo}")
+            ventana.title(f"Eva Infinity 2.0 - {nombre_archivo.split(".json")[0]}")
             # Borrar contenido previo
             for widget in header_center.winfo_children():
                 widget.destroy()
-            header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo} -", style="Header.TLabel")
+            header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
             header_label.pack(anchor="center")
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
             ruta_archivo = archivo
             ultima_modificacion = os.path.getmtime(ruta_archivo)
             actualizar_parametros()
-            messagebox.showinfo("Carga exitosa", "Archivo cargado correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo cargar el archivo: {e}")
 
@@ -142,16 +142,35 @@ def guardar_parametros_json():
 
         with open(ruta_archivo, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
-        messagebox.showinfo("Guardado exitoso", "Archivo guardado correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo guardar el archivo: {e}")
 
 # Función para monitorear cambios en el archivo JSON
 def monitorear_cambios_parametros():
     global ultima_modificacion, ruta_archivo, data
+    ultimo_archivo_caliente = parametros_iniciales
     while True:
         if ruta_archivo:
             try:
+                # Especifica la ruta de la carpeta parametros
+                carpeta_parametros = 'future/estrategias/infinity/parametros/*'
+
+                # Usa glob para obtener todos los archivos dentro de la carpeta
+                archivos_parametros = glob.glob(carpeta_parametros)
+
+                # Ubicar el archivo
+                for archivo in archivos_parametros:
+                    try:
+                        if float(os.path.getctime(archivo)) > float(os.path.getmtime(parametros_iniciales)) and archivo != ultimo_archivo_caliente:
+                            cargar_parametros_json(archivo)
+                            ultimo_archivo_caliente = archivo
+                    except IsADirectoryError:
+                        print(f"{archivo} es una carpeta, omitiendo.")
+                    except FileNotFoundError:
+                        print(f"{archivo} no existe.")
+                    except PermissionError:
+                        print(f"No tienes permisos para eliminar {archivo}.")
+                
                 mod_time = os.path.getmtime(ruta_archivo)
                 if mod_time != ultima_modificacion:  # Detectar cambios en la marca de tiempo
                     ultima_modificacion = mod_time
@@ -162,21 +181,30 @@ def monitorear_cambios_parametros():
                 print(f"Error monitoreando el archivo: {e}")
         time.sleep(1)  # Verificar cada segundo
 
-# Función para seleccionar el archivo JSON
-def seleccionar_salida_long():
-    global RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG
-    archivo_seleccionado = filedialog.askopenfilename(
-        title="Seleccionar salida",
-        filetypes=[("Archivos JSON", "*.json")],
-        initialdir="future/estrategias/infinity/salida"
-    )
-    if archivo_seleccionado:
-        RUTA_JSON_LONG = archivo_seleccionado
-        HASH_ARCHIVO_ACTUAL_LONG = None  # Reinicia el hash para detectar cambios
-
 # Función para cargar el archivo JSON y actualizar la interfaz
 def cargar_json_salida():
+    global RUTA_JSON_LONG
     try:
+        # Especifica la ruta de la carpeta salida
+        carpeta_salida = 'future/estrategias/infinity/salida/*'
+
+        # Usa glob para obtener todos los archivos dentro de la carpeta
+        archivos_salida = glob.glob(carpeta_salida)
+
+        # Elimina cada archivo en la carpeta
+        for archivo in archivos_salida:
+            try:
+                if "LONG" in archivo:
+                    RUTA_JSON_LONG = archivo
+                if "SHORT" in archivo:
+                    RUTA_JSON_SHORT = archivo
+            except IsADirectoryError:
+                print(f"{archivo} es una carpeta, omitiendo.")
+            except FileNotFoundError:
+                print(f"{archivo} no existe.")
+            except PermissionError:
+                print(f"No tienes permisos para eliminar {archivo}.")
+        
         with open(RUTA_JSON_LONG, "r") as archivo:
             salida_long = json.load(archivo)
             redondear = 8 if salida_long.get('inverso', False) else 2
@@ -203,21 +231,30 @@ def cargar_json_salida():
         print("Error al decodificar el archivo JSON.")
         return None
 
-# Función para seleccionar el archivo JSON
-def seleccionar_salida_short():
-    global RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT
-    archivo_seleccionado = filedialog.askopenfilename(
-        title="Seleccionar salida",
-        filetypes=[("Archivos JSON", "*.json")],
-        initialdir="future/estrategias/infinity/salida"
-    )
-    if archivo_seleccionado:
-        RUTA_JSON_SHORT = archivo_seleccionado
-        HASH_ARCHIVO_ACTUAL_SHORT = None  # Reinicia el hash para detectar cambios
-
 # Función para cargar el archivo JSON y actualizar la interfaz
 def cargar_json_salida_short():
+    global RUTA_JSON_SHORT
     try:
+        # Especifica la ruta de la carpeta salida
+        carpeta_salida = 'future/estrategias/infinity/salida/*'
+
+        # Usa glob para obtener todos los archivos dentro de la carpeta
+        archivos_salida = glob.glob(carpeta_salida)
+
+        # Ubicar la ruta long y short
+        for archivo in archivos_salida:
+            try:
+                if "LONG" in archivo:
+                    RUTA_JSON_LONG = archivo
+                if "SHORT" in archivo:
+                    RUTA_JSON_SHORT = archivo
+            except IsADirectoryError:
+                print(f"{archivo} es una carpeta, omitiendo.")
+            except FileNotFoundError:
+                print(f"{archivo} no existe.")
+            except PermissionError:
+                print(f"No tienes permisos para eliminar {archivo}.")
+        
         with open(RUTA_JSON_SHORT, "r") as archivo:
             salida_short = json.load(archivo)
             redondear = 8 if salida_short.get('inverso', False) else 2
@@ -281,12 +318,12 @@ def crear_interfaz():
     ganancia_actual.pack(anchor="w", pady=2)
 
     # Título principal en el header central
-    header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo} -", style="Header.TLabel")
+    header_label = ttk.Label(header_center, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} -", style="Header.TLabel")
     header_label.pack(anchor="center")
 
     # Entradas para API Key y API Secret en el header derecho
     try:
-        credenciales = json.load(open("future/estrategias/infinity/credenciales.json", "r"))
+        credenciales = json.load(open(directorio_credenciales, "r"))
     except Exception as e:
         print("ERROR CARGANDO CREDENCIALES")
         print(e)
@@ -309,10 +346,10 @@ def crear_interfaz():
     # Funcion para guardar credenciales
     def guardar_credenciales():
         try:
-            credenciales = json.load(open("future/estrategias/infinity/credenciales.json", "r"))
+            credenciales = json.load(open(directorio_credenciales, "r"))
             credenciales['api_key'] = api_key_entry.get()
             credenciales['api_secret'] = api_secret_entry.get()
-            json.dump(credenciales, open("future/estrategias/infinity/credenciales.json", "w"), indent=4)
+            json.dump(credenciales, open(directorio_credenciales, "w"), indent=4)
             messagebox.showinfo("Guardado exitoso", "Credenciales guardadas correctamente.")
         except Exception as e:
             print("ERROR GUARDANDO CREDENCIALES")
@@ -346,10 +383,7 @@ def crear_interfaz():
     footer_label.pack(expand=True)
 
     # -------------PARAMETROS-------------------
-    # Botones de carga y guardado
-    boton_abrir = tk.Button(frame_izquierdo, text="Abrir", command=cargar_parametros_json)
-    boton_abrir.pack(pady=5)
-
+    # Boton de enviar parametros
     boton_guardar = tk.Button(frame_izquierdo, text="Enviar", command=guardar_parametros_json)
     boton_guardar.pack(pady=5)
 
@@ -397,6 +431,8 @@ def crear_interfaz():
     # Iniciar el monitoreo en un hilo aparte
     hilo_monitoreo = threading.Thread(target=monitorear_cambios_parametros, daemon=True)
     hilo_monitoreo.start()
+    cargar_parametros_json(parametros_iniciales)
+    guardar_parametros_json()
     # -------------FIN PARAMETROS-------------------
     
     # -------------SALIDA LONG-------------------
@@ -431,7 +467,7 @@ def crear_interfaz():
         for widget in frame_principal.winfo_children():
             widget.destroy()
 
-        titulo_label = tk.Label(frame_principal, text=f"- GRID LONG -", font=("Arial", 10, "bold"), bg=COLOR_FONDO, fg=COLOR_TITULO, anchor="w")
+        titulo_label = tk.Label(frame_principal, text=f"- {data['activo']} GRID LONG -", font=("Arial", 10, "bold"), bg=COLOR_FONDO, fg=COLOR_TITULO, anchor="w")
         titulo_label.pack(fill="none", padx=10, pady=5)
         label_info = tk.Label(frame_principal, text=f"Ganancias del grid: {round(float(data['ganancias_del_grid']), redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(100*float(data['ganancias_del_grid'])/float(data['balance_inicial']), 2)}%)   ({data['parejas_completadas']}/{data['cantidad_parejeas']})", font=("Arial", 10), bg=COLOR_FONDO, fg=COLOR_TEXTO, anchor="w")
         label_info.pack(fill="x", padx=10, pady=2)
@@ -495,7 +531,7 @@ def crear_interfaz():
 
     # Función que verifica cambios en el archivo JSON
     def monitorizar_cambios():
-        global HASH_ARCHIVO_ACTUAL_LONG, salida_long
+        global HASH_ARCHIVO_ACTUAL_LONG
         while True:
             # Calcular hash del archivo actual
             try:
@@ -507,7 +543,6 @@ def crear_interfaz():
             if nuevo_hash != HASH_ARCHIVO_ACTUAL_LONG:
                 HASH_ARCHIVO_ACTUAL_LONG = nuevo_hash
                 data = cargar_json_salida()
-                salida_long = data
                 if data:
                     ventana.after(0, lambda: actualizar_interfaz_long(data))
             time.sleep(0.54)  # Intervalo de actualización (en segundos)
@@ -520,16 +555,6 @@ def crear_interfaz():
     data_inicial = cargar_json_salida()
     if data_inicial:
         actualizar_interfaz_long(data_inicial)
-
-    # Botón para seleccionar archivo
-    boton_seleccionar_archivo = tk.Button(
-        frame_central,
-        text="Seleccionar Salida Long",
-        command=seleccionar_salida_long,
-        bg=COLOR_TEXTO,
-        fg=COLOR_FONDO
-    )
-    boton_seleccionar_archivo.pack(pady=5)
     # -------------FIN SALIDA LONG---------------
     
     # -------------SALIDA SHORT-------------------
@@ -564,7 +589,7 @@ def crear_interfaz():
         for widget in frame_principal_short.winfo_children():
             widget.destroy()
 
-        titulo_label = tk.Label(frame_principal_short, text=f"- GRID SHORT -", font=("Arial", 10, "bold"), bg=COLOR_FONDO, fg=COLOR_TITULO, anchor="w")
+        titulo_label = tk.Label(frame_principal_short, text=f"- {data['activo']} GRID SHORT -", font=("Arial", 10, "bold"), bg=COLOR_FONDO, fg=COLOR_TITULO, anchor="w")
         titulo_label.pack(fill="none", padx=10, pady=5)
         label_info = tk.Label(frame_principal_short, text=f"Ganancias del grid: {round(float(data['ganancias_del_grid']), redondear)} {'USDT' if not data['inverso'] else data['activo']} ({round(100*float(data['ganancias_del_grid'])/float(data['balance_inicial']), 2)}%)   ({data['parejas_completadas']}/{data['cantidad_parejeas']})", font=("Arial", 10), bg=COLOR_FONDO, fg=COLOR_TEXTO, anchor="w")
         label_info.pack(fill="x", padx=10, pady=2)
@@ -653,16 +678,6 @@ def crear_interfaz():
     data_inicial = cargar_json_salida_short()
     if data_inicial:
         actualizar_interfaz_short(data_inicial)
-
-    # Botón para seleccionar archivo
-    boton_seleccionar_archivo = tk.Button(
-        frame_derecho,
-        text="Seleccionar Salida Short",
-        command=seleccionar_salida_short,
-        bg=COLOR_TEXTO,
-        fg=COLOR_FONDO
-    )
-    boton_seleccionar_archivo.pack(pady=5)
     # -------------FIN SALIDA SHORT---------------
     
     # Loop principal de la ventana
