@@ -8,14 +8,22 @@ from datetime import datetime
 import glob
 import subprocess
 import platform
+import datos_servidor
 
-# Directorios
+# Directorios locales
 directorio_credenciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/credenciales.json"
 parametros_iniciales = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros_infinity_2.0.json"
 carpeta_parametros = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/parametros/*"
 carpeta_salida = "/Volumes/Datos/DESARROLLO PERSONAL/PROGRAMAR APLICACIONES WEB/Perfeccionar Python/Proyectos Python/Trading Bot Exchange/exchange/future/estrategias/infinity/salida/*"
 ruta_infinity = "/Users/gabochaparro/Desktop/Infinity 20"
-ruta_infinity_servidor = ""
+ruta_infinity_servidor = "/Users/gabochaparro/Desktop/Infinity 20 remoto"
+
+# Directorios remotos
+CREDENCIALES_REMOTO = "/home/ubuntu/exchange/future/estrategias/infinity" # Directorio en EC2 donde están las credenciales
+PARAMETROS_REMOTO = "/home/ubuntu/exchange/future/estrategias/infinity"  # Directorio en EC2 donde están los parametros iniciales
+PARAMETROS_LIVE_REMOTO = "/home/ubuntu/exchange/future/estrategias/infinity/parametros"  # Directorio en EC2 donde están los parametros en vivo
+SALIDA_REMOTO = "/home/ubuntu/exchange/future/estrategias/infinity/salida" # Directorio en EC2 donde están las salidas
+
 
 # Colores personalizados
 COLOR_FONDO = "#1e1e2f"
@@ -28,24 +36,25 @@ COLOR_NEGATIVO = "#ff0000"
 
 # Función para cargar el archivo JSON
 def cargar_parametros_json(ruta):
-    global data, ruta_archivo, ultima_modificacion, nombre_archivo
+    global data, ruta_archivo, nombre_archivo
     try:
         archivo = ruta
         if archivo:
             nombre_archivo = archivo.split("/")[-1]
             ventana.title(f"Eva Infinity 2.0 - {nombre_archivo.split(".json")[0]}")
+            
             # Borrar contenido previo
             for widget in header_top.winfo_children():
                 widget.destroy()
             header_label = ttk.Label(header_top, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
             header_label.pack(anchor="center")
+            
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
             ruta_archivo = archivo
-            ultima_modificacion = os.path.getmtime(ruta_archivo)
             actualizar_parametros()
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo cargar el archivo: {e}")
+        print("Error", f"No se pudo cargar lo parametros: {e}")
 
 # Función que actualiza la interfaz
 def actualizar_parametros():
@@ -148,40 +157,36 @@ def guardar_parametros_json():
 
         with open(ruta_archivo, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
+
+        if opcion_seleccionada.get() == "remoto":
+            if ruta_archivo == parametros_iniciales:
+                ruta_remota = PARAMETROS_REMOTO
+            else:
+                ruta_remota = PARAMETROS_LIVE_REMOTO
+            datos_servidor.subir_archivo_remoto(ruta_remota,ruta_archivo.split(os.path.basename(ruta_archivo))[0],os.path.basename(ruta_archivo))
+
+
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo guardar el archivo: {e}")
+        print("Error", f"No se pudo guardar el archivo: {e}")
 
 # Función para monitorear cambios en el archivo JSON
 def monitorear_cambios_parametros():
-    global ultima_modificacion, ruta_archivo, data
-    ultimo_archivo_caliente = parametros_iniciales
+    ultimo = float(os.path.getmtime(parametros_iniciales))
+    ultimo_modificado = {}
     while True:
-        if ruta_archivo:
-            try:
-                # Usa glob para obtener todos los archivos dentro de la carpeta
-                archivos_parametros = glob.glob(carpeta_parametros)
+        try:
+            # Obtener los archivos de la carpeta parametros
+            archivo_parametros = glob.glob(carpeta_parametros)
 
-                # Ubicar el archivo
-                for archivo in archivos_parametros:
-                    try:
-                        if float(os.path.getctime(archivo)) > float(os.path.getmtime(parametros_iniciales)) and archivo != ultimo_archivo_caliente:
-                            cargar_parametros_json(archivo)
-                            ultimo_archivo_caliente = archivo
-                    except IsADirectoryError:
-                        print(f"{archivo} es una carpeta, omitiendo.")
-                    except FileNotFoundError:
-                        print(f"{archivo} no existe.")
-                    except PermissionError:
-                        print(f"No tienes permisos para eliminar {archivo}.")
-                
-                mod_time = os.path.getmtime(ruta_archivo)
-                if mod_time != ultima_modificacion:  # Detectar cambios en la marca de tiempo
-                    ultima_modificacion = mod_time
-                    with open(ruta_archivo, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    ventana.after(0, actualizar_parametros)  # Actualizar la interfaz en el hilo principal
-            except Exception as e:
-                print(f"Error monitoreando el archivo: {e}")
+            # Buscar el archivo con la ultima modificacion
+            for archivo in archivo_parametros:
+                if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado:
+                    ultimo = float(os.path.getmtime(archivo))
+                    ultimo_modificado = json.load(open(archivo,"r"))
+                    cargar_parametros_json(archivo)
+
+        except Exception as e:
+            print(f"Error monitoreando el archivo: {e}")
         time.sleep(1)  # Verificar cada segundo
 
 # Función para cargar el archivo JSON y actualizar la interfaz
@@ -191,7 +196,7 @@ def cargar_json_salida():
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
 
-        # Elimina cada archivo en la carpeta
+        # Ubicar la ruta long y short
         for archivo in archivos_salida:
             try:
                 if "LONG" in archivo:
@@ -277,7 +282,7 @@ def cargar_json_salida_short():
         return None
 
 def crear_interfaz():
-    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG, RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT, header_left, header_top
+    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG, RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT, header_left, header_top, opcion_seleccionada
     # Crear la ventana principal
     ventana = tk.Tk()
     nombre_archivo = "Eva Future Infinity"
@@ -344,24 +349,72 @@ def crear_interfaz():
         boton.grid(row=0, column=i)
         i=i+1
 
+    # FUNCION PARA CORRER INFINITY 2.0
     def correr_infinity():
-        if platform.system() == "Windows":
-            if opcion_seleccionada.get() == "local":
-                os.startfile(ruta_infinity)
-            else:
-                os.startfile(ruta_infinity_servidor)
-        
-        elif platform.system() == "Darwin":  # macOS
-            if opcion_seleccionada.get() == "local":
-                subprocess.run(["open", ruta_infinity])
-            else:
-                subprocess.run(["open", ruta_infinity_servidor])
-        
-        else:  # Linux
-            if opcion_seleccionada.get() == "local":
-                subprocess.run(["xdg-open", ruta_infinity])
-            else:
-                subprocess.run(["xdg-open", ruta_infinity_servidor])
+        try:
+            # Guardar parametros antes de correr el infinity
+            guardar_parametros_json()
+            
+            # Obtener las salidas iniciales del servidor
+            if opcion_seleccionada.get() == "remoto":
+                ok = ""
+                while ok != "OK":
+                    # Obtener las salidas iniciales del servidor
+                    salidas = datos_servidor.listar_archivos_remotos(SALIDA_REMOTO)
+                    for salida in salidas:
+                        if "LONG" in salida:
+                            ok = datos_servidor.descargar_archivo_remoto(SALIDA_REMOTO,carpeta_salida.split("/*")[0],salida)
+                        if ok == "OK":
+                            salida_inicial = json.load(open(f"{carpeta_salida.split("/*")[0]}/{salida}","r"))
+                            print("SALIDA INICIAL")
+                            print(json.dumps(salida_inicial,indent=2))
+                            salida_actual = salida_inicial
+                            break
+            
+            # Correr infinity segun el sistema operativo
+            if platform.system() == "Windows":
+                if opcion_seleccionada.get() == "local":
+                    os.startfile(ruta_infinity)
+                else:
+                    os.startfile(ruta_infinity_servidor)
+            
+            elif platform.system() == "Darwin":  # macOS
+                if opcion_seleccionada.get() == "local":
+                    subprocess.run(["open", ruta_infinity])
+                else:
+                    subprocess.run(["open", ruta_infinity_servidor])
+            
+            else:  # Linux
+                if opcion_seleccionada.get() == "local":
+                    subprocess.run(["xdg-open", ruta_infinity])
+                else:
+                    subprocess.run(["xdg-open", ruta_infinity_servidor])
+
+            # Iniciar los hilos que extraen los archivos del servidor en modo remoto
+            if opcion_seleccionada.get() == "remoto":
+                while salida_inicial == salida_actual:
+                    ok = ""
+                    while ok != "OK":
+                        # Obtener las salidas iniciales del servidor
+                        salidas = datos_servidor.listar_archivos_remotos(SALIDA_REMOTO)
+                        for salida in salidas:
+                            if "LONG" in salida:
+                                ok = datos_servidor.descargar_archivo_remoto(SALIDA_REMOTO,carpeta_salida.split("/*")[0],salida)
+                            if ok == "OK":
+                                salida_actual = json.load(open(f"{carpeta_salida.split("/*")[0]}/{salida}","r"))
+                                print("SALIDA ACTUAL")
+                                print(json.dumps(salida_actual,indent=2))
+                                break
+                threading.Thread(target=datos_servidor.parametros_actualizados, daemon=True).start()
+                threading.Thread(target=datos_servidor.salidas_actualizadas, daemon=True).start()
+            
+            cargar_json_salida()
+            cargar_json_salida_short()
+
+        except Exception as e:
+            print("ERROR CORRIENDO EL EJECUTABLE INFINITY")
+            print(e)
+            print("")
     
     boton_infinity = ttk.Button(header_center, text=f"CORRER INFINITY 2.0", command=correr_infinity)
     boton_infinity.pack()
@@ -395,6 +448,8 @@ def crear_interfaz():
             credenciales['api_key'] = api_key_entry.get()
             credenciales['api_secret'] = api_secret_entry.get()
             json.dump(credenciales, open(directorio_credenciales, "w"), indent=4)
+            if opcion_seleccionada.get() == "remoto":
+                datos_servidor.subir_archivo_remoto(CREDENCIALES_REMOTO,directorio_credenciales.split("credenciales.json")[0],"credenciales.json")
             messagebox.showinfo("Guardado exitoso", "Credenciales guardadas correctamente.")
         except Exception as e:
             print("ERROR GUARDANDO CREDENCIALES")
@@ -472,12 +527,14 @@ def crear_interfaz():
     entries = {}  # Para campos editables no booleanos
     botones_booleanos = {}  # Para botones toggle
     ruta_archivo = None  # Para carga y descarga remota
+    
+    # Cargar y gurdar los parametros iniciales
+    cargar_parametros_json(parametros_iniciales)
+    guardar_parametros_json()
 
     # Iniciar el monitoreo en un hilo aparte
     hilo_monitoreo = threading.Thread(target=monitorear_cambios_parametros, daemon=True)
     hilo_monitoreo.start()
-    cargar_parametros_json(parametros_iniciales)
-    guardar_parametros_json()
     # -------------FIN PARAMETROS-------------------
     
     # -------------SALIDA LONG-------------------
@@ -578,6 +635,14 @@ def crear_interfaz():
     def monitorizar_cambios():
         global HASH_ARCHIVO_ACTUAL_LONG
         while True:
+            
+            # Esperar hasta que se generen los archivos
+            archivos_salida = glob.glob(carpeta_salida)
+            while len(archivos_salida) == 0:
+                archivos_salida = glob.glob(carpeta_salida)
+                if len(archivos_salida) != 0:
+                    cargar_json_salida()
+
             # Calcular hash del archivo actual
             try:
                 nuevo_hash = os.stat(RUTA_JSON_LONG).st_mtime
@@ -700,6 +765,14 @@ def crear_interfaz():
     def monitorizar_cambios_short():
         global HASH_ARCHIVO_ACTUAL_SHORT, salida_short
         while True:
+            
+            # Esperar hasta que se generen los archivos
+            archivos_salida = glob.glob(carpeta_salida)
+            while len(archivos_salida) == 0:
+                archivos_salida = glob.glob(carpeta_salida)
+                if len(archivos_salida) != 0:
+                    cargar_json_salida_short()
+            
             # Calcular hash del archivo actual
             try:
                 nuevo_hash = os.stat(RUTA_JSON_SHORT).st_mtime

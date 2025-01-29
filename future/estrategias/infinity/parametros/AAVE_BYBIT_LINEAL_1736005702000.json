@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
     "activo": "aave",
-    "direccion": "LONG",
+    "direccion": "RANGO",
     "inverso": false,
     "auto": true,
     "pausa": false,

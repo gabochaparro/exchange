@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
     "activo": "1000SATS",
-    "direccion": "LONG",
+    "direccion": "SHORT",
     "inverso": false,
     "auto": true,
     "pausa": false,
