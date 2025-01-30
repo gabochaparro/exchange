@@ -1,6 +1,6 @@
 {
     "exchange": "BYBIT",
-    "activo": "ACH",
+    "activo": "ach",
     "direccion": "SHORT",
     "inverso": false,
     "auto": true,

@@ -85,6 +85,7 @@ def subir_archivo_remoto(directorio_remoto, ruta_local, nombre_archivo):
         cliente.close()
 
         print("Éxito", f"Archivo {nombre_archivo} guardado en el servidor correctamente.")
+        return "OK"
     except Exception as e:
         print("Error", f"No se pudo guardar el archivo remoto: {e}")
 
@@ -167,7 +168,7 @@ def parametros_actualizados():
         print("")
 
 
-#'''
+'''
 hilo_saida = threading.Thread(target=salidas_actualizadas, daemon=True)
 hilo_saida.start()
 hilo_parametros = threading.Thread(target=parametros_actualizados, daemon=True)

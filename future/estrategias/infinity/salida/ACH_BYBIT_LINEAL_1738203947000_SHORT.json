@@ -1,0 +1,91 @@
+{
+    "fecha_inicio": "1738203947000",
+    "exchange": "BYBIT",
+    "activo": "ACH",
+    "inverso": false,
+    "balance_inicial": "1239363172",
+    "balance_actual": "1231546484",
+    "ganancias_del_grid": "0.0",
+    "ganancia_actual": "-0.7541894265678707",
+    "riesgo_maximo": "-1.1337080459899382",
+    "beneficio_maximo": "0.13034040679078596",
+    "cantidad_parejeas": "0",
+    "parejas_completadas": "0",
+    "parejas": [
+        {
+            "general": {
+                "fecha": "2025-01-30 - 02:52:40 AM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "",
+                "price": "0.037642",
+                "cantidad": "300.0",
+                "monto": "11.2926",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "venta": {
+                "orderId": "4a98702a-bdfc-4661-9f68-ef056643d820",
+                "price": "0.038022",
+                "cantidad": "300.0",
+                "monto": "11.406600000000001",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        },
+        {
+            "general": {
+                "fecha": "2025-01-30 - 02:52:22 AM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "",
+                "price": "0.03689337689337689",
+                "cantidad": "300.0",
+                "monto": "11.068013068013068",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "venta": {
+                "orderId": "cea8b348-ea18-4d3b-99d7-5779e5b23f8a",
+                "price": "0.037266",
+                "cantidad": "300.0",
+                "monto": "11.1798",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        },
+        {
+            "general": {
+                "fecha": "2025-01-30 - 02:26:32 AM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "1a7f4b0e-1c37-4403-9290-1775d673af2e",
+                "price": "0.037266",
+                "cantidad": "300.0",
+                "monto": "11.1798",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "venta": {
+                "orderId": "25406fcb-a876-4fba-ad6d-9bb22000b870",
+                "price": "0.03765",
+                "cantidad": "300",
+                "monto": "11.295000000000002",
+                "ejecutada": true,
+                "fecha_ejecucion": "2025-01-30 - 02:26:33 AM"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        }
+    ]
+}

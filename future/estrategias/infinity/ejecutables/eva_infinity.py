@@ -165,9 +165,11 @@ def guardar_parametros_json():
                 ruta_remota = PARAMETROS_LIVE_REMOTO
             datos_servidor.subir_archivo_remoto(ruta_remota,ruta_archivo.split(os.path.basename(ruta_archivo))[0],os.path.basename(ruta_archivo))
 
+        messagebox.showinfo("Exito", "Parametros guardados")
 
     except Exception as e:
         print("Error", f"No se pudo guardar el archivo: {e}")
+        messagebox.showinfo("ERROR", "Error guardando parametros")
 
 # Función para monitorear cambios en el archivo JSON
 def monitorear_cambios_parametros():
@@ -191,42 +193,21 @@ def monitorear_cambios_parametros():
 
 # Función para cargar el archivo JSON y actualizar la interfaz
 def cargar_json_salida():
-    global RUTA_JSON_LONG
     try:
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
+        
+        # Esperar hasta que se generen los archivos de salida
+        while len(archivos_salida) == 0:
+            archivos_salida = glob.glob(carpeta_salida)
 
         # Ubicar la ruta long y short
         for archivo in archivos_salida:
-            try:
-                if "LONG" in archivo:
-                    RUTA_JSON_LONG = archivo
-                if "SHORT" in archivo:
-                    RUTA_JSON_SHORT = archivo
-            except IsADirectoryError:
-                print(f"{archivo} es una carpeta, omitiendo.")
-            except FileNotFoundError:
-                print(f"{archivo} no existe.")
-            except PermissionError:
-                print(f"No tienes permisos para eliminar {archivo}.")
+            if "LONG" in archivo:
+                ruta_salida_long = archivo
         
-        with open(RUTA_JSON_LONG, "r") as archivo:
+        with open(ruta_salida_long, "r") as archivo:
             salida_long = json.load(archivo)
-            redondear = 8 if salida_long.get('inverso', False) else 2
-
-            # Borrar contenido previo
-            for widget in header_left.winfo_children():
-                widget.destroy()
-
-            info_general = [
-                f"Balance inicial: {round(float(salida_long['balance_inicial']), redondear)} {'USDT' if not salida_long['inverso'] else salida_long['activo']}",
-                f"Balance actual: {round(float(salida_long['balance_actual']), redondear)} {'USDT' if not salida_long['inverso'] else salida_long['activo']}",
-                f"Ganancia actual: {round(float(salida_long['balance_actual'])-float(salida_long['balance_inicial']), redondear)} {'USDT' if not salida_long['inverso'] else salida_long['activo']} ({round(float(salida_long['ganancia_actual']), 2)}%)   ({round(float(salida_long['beneficio_maximo']), 2)}% / {round(float(salida_long['riesgo_maximo']), 2)}%)"
-            ]
-
-            for info in info_general:
-                label_info = ttk.Label(header_left, text=info, style="Content.TLabel")
-                label_info.pack(anchor="w", pady=2)
 
             return salida_long
     except FileNotFoundError:
@@ -238,42 +219,23 @@ def cargar_json_salida():
 
 # Función para cargar el archivo JSON y actualizar la interfaz
 def cargar_json_salida_short():
-    global RUTA_JSON_SHORT
     try:
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
+        
+        # Esperar hasta que se generen los archivos de salida
+        while len(archivos_salida) == 0:
+            archivos_salida = glob.glob(carpeta_salida)
 
         # Ubicar la ruta long y short
         for archivo in archivos_salida:
-            try:
-                if "LONG" in archivo:
-                    RUTA_JSON_LONG = archivo
-                if "SHORT" in archivo:
-                    RUTA_JSON_SHORT = archivo
-            except IsADirectoryError:
-                print(f"{archivo} es una carpeta, omitiendo.")
-            except FileNotFoundError:
-                print(f"{archivo} no existe.")
-            except PermissionError:
-                print(f"No tienes permisos para eliminar {archivo}.")
+            if "SHORT" in archivo:
+                ruta_salida_short = archivo
         
-        with open(RUTA_JSON_SHORT, "r") as archivo:
+        with open(ruta_salida_short, "r") as archivo:
             salida_short = json.load(archivo)
-            redondear = 8 if salida_short.get('inverso', False) else 2
-            # Borrar contenido previo
-            for widget in header_left.winfo_children():
-                widget.destroy()
-
-            info_general = [
-                f"Balance inicial: {round(float(salida_short['balance_inicial']), redondear)} {'USDT' if not salida_short['inverso'] else salida_short['activo']}",
-                f"Balance actual: {round(float(salida_short['balance_actual']), redondear)} {'USDT' if not salida_short['inverso'] else salida_short['activo']}",
-                f"Ganancia actual: {round(float(salida_short['balance_actual'])-float(salida_short['balance_inicial']), redondear)} {'USDT' if not salida_short['inverso'] else salida_short['activo']} ({round(float(salida_short['ganancia_actual']), 2)}%)   ({round(float(salida_short['beneficio_maximo']), 2)}% / {round(float(salida_short['riesgo_maximo']), 2)}%)"
-            ]
-
-            for info in info_general:
-                label_info = ttk.Label(header_left, text=info, style="Content.TLabel")
-                label_info.pack(anchor="w", pady=2)
             return salida_short
+    
     except FileNotFoundError:
         print("Archivo JSON no encontrado.")
         return None
@@ -282,7 +244,7 @@ def cargar_json_salida_short():
         return None
 
 def crear_interfaz():
-    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, RUTA_JSON_LONG, HASH_ARCHIVO_ACTUAL_LONG, RUTA_JSON_SHORT, HASH_ARCHIVO_ACTUAL_SHORT, header_left, header_top, opcion_seleccionada
+    global frame_editor, entries, botones_booleanos, ventana, data, frame_editor_id, ruta_archivo, ultima_modificacion, frame_izquierdo, nombre_archivo, header_left, header_top, opcion_seleccionada
     # Crear la ventana principal
     ventana = tk.Tk()
     nombre_archivo = "Eva Future Infinity"
@@ -482,6 +444,7 @@ def crear_interfaz():
     footer_label = ttk.Label(footer, text="Footer - Información Adicional", anchor="center")
     footer_label.pack(expand=True)
 
+    
     # -------------PARAMETROS-------------------
     # Boton de enviar parametros
     boton_guardar = tk.Button(frame_izquierdo, text="Enviar", command=guardar_parametros_json)
@@ -538,10 +501,6 @@ def crear_interfaz():
     # -------------FIN PARAMETROS-------------------
     
     # -------------SALIDA LONG-------------------
-    # Inicializamos una variable global para detectar cambios en el archivo
-    RUTA_JSON_LONG = ""
-    HASH_ARCHIVO_ACTUAL_LONG = None
-
     # Frame principal para información general
     frame_principal = tk.Frame(frame_central, bg=COLOR_FONDO)
     frame_principal.pack(side="top", fill="x", padx=10, pady=5)
@@ -633,29 +592,36 @@ def crear_interfaz():
 
     # Función que verifica cambios en el archivo JSON
     def monitorizar_cambios():
-        global HASH_ARCHIVO_ACTUAL_LONG
+        salida_actual = {}
         while True:
-            
-            # Esperar hasta que se generen los archivos
-            archivos_salida = glob.glob(carpeta_salida)
-            while len(archivos_salida) == 0:
-                archivos_salida = glob.glob(carpeta_salida)
-                if len(archivos_salida) != 0:
-                    cargar_json_salida()
-
-            # Calcular hash del archivo actual
             try:
-                nuevo_hash = os.stat(RUTA_JSON_LONG).st_mtime
-            except FileNotFoundError:
-                nuevo_hash = None
+                # obtener la nueva salida
+                nueva_salida = cargar_json_salida()
 
-            # Si el hash ha cambiado, recargar datos
-            if nuevo_hash != HASH_ARCHIVO_ACTUAL_LONG:
-                HASH_ARCHIVO_ACTUAL_LONG = nuevo_hash
-                data = cargar_json_salida()
-                if data:
-                    ventana.after(0, lambda: actualizar_interfaz_long(data))
-            time.sleep(0.54)  # Intervalo de actualización (en segundos)
+                # Si la salida ha cambiado cargarla y actualizar
+                if nueva_salida != salida_actual:
+                    salida_actual = nueva_salida
+                    
+                    # Borrar contenido previo
+                    redondear = 8 if nueva_salida['inverso'] else 2
+                    for widget in header_left.winfo_children():
+                        widget.destroy()
+
+                    info_general = [
+                        f"Balance inicial: {round(float(nueva_salida['balance_inicial']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']}",
+                        f"Balance actual: {round(float(nueva_salida['balance_actual']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']}",
+                        f"Ganancia actual: {round(float(nueva_salida['balance_actual'])-float(nueva_salida['balance_inicial']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']} ({round(float(nueva_salida['ganancia_actual']), 2)}%)   ({round(float(nueva_salida['beneficio_maximo']), 2)}% / {round(float(nueva_salida['riesgo_maximo']), 2)}%)"
+                    ]
+
+                    for info in info_general:
+                        label_info = ttk.Label(header_left, text=info, style="Content.TLabel")
+                        label_info.pack(anchor="w", pady=2)
+                    ventana.after(0, lambda: actualizar_interfaz_long(nueva_salida))
+            
+            except Exception as e:
+                print("ERROR MONITOREANDO SALIDAS LONG")
+                print(e)
+                print("")
 
     # Iniciar el monitoreo en un hilo separado
     hilo_monitor = threading.Thread(target=monitorizar_cambios, daemon=True)
@@ -667,11 +633,8 @@ def crear_interfaz():
         actualizar_interfaz_long(data_inicial)
     # -------------FIN SALIDA LONG---------------
     
-    # -------------SALIDA SHORT-------------------
-    # Inicializamos una variable global para detectar cambios en el archivo
-    RUTA_JSON_SHORT = ""
-    HASH_ARCHIVO_ACTUAL_SHORT = None
 
+    # -------------SALIDA SHORT-------------------
     # Frame principal para información general
     frame_principal_short = tk.Frame(frame_derecho, bg=COLOR_FONDO)
     frame_principal_short.pack(side="top", fill="x", padx=10, pady=5)
@@ -763,30 +726,36 @@ def crear_interfaz():
 
     # Función que verifica cambios en el archivo JSON
     def monitorizar_cambios_short():
-        global HASH_ARCHIVO_ACTUAL_SHORT, salida_short
+        salida_actual = {}
         while True:
-            
-            # Esperar hasta que se generen los archivos
-            archivos_salida = glob.glob(carpeta_salida)
-            while len(archivos_salida) == 0:
-                archivos_salida = glob.glob(carpeta_salida)
-                if len(archivos_salida) != 0:
-                    cargar_json_salida_short()
-            
-            # Calcular hash del archivo actual
             try:
-                nuevo_hash = os.stat(RUTA_JSON_SHORT).st_mtime
-            except FileNotFoundError:
-                nuevo_hash = None
+                # obtener la nueva salida
+                nueva_salida = cargar_json_salida_short()
 
-            # Si el hash ha cambiado, recargar datos
-            if nuevo_hash != HASH_ARCHIVO_ACTUAL_SHORT:
-                HASH_ARCHIVO_ACTUAL_SHORT = nuevo_hash
-                data = cargar_json_salida_short()
-                salida_short = data
-                if data:
-                    ventana.after(0, lambda: actualizar_interfaz_short(data))
-            time.sleep(0.54)  # Intervalo de actualización (en segundos)
+                # Si la salida ha cambiado cargarla y actualizar
+                if nueva_salida != salida_actual:
+                    salida_actual = nueva_salida
+                    
+                    # Borrar contenido previo
+                    redondear = 8 if nueva_salida['inverso'] else 2
+                    for widget in header_left.winfo_children():
+                        widget.destroy()
+
+                    info_general = [
+                        f"Balance inicial: {round(float(nueva_salida['balance_inicial']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']}",
+                        f"Balance actual: {round(float(nueva_salida['balance_actual']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']}",
+                        f"Ganancia actual: {round(float(nueva_salida['balance_actual'])-float(nueva_salida['balance_inicial']), redondear)} {'USDT' if not nueva_salida['inverso'] else nueva_salida['activo']} ({round(float(nueva_salida['ganancia_actual']), 2)}%)   ({round(float(nueva_salida['beneficio_maximo']), 2)}% / {round(float(nueva_salida['riesgo_maximo']), 2)}%)"
+                    ]
+
+                    for info in info_general:
+                        label_info = ttk.Label(header_left, text=info, style="Content.TLabel")
+                        label_info.pack(anchor="w", pady=2)
+                    ventana.after(0, lambda: actualizar_interfaz_short(nueva_salida))
+            
+            except Exception as e:
+                print("ERROR MONITOREANDO SALIDAS SHORT")
+                print(e)
+                print("")
 
     # Iniciar el monitoreo en un hilo separado
     hilo_monitor = threading.Thread(target=monitorizar_cambios_short, daemon=True)
