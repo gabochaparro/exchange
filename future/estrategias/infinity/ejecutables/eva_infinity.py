@@ -163,13 +163,18 @@ def guardar_parametros_json():
                 ruta_remota = PARAMETROS_REMOTO
             else:
                 ruta_remota = PARAMETROS_LIVE_REMOTO
-            datos_servidor.subir_archivo_remoto(ruta_remota,ruta_archivo.split(os.path.basename(ruta_archivo))[0],os.path.basename(ruta_archivo))
+            ok = datos_servidor.subir_archivo_remoto(ruta_remota,ruta_archivo.split(os.path.basename(ruta_archivo))[0],os.path.basename(ruta_archivo))
 
-        messagebox.showinfo("Exito", "Parametros guardados")
+            if ok == "OK":
+                messagebox.showinfo("Exito", "Parametros enviados al servidor correctamente")
+            else:
+                messagebox.showerror("Error", "Parametros no enviados")
+        else:
+            messagebox.showinfo("Exito", "Parametros enviados correctamente")
 
     except Exception as e:
         print("Error", f"No se pudo guardar el archivo: {e}")
-        messagebox.showinfo("ERROR", "Error guardando parametros")
+        messagebox.showerror("ERROR", "Error guardando parametros")
 
 # Función para monitorear cambios en el archivo JSON
 def monitorear_cambios_parametros():

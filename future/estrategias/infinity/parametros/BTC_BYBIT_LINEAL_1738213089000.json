@@ -1,7 +1,7 @@
 {
     "exchange": "BYBIT",
-    "activo": "ach",
-    "direccion": "SHORT",
+    "activo": "btc",
+    "direccion": "LONG",
     "inverso": false,
     "auto": true,
     "pausa": false,

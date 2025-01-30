@@ -1,0 +1,66 @@
+{
+    "fecha_inicio": "1738274801000",
+    "exchange": "BYBIT",
+    "activo": "GRIFFAIN",
+    "inverso": false,
+    "balance_inicial": "12.517269",
+    "balance_actual": "12.51840795",
+    "ganancias_del_grid": "0.0",
+    "ganancia_actual": "0.009998906310945061",
+    "riesgo_maximo": "-0.0007999348739718308",
+    "beneficio_maximo": "0.012898660242902454",
+    "cantidad_parejeas": "2",
+    "parejas_completadas": "0",
+    "parejas": [
+        {
+            "general": {
+                "fecha": "2025-01-30 - 05:15:01 PM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "",
+                "price": "0.22917284316632078",
+                "cantidad": "24.0",
+                "monto": "5.500148235991698",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "venta": {
+                "orderId": "5fbaf2d5-d926-41fa-9763-0fe8ac166160",
+                "price": "0.2319",
+                "cantidad": "24.0",
+                "monto": "5.5656",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        },
+        {
+            "general": {
+                "fecha": "2025-01-30 - 05:14:48 PM",
+                "beneficios": "0"
+            },
+            "compra": {
+                "orderId": "",
+                "price": "0.2319",
+                "cantidad": "24.0",
+                "monto": "5.5656",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "venta": {
+                "orderId": "efa2b3b3-a884-4dae-81f6-73a61a00f38e",
+                "price": "0.2347",
+                "cantidad": "24.0",
+                "monto": "5.6328",
+                "ejecutada": false,
+                "fecha_ejecucion": "-"
+            },
+            "sl": {
+                "orderId": ""
+            }
+        }
+    ]
+}
