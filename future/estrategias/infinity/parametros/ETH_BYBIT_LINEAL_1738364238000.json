@@ -1,6 +1,6 @@
 {
     "exchange": "BYBIT",
-    "activo": "sol",
+    "activo": "eth",
     "direccion": "SHORT",
     "inverso": false,
     "auto": false,

@@ -34,6 +34,9 @@ COLOR_BORDE = "#404056"
 COLOR_POSITIVO = "#00ff00"
 COLOR_NEGATIVO = "#ff0000"
 
+activo = ""
+tipo = ""
+
 # Función para cargar el archivo JSON
 def cargar_parametros_json(ruta):
     global data, ruta_archivo, nombre_archivo
@@ -190,7 +193,7 @@ def monitorear_cambios_parametros():
 
             # Buscar el archivo con la ultima modificacion
             for archivo in archivo_parametros:
-                if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado  and activo in archivo and tipo in archivo:
+                if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado:
                     ultimo = float(os.path.getmtime(archivo))
                     ultimo_modificado = json.load(open(archivo,"r"))
                     cargar_parametros_json(archivo)
@@ -212,7 +215,7 @@ def cargar_json_salida():
         # Ubicar la ruta long y short
         ruta_salida_long = {}
         for archivo in archivos_salida:
-            if "LONG" in archivo and activo in archivo and tipo in archivo:
+            if "LONG" in archivo:
                 ruta_salida_long = archivo
         
                 with open(ruta_salida_long, "r") as archivo:
@@ -239,7 +242,7 @@ def cargar_json_salida_short():
         # Ubicar la ruta long y short
         ruta_salida_short = {}
         for archivo in archivos_salida:
-            if "SHORT" in archivo and activo in archivo and tipo in archivo:
+            if "SHORT" in archivo:
                 ruta_salida_short = archivo
         
                 with open(ruta_salida_short, "r") as archivo:
