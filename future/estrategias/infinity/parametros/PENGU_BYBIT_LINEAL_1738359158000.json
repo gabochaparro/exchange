@@ -1,6 +1,6 @@
 {
     "exchange": "BYBIT",
-    "activo": "btc",
+    "activo": "PENGU",
     "direccion": "SHORT",
     "inverso": false,
     "auto": false,

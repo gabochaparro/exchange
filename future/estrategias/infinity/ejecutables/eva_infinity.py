@@ -38,21 +38,19 @@ COLOR_NEGATIVO = "#ff0000"
 def cargar_parametros_json(ruta):
     global data, ruta_archivo, nombre_archivo
     try:
-        archivo = ruta
-        if archivo:
-            nombre_archivo = archivo.split("/")[-1]
-            ventana.title(f"Eva Infinity 2.0 - {nombre_archivo.split(".json")[0]}")
-            
-            # Borrar contenido previo
-            for widget in header_top.winfo_children():
-                widget.destroy()
-            header_label = ttk.Label(header_top, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
-            header_label.pack(anchor="center")
-            
-            with open(archivo, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            ruta_archivo = archivo
-            actualizar_parametros()
+        nombre_archivo = ruta.split("/")[-1]
+        ventana.title(f"Eva Infinity 2.0 - {nombre_archivo.split(".json")[0]}")
+        
+        # Borrar contenido previo
+        for widget in header_top.winfo_children():
+            widget.destroy()
+        header_label = ttk.Label(header_top, text=f"- INFINITY FUTURE - {nombre_archivo.split(".json")[0]} - {datetime.now().strftime('%d-%m-%Y %I:%M:%S %p')} -", style="Header.TLabel")
+        header_label.pack(anchor="center")
+        
+        with open(ruta, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        ruta_archivo = ruta
+        actualizar_parametros()
     except Exception as e:
         print("Error", f"No se pudo cargar lo parametros: {e}")
 
@@ -147,6 +145,7 @@ def toggle_boolean(clave):
 
 # Función para guardar cambios en el archivo JSON
 def guardar_parametros_json():
+    global activo, tipo
     try:
         for clave, entry in entries.items():
             valor = entry.get()
@@ -157,6 +156,9 @@ def guardar_parametros_json():
 
         with open(ruta_archivo, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
+        
+        activo = data['activo']
+        tipo = "INVERSO" if data['inverso'] else "LINEAL"
 
         if opcion_seleccionada.get() == "remoto":
             if ruta_archivo == parametros_iniciales:
@@ -178,6 +180,7 @@ def guardar_parametros_json():
 
 # Función para monitorear cambios en el archivo JSON
 def monitorear_cambios_parametros():
+    global activo, tipo
     ultimo = float(os.path.getmtime(parametros_iniciales))
     ultimo_modificado = {}
     while True:
@@ -187,7 +190,7 @@ def monitorear_cambios_parametros():
 
             # Buscar el archivo con la ultima modificacion
             for archivo in archivo_parametros:
-                if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado:
+                if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado  and activo in archivo and tipo in archivo:
                     ultimo = float(os.path.getmtime(archivo))
                     ultimo_modificado = json.load(open(archivo,"r"))
                     cargar_parametros_json(archivo)
@@ -207,14 +210,15 @@ def cargar_json_salida():
             archivos_salida = glob.glob(carpeta_salida)
 
         # Ubicar la ruta long y short
+        ruta_salida_long = {}
         for archivo in archivos_salida:
-            if "LONG" in archivo:
+            if "LONG" in archivo and activo in archivo and tipo in archivo:
                 ruta_salida_long = archivo
         
-        with open(ruta_salida_long, "r") as archivo:
-            salida_long = json.load(archivo)
-
-            return salida_long
+                with open(ruta_salida_long, "r") as archivo:
+                    salida_long = json.load(archivo)
+                    return salida_long
+    
     except FileNotFoundError:
         print("Archivo JSON no encontrado.")
         return None
@@ -233,13 +237,14 @@ def cargar_json_salida_short():
             archivos_salida = glob.glob(carpeta_salida)
 
         # Ubicar la ruta long y short
+        ruta_salida_short = {}
         for archivo in archivos_salida:
-            if "SHORT" in archivo:
+            if "SHORT" in archivo and activo in archivo and tipo in archivo:
                 ruta_salida_short = archivo
         
-        with open(ruta_salida_short, "r") as archivo:
-            salida_short = json.load(archivo)
-            return salida_short
+                with open(ruta_salida_short, "r") as archivo:
+                    salida_short = json.load(archivo)
+                    return salida_short
     
     except FileNotFoundError:
         print("Archivo JSON no encontrado.")
@@ -490,7 +495,6 @@ def crear_interfaz():
 
     # Variables globales
     data = {}
-    ruta_archivo = None
     ultima_modificacion = None
     entries = {}  # Para campos editables no booleanos
     botones_booleanos = {}  # Para botones toggle
@@ -631,11 +635,6 @@ def crear_interfaz():
     # Iniciar el monitoreo en un hilo separado
     hilo_monitor = threading.Thread(target=monitorizar_cambios, daemon=True)
     hilo_monitor.start()
-
-    # Cargar datos iniciales
-    data_inicial = cargar_json_salida()
-    if data_inicial:
-        actualizar_interfaz_long(data_inicial)
     # -------------FIN SALIDA LONG---------------
     
 
@@ -765,11 +764,6 @@ def crear_interfaz():
     # Iniciar el monitoreo en un hilo separado
     hilo_monitor = threading.Thread(target=monitorizar_cambios_short, daemon=True)
     hilo_monitor.start()
-
-    # Cargar datos iniciales
-    data_inicial = cargar_json_salida_short()
-    if data_inicial:
-        actualizar_interfaz_short(data_inicial)
     # -------------FIN SALIDA SHORT---------------
     
     # Loop principal de la ventana
