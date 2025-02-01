@@ -1,6 +1,6 @@
 {
     "exchange": "BYBIT",
-    "activo": "btc",
+    "activo": "1000neirocto",
     "direccion": "SHORT",
     "inverso": false,
     "auto": false,

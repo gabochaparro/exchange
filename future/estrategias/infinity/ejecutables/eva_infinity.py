@@ -160,7 +160,7 @@ def guardar_parametros_json():
         with open(ruta_archivo, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
         
-        activo = data['activo']
+        activo = data['activo'].upper()
         tipo = "INVERSO" if data['inverso'] else "LINEAL"
 
         if opcion_seleccionada.get() == "remoto":
@@ -196,7 +196,8 @@ def monitorear_cambios_parametros():
                 if float(os.path.getmtime(archivo)) > ultimo and json.load(open(archivo,"r")) != ultimo_modificado:
                     ultimo = float(os.path.getmtime(archivo))
                     ultimo_modificado = json.load(open(archivo,"r"))
-                    cargar_parametros_json(archivo)
+                    if activo in archivo and tipo in archivo:
+                        cargar_parametros_json(archivo)
 
         except Exception as e:
             print(f"Error monitoreando el archivo: {e}")
@@ -207,7 +208,7 @@ def cargar_json_salida():
     try:
         # Usa glob para obtener todos los archivos dentro de la carpeta
         archivos_salida = glob.glob(carpeta_salida)
-        
+            
         # Esperar hasta que se generen los archivos de salida
         while len(archivos_salida) == 0:
             archivos_salida = glob.glob(carpeta_salida)
@@ -215,7 +216,7 @@ def cargar_json_salida():
         # Ubicar la ruta long y short
         ruta_salida_long = {}
         for archivo in archivos_salida:
-            if "LONG" in archivo:
+            if "LONG" in archivo and activo in archivo and tipo in archivo:
                 ruta_salida_long = archivo
         
                 with open(ruta_salida_long, "r") as archivo:
@@ -242,7 +243,7 @@ def cargar_json_salida_short():
         # Ubicar la ruta long y short
         ruta_salida_short = {}
         for archivo in archivos_salida:
-            if "SHORT" in archivo:
+            if "SHORT" in archivo and activo in archivo and tipo in archivo:
                 ruta_salida_short = archivo
         
                 with open(ruta_salida_short, "r") as archivo:
