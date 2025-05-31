@@ -388,9 +388,9 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
                                 else:
-                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -422,9 +422,9 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
                                 else:
-                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -509,9 +509,9 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
                                 else:
-                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                     
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
@@ -541,9 +541,9 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
                                 else:
-                                    pareja['general']['beneficios'] = str(0.9989*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                         
                                 # Cancelar la orden de SL en caso tenga
                                 if pareja['sl']['orderId'] != "":
