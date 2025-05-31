@@ -1,0 +1,21 @@
+{
+    "exchange": "BYBIT",
+    "activo": "LDO",
+    "direccion": "SHORT",
+    "inverso": false,
+    "auto": false,
+    "pausa": false,
+    "apalancamiento": 3.6,
+    "precio_referencia": 0,
+    "distancia_grid": 0.81,
+    "ganancia_long": 0,
+    "ganancia_short": 0.504,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": true,
+    "umbral_libro": 0,
+    "tp": 1.71,
+    "sl": 0.855,
+    "reiniciar_parejas": false
+}

@@ -1,0 +1,21 @@
+{
+    "exchange": "BYBIT",
+    "activo": "DEXE",
+    "direccion": "SHORT",
+    "inverso": false,
+    "auto": false,
+    "pausa": false,
+    "apalancamiento": 9,
+    "precio_referencia": 0,
+    "distancia_grid": 1.26,
+    "ganancia_long": 0,
+    "ganancia_short": 0.9,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": false,
+    "umbral_libro": 0,
+    "tp": 3.06,
+    "sl": 1.8,
+    "reiniciar_parejas": false
+}

@@ -1,0 +1,20 @@
+{
+    "exchange": "BYBIT",
+    "activo": "10000sats",
+    "direccion": "SHORT",
+    "inverso": false,
+    "auto": true,
+    "pausa": true,
+    "apalancamiento": 9,
+    "precio_referencia": 0,
+    "distancia_grid": 0.27,
+    "ganancia_long": 0.027,
+    "ganancia_short": 0,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": true,
+    "umbral_libro": 0,
+    "tp": 0,
+    "sl": 54
+}

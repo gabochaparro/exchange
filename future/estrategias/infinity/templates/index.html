@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sección de Control -->
+        <div class="control-panel">
+            <button id="playPauseBtn" class="play-pause-button">⏯️</button>
+            <h2>Estado: <span id="statusText">Pausa</span></h2>
+        </div>
+
+        <!-- Ventana de Resultados de Operaciones -->
+        <div class="results-panel">
+            <h3>Resultados de Operaciones</h3>
+            <pre id="resultsData">Cargando resultados...</pre>
+        </div>
+
+        <!-- Terminal de APIs -->
+        <div class="terminal-panel">
+            <h3>Terminal de APIs</h3>
+            <div id="terminalOutput">Ejecutando APIs...</div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

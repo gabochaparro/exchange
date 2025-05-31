@@ -1,0 +1,21 @@
+{
+    "exchange": "BYBIT",
+    "activo": "1000TOSHI",
+    "direccion": "LONG",
+    "inverso": false,
+    "auto": false,
+    "pausa": false,
+    "apalancamiento": 9,
+    "precio_referencia": 0,
+    "distancia_grid": 2.07,
+    "ganancia_long": 0,
+    "ganancia_short": 0.9,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": true,
+    "umbral_libro": 0,
+    "tp": 0,
+    "sl": 3.06,
+    "reiniciar_parejas": false
+}
