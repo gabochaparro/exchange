@@ -543,7 +543,7 @@ def crear_interfaz():
             widget.destroy()
 
         # Actualizar el encabezado con información general
-        redondear = 8 if data.get('inverso', False) else 2
+        redondear = 8 if data.get('inverso', True) else 2
         for widget in frame_principal.winfo_children():
             widget.destroy()
 
@@ -672,7 +672,7 @@ def crear_interfaz():
             widget.destroy()
 
         # Actualizar el encabezado con información general
-        redondear = 8 if data.get('inverso', False) else 2
+        redondear = 8 if data.get('inverso', True) else 2
         for widget in frame_principal_short.winfo_children():
             widget.destroy()
 
