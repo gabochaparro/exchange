@@ -16,7 +16,8 @@
     "condicional_short": true,
     "umbral_libro": 0,
     "tp": 0,
+    "precio_tp": 0,
     "sl": 0,
-    "reiniciar_parejas": false,
-    "precio_objetivo": 0
+    "precio_sl": 0,
+    "reiniciar_parejas": false
 }

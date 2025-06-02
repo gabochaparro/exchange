@@ -98,7 +98,8 @@ auto = parametros['auto']
 invertir_ganancias_grid = parametros['invertir_ganancias_grid']
 breakeven = parametros['descarga_breakeven']
 reiniciar_parejas = parametros['reiniciar_parejas']
-precio_objetivo = parametros['precio_objetivo']
+precio_tp = parametros['precio_tp']
+precio_sl = parametros['precio_sl']
 proteccion_sl = False
 # ---------------------------
 
@@ -1709,7 +1710,7 @@ def detener_estrategia():
                 ganancias_grid_short = ganancias_grid_short + float(pareja['general']['beneficios'])
 
         # Detener estrategia por Take Profit
-        if (beneficio > tp  and tp != float(0)) or (precio_actual > precio_objetivo and precio_objetivo != 0 and tipo == "LONG") or (precio_actual < precio_objetivo and precio_objetivo != 0 and tipo == "SHORT"):
+        if (beneficio > tp  and tp != float(0)) or (precio_actual > precio_tp and precio_tp != float(0) and tipo == "LONG") or (precio_actual < precio_tp and precio_tp != float(0) and tipo == "SHORT"):
             pausa = True
             parametros['pausa'] = True
             json.dump(parametros, open(parametros_copia, "w"), indent=4)
@@ -1721,7 +1722,7 @@ def detener_estrategia():
             print("")
 
         # Detener estrategia por Stop Loss    
-        if beneficio <= (-1)*(0.9*sl) and sl != float(0):
+        if (beneficio <= (-1)*(0.9*sl) and sl != float(0)) or (precio_actual <= precio_sl and precio_sl != float(0) and tipo == "LONG") or (precio_actual >= precio_sl and precio_sl != float(0) and tipo == "SHORT"):
             iniciar_estrategia = False
             cerrar_todo()
             mostrar_lista(parejas_compra_venta)
