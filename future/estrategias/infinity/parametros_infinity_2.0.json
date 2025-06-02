@@ -17,5 +17,6 @@
     "umbral_libro": 0,
     "tp": 0,
     "sl": 0,
-    "reiniciar_parejas": false
+    "reiniciar_parejas": false,
+    "precio_objetivo": 0
 }
