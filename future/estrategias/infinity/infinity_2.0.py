@@ -12,7 +12,6 @@ import future_ws
 import json
 import time
 import threading
-from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import copy
 import shutil
@@ -390,7 +389,7 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['cantidad'])-float(pareja['compra']['cantidad'])))
                                 else:
                                     pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 
@@ -424,7 +423,7 @@ def actualizar_pareja_long(exchange, symbol):
                                 pareja['venta']['price'] = str(orden['avgPrice'])
                                 pareja['venta']['monto'] = str(float(pareja['venta']['cantidad'])*float(pareja['venta']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['cantidad'])-float(pareja['compra']['cantidad'])))
                                 else:
                                     pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                 
@@ -511,7 +510,7 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['cantidad'])-float(pareja['compra']['cantidad'])))
                                 else:
                                     pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                     
@@ -543,7 +542,7 @@ def actualizar_pareja_short(exchange, symbol):
                                 pareja['compra']['price'] = str(orden['avgPrice'])
                                 pareja['compra']['monto'] = str(float(pareja['compra']['cantidad'])*float(pareja['compra']['price']))
                                 if inverso:
-                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto']))/precio_actual)
+                                    pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['cantidad'])-float(pareja['compra']['cantidad'])))
                                 else:
                                     pareja['general']['beneficios'] = str((1-comision_grid/100)*(float(pareja['venta']['monto'])-float(pareja['compra']['monto'])))
                                         
