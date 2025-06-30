@@ -13,7 +13,6 @@ import json
 import time
 import threading
 from datetime import datetime
-import copy
 import shutil
 import os
 import glob
