@@ -337,7 +337,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar la pareja
                             if orden['orderStatus'] == "Filled" and pareja['compra']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['qty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['qty']
                                 pareja['compra']['ejecutada'] = True
@@ -355,7 +355,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar pareja
                             if orden['status'] == "FILLED" and pareja['compra']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['origQty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['compra']['ejecutada'] = True
@@ -379,7 +379,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar pareja
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['qty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['qty']
                                 pareja['venta']['ejecutada'] = True
@@ -413,7 +413,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar pareja
                             if orden['status'] == "FILLED" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['origQty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['venta']['ejecutada'] = True
@@ -500,7 +500,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Acualizar la pareja
                             if orden['orderStatus'] == "Filled" and not(pareja['compra']['ejecutada']):
                                 if inverso:
-                                    cantidad = lote*float(orden['qty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['qty']
                                 pareja['compra']['ejecutada'] = True
@@ -532,7 +532,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Actualizar la pareja
                             if orden['status'] == "FILLED" and pareja['compra']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['origQty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['compra']['ejecutada'] = True
@@ -590,7 +590,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Obtener la orden de venta en BYBIT
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['qty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['qty']
                                 pareja['venta']['ejecutada'] = True
@@ -609,7 +609,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Obtener la orden de venta en Binance
                             if orden['status'] == "FILLED" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = lote*float(orden['qty'])/float(orden['avgPrice'])
+                                    cantidad = orden['cumExecValue']
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['venta']['ejecutada'] = True

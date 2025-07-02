@@ -5,6 +5,7 @@ import bingx
 import okx_
 import kucoin
 import gateio
+import json
 
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
@@ -110,7 +111,7 @@ def precio_actual_activo(exchange, symbol):
 
 # FUNCIÓN UNIVERSAL QUE CREA UNA ORDEN LIMITI Ó MARKET
 #-----------------------------------------------------
-def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
+def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage, tp=0.0, sl=0.0):
     try:
 
         exchange = exchange.upper()
@@ -132,7 +133,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # BYBIT
         if exchange == "BYBIT":
-            orden = bybit_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bybit_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage, tp, sl)
 
         # BITGET
         if exchange == "BITGET":
@@ -853,11 +854,25 @@ def cambiar_margen(exchange, symbol, margin_mode):
         print("")
 # --------------------------------------
 
+# FUNCIÓN QUE NORMALIZA LOS PRECIOS
+# ---------------------------------
+def normalizar_precio(exchange, symbol, precio):
+
+        exchange = exchange.upper()
+        
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit_inverse.normalizar_precio(symbol, precio)
+# ---------------------------------
+
 #orden = buscar_ticks("binance")
 #orden = precio_actual_activo(exchange="bybit", symbol="BTC")
-#orden = nueva_orden(exchange="bybit", symbol="btc", order_type="limit", quantity=3, price=65080.0, side="buy", leverage=3.6)
+#orden = nueva_orden(exchange="bybit", symbol="btc", order_type="limit", quantity=3, price=65080.0, side="buy", leverage=3.6, tp=111999, sl=64111)
 #orden = cancelar_ordenes(exchange="bybit", symbol="btc")
-#orden = obtener_ordenes(exchange="bybit", symbol="btc")
+#orden = obtener_ordenes(exchange="bybit", symbol="sol")
 #orden = obtener_historial_ordenes("bybit","BTC")
 #orden = cancelar_orden(exchange="bybit", symbol="btc", orderId="864b343f-33a7-4b1e-8659-d895ea998066")
 #orden = obtener_posicion(exchange="bybit", symbol="btc")
@@ -866,4 +881,5 @@ def cambiar_margen(exchange, symbol, margin_mode):
 #orden = take_profit("binance", "eth", "short", 2840, "limit", 1)
 #orden = trailing_stop(exchange="bybit", symbol="btc", positionSide="short", activationPrice=65000, callbackRate=1)
 #orden = apalancamiento_max("binance","eth")
+#orden = normalizar_precio("BYBIT", "XRP", 9.1234456789)
 #print(json.dumps(orden,indent=2))

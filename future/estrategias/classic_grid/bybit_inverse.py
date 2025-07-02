@@ -68,7 +68,7 @@ def apalancameinto(symbol,leverage):
 
 # FUNCIÓN DE BYBIT NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------------
-def nueva_orden(symbol, order_type, quantity, price, side, leverage):
+def nueva_orden(symbol, order_type, quantity, price, side, leverage, tp=0.0, sl=0.0):
     try:
         
         # Cambia el apalancamiento
@@ -99,6 +99,11 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         cantidad_paso = float(bybit_session.get_instruments_info(category=category, symbol=symbol)['result']['list'][0]['lotSizeFilter']['qtyStep'])
         quantity = round(quantity/cantidad_paso)*cantidad_paso
 
+        # Definir el Tp
+        tpOrderType = "Market"
+        if tp > 0:
+            tpOrderType = "Limit"
+
         # Coloca la orden "LIMIT"
         if order_type.upper() == "LIMIT":
             order = bybit_session.place_order(
@@ -109,7 +114,12 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 qty=quantity,
                 price=price,
                 timeinforce="GTC",
-                positionIdx=positionSide
+                positionIdx=positionSide,
+                tpslMode = "Partial",
+                tpOrderType = tpOrderType,
+                takeProfit = str(tp),
+                tpLimitPrice = str(tp),
+                stopLoss = str(sl)
             )
         
         # Coloca la orden "MARKET"
@@ -120,7 +130,12 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 side=side[0] + side[1:].lower(),
                 orderType=order_type,
                 qty=quantity,
-                positionIdx=positionSide
+                positionIdx=positionSide,
+                tpslMode = "Partial",
+                tpOrderType = tpOrderType,
+                takeProfit = str(tp),
+                tpLimitPrice = str(tp),
+                stopLoss = str(sl)
             )
 
         # Coloca la orden "CONDITIONAL"
@@ -136,7 +151,12 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 triggerBy="LastPrice",
                 timeinforce="GTC",
                 positionIdx=positionSide,
-                triggerDirection=triggerDirection
+                triggerDirection=triggerDirection,
+                tpslMode = "Partial",
+                tpOrderType = tpOrderType,
+                takeProfit = str(tp),
+                tpLimitPrice = str(tp),
+                stopLoss = str(sl)
             )
 
         order = obtener_ordenes(symbol, order["result"]["orderId"])
@@ -513,13 +533,20 @@ def cambiar_margen(symbol,tradeMode):
         print("")
 # ------------------------------------
 
+# FUNCIÓN QUE NORMALIZA LOS PRECIOS
+# ---------------------------------
+def normalizar_precio(symbol, precio):
+    norma = bybit_session.get_instruments_info(category="inverse", symbol=symbol)['result']['list'][0]['priceFilter']['tickSize']
+    redondear = len(norma.split(".")[-1])
+    return round(precio, redondear)
+# ---------------------------------
 
 #orden = precio_actual_activo("btcusd")
 #orden = apalancameinto_max("ethusd")
 #orden = obtener_ordenes("ethusd")
 #orden = cancelar_ordenes("BTCUSD")
 #orden = obtener_historial_ordenes("BTCUSD")
-#orden = nueva_orden(symbol="BTCUSD", order_type="Limit", quantity=1, price=64700, side="BUY", leverage=3)
+#orden = nueva_orden(symbol="BTCUSD", order_type="Limit", quantity=1, price=105500, side="BUY", leverage=3, tp=106111, sl=105111)
 #orden = cancelar_orden("BTCUSD", orderId="b0cdc9fa-40b9-461b-9dff-e5897d9caac0")
 #orden = obtener_posicion("BTCUSD")
 #orden = cerrar_posicion("BTCUSD", "LONG")
@@ -528,4 +555,5 @@ def cambiar_margen(symbol,tradeMode):
 #orden = trailing_stop("BTCUSD", "SHORT", 65223.00, 0.36)
 #orden = patrimonio('ethusd')
 #orden = margen_disponible("ethusd")
+#orden = normalizar_precios("XRPUSD", 111999.1234456789)
 #print(json.dumps(orden,indent=2))

@@ -5,6 +5,7 @@ import bingx
 import okx_
 import kucoin
 import gateio
+import json
 
 
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
@@ -108,7 +109,7 @@ def precio_actual_activo(exchange, symbol):
 
 # FUNCIÓN UNIVERSAL QUE CREA UNA ORDEN LIMITI Ó MARKET
 #-----------------------------------------------------
-def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
+def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage, tp=0, sl=0):
     try:
 
         exchange = exchange.upper()
@@ -130,7 +131,7 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage):
 
         # BYBIT
         if exchange == "BYBIT":
-            orden = bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            orden = bybit.nueva_orden(symbol, order_type, quantity, price, side, leverage, tp, sl)
 
         # BITGET
         if exchange == "BITGET":
@@ -887,6 +888,21 @@ def cambiar_margen(exchange, symbol, margin_mode):
         print("")
 # --------------------------------------
 
+# FUNCIÓN QUE NORMALIZA LOS PRECIOS
+# ---------------------------------
+def normalizar_precio(exchange, symbol, precio):
 
-#orden = obtener_historial_ordenes("BINANCE","1000rats")
+        exchange = exchange.upper()
+        
+        # Definir el Símbolo segun el exchange
+        symbol = definir_symbol(exchange=exchange, symbol=symbol)
+
+        # BYBIT
+        if exchange == "BYBIT":
+            return bybit.normalizar_precio(symbol, precio)
+# ---------------------------------
+
+#orden = nueva_orden("BYBIT", "XAUT", "LIMIT", 0.002, 3300, "BUY", 6, 3335, 3199)
+#orden = obtener_ordenes("BYBIT", "XAUT")
+#orden = normalizar_precio("BYBIT", "XRP", 111999.123456789)
 #print(json.dumps(orden, indent=2))

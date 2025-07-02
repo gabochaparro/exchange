@@ -197,7 +197,7 @@ def cancelar_ordenes(symbol):
 # ----------------------------------------------------
 def obtener_historial_ordenes(symbol, orderId="", limit=369):
     try:
-        return bybit_session.get_order_history(category="inverse",symbol=symbol,orderId=orderId,limit=limit)['result']['list']
+        return bybit_session.get_order_history(category="inverse",symbol=symbol.upper(),orderId=orderId,limit=limit)['result']['list']
 
     except Exception as e:
         print("ERROR OBTENIENDO INFO DE LAS ORDENES ABIERTAS EN BYBIT")
@@ -516,9 +516,9 @@ def cambiar_margen(symbol,tradeMode):
 
 #orden = precio_actual_activo("btcusd")
 #orden = apalancameinto_max("ethusd")
-#orden = obtener_ordenes("ethusd")
+#orden = obtener_ordenes("solusd")
 #orden = cancelar_ordenes("BTCUSD")
-#orden = obtener_historial_ordenes("BTCUSD")
+#orden = obtener_historial_ordenes("solUSD")
 #orden = nueva_orden(symbol="BTCUSD", order_type="Limit", quantity=1, price=64700, side="BUY", leverage=3)
 #orden = cancelar_orden("BTCUSD", orderId="b0cdc9fa-40b9-461b-9dff-e5897d9caac0")
 #orden = obtener_posicion("BTCUSD")
