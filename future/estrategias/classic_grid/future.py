@@ -298,7 +298,7 @@ def obtener_historial_ordenes(exchange, symbol, orderId="", limit=100):
 
 # FUNCIÓN QUE CANCELA UNA ORDEN
 # -----------------------------
-def cancelar_orden(exchange, symbol, orderId):
+def cancelar_orden(exchange, symbol, orderId=""):
     try:
 
         exchange = exchange.upper()

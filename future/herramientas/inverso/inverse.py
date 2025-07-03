@@ -1,13 +1,3 @@
-import binance_inverse
-import bybit_inverse
-import bitget
-import bingx
-import okx_
-import kucoin
-import gateio
-import json
-
-
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
 # ----------------------------------------------
 def definir_symbol(exchange, symbol):
@@ -53,6 +43,7 @@ def buscar_ticks(exchange):
         
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.buscar_ticks()
     
     except Exception as e:
@@ -74,33 +65,33 @@ def precio_actual_activo(exchange, symbol):
         
         # BINANCE
         if exchange == "BINANCE":
-            precio = binance_inverse.precio_actual_activo(symbol)
+            import binance_inverse
+            return binance_inverse.precio_actual_activo(symbol)
 
         # BYBIT
         if exchange == "BYBIT":
-            precio = bybit_inverse.precio_actual_activo(symbol)
+            import bybit_inverse
+            return bybit_inverse.precio_actual_activo(symbol)
 
         # BITGET
         if exchange == "BITGET":
-            precio = bitget.precio_actual_activo(symbol)    
+            pass    
 
         # BINGX
         if exchange == "BINGX":
-            precio = bingx.precio_actual_activo(symbol)
+            pass
 
         # OKX
         if exchange == "OKX":
-            precio = okx_.precio_actual_activo(symbol)
+            pass
 
         # KUCOIN
         if exchange == "KUCOIN":
-            precio = kucoin.precio_actual_activo(symbol)
+            pass
 
         # GATEIO
         if exchange == "GATEIO":
-            precio = gateio.precio_actual_activo(symbol)
-
-        return precio
+            pass
     
     except Exception as e:
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol}")
@@ -129,33 +120,33 @@ def nueva_orden(exchange, symbol, order_type, quantity, price, side, leverage, t
 
         # BINANCE
         if exchange == "BINANCE":
-            orden = binance_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            import binance_inverse
+            return binance_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage)
 
         # BYBIT
         if exchange == "BYBIT":
-            orden = bybit_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage, tp, sl)
+            import bybit_inverse
+            return bybit_inverse.nueva_orden(symbol, order_type, quantity, price, side, leverage, tp, sl)
 
         # BITGET
         if exchange == "BITGET":
-            orden = orden = bitget.nueva_orden(symbol, order_type, quantity, price, side, leverage)    
+            pass    
 
         # BINGX
         if exchange == "BINGX":
-            orden = bingx.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            pass
 
         # OKX
         if exchange == "OKX":
-            orden = okx_.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            pass
 
         # KUCOIN
         if exchange == "KUCOIN":
-            orden = kucoin.nueva_orden(symbol, order_type, quantity, price, side, leverage)
+            pass
 
         # GATEIO
         if exchange == "GATEIO":
-            orden = gateio.nueva_orden(symbol, order_type, quantity, price, side, leverage)
-
-        return orden
+            pass
 
     except Exception as e:
         print("ERROR CREANDO LA ORDEN")
@@ -176,31 +167,33 @@ def cancelar_ordenes(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             binance_inverse.cancelar_ordenes(symbol=symbol)
         
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             bybit_inverse.cancelar_ordenes(symbol=symbol)
         
         # BITGET
         if exchange == "BITGET":
-            bitget.cancelar_ordenes(symbol=symbol)
+            pass
         
         # BINGX
         if exchange == "BINGX":
-            bingx.cancelar_ordenes(symbol=symbol)
+            pass
         
         # OKX
         if exchange == "OKX":
-            okx_.cancelar_ordenes(symbol=symbol)
+            pass
         
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.cancelar_ordenes(symbol=symbol)
+            pass
         
         # GATEIO
         if exchange == "GATEIO":
-            gateio.cancelar_ordenes(symbol=symbol)
+            pass
         
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES")
@@ -221,31 +214,33 @@ def obtener_ordenes(exchange, symbol, orderId=""):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.obtener_ordenes(symbol=symbol)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.obtener_ordenes(symbol=symbol,orderId=orderId)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.obtener_ordenes(symbol=symbol)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.obtener_ordenes(symbol=symbol)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.obtener_ordenes(symbol=symbol)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.obtener_ordenes(symbol=symbol)
+            return ""
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.obtener_ordenes(symbol=symbol)
+            return ""
     
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES")
@@ -266,31 +261,33 @@ def obtener_historial_ordenes(exchange, symbol, orderId="", limit=369):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.obtener_historial_ordenes(symbol=symbol,limit=limit)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.obtener_historial_ordenes(symbol=symbol,orderId=orderId,limit=limit)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.obtener_historial_ordenes(symbol=symbol)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.obtener_historial_ordenes(symbol=symbol)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.obtener_historial_ordenes(symbol=symbol)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.obtener_historial_ordenes(symbol=symbol)
+            return ""
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.obtener_historial_ordenes(symbol=symbol)
+            return ""
     
     except Exception as e:
         print("ERROR CANCELANDO TODAS LAS ORDENES")
@@ -311,31 +308,33 @@ def cancelar_orden(exchange, symbol, orderId=""):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             binance_inverse.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             bybit_inverse.cancelar_orden(symbol=symbol, orderId=orderId)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.cancelar_orden(symbol=symbol, orderId=orderId)
+            pass
 
         # BINGX
         if exchange == "BINGX":
-            bingx.cancelar_orden(symbol=symbol, orderId=orderId)
+            pass
 
         # OKX
         if exchange == "OKX":
-            okx_.cancelar_orden(symbol=symbol, orderId=orderId)
+            pass
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.cancelar_orden(symbol=symbol, orderId=orderId)
+            pass
 
         # KUCOIN
         if exchange == "GATEIO":
-            gateio.cancelar_orden(symbol=symbol, orderId=orderId)
+            pass
     
     except Exception as e:
         print(f"ERROR CANCELANDO LA ORDEN {id} DE {exchange}")
@@ -356,31 +355,33 @@ def obtener_posicion(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.obtener_posicion(symbol)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.obtener_posicion(symbol)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.obtener_posicion(symbol)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.obtener_posicion(symbol)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.obtener_posicion(symbol)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.obtener_posicion(symbol)
+            return ""
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.obtener_posicion(symbol)
+            return ""
 
     except Exception as e:
         print(f"ERROR OBTENIENDO INFO DE LAS POSICIONES DE {exchange}")
@@ -405,31 +406,33 @@ def cerrar_posicion(exchange, symbol, positionSide, size=""):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.cerrar_posicion(symbol, positionSide)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.cerrar_posicion(symbol, positionSide, size=size)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.cerrar_posicion(symbol, positionSide)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.cerrar_posicion(symbol, positionSide)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.cerrar_posicion(symbol, positionSide)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.cerrar_posicion(symbol)
+            return ""
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.cerrar_posicion(symbol, positionSide)
+            return ""
 
     except Exception as e:
         print(f"ERROR CERRANDO POSICION EN {exchange}")
@@ -455,31 +458,33 @@ def stop_loss(exchange, symbol, positionSide, stopPrice, slSize=""):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             binance_inverse.stop_loss(symbol, positionSide, stopPrice)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.stop_loss(symbol, positionSide, stopPrice, slSize=slSize)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.stop_loss(symbol, positionSide, stopPrice)
+            pass
 
         # BINGX
         if exchange == "BINGX":
-            bingx.stop_loss(symbol, positionSide, stopPrice)
+            pass
 
         # OKX (NO FUNCIONA AUN)
         if exchange == "OKX":
-            okx_.stop_loss(symbol, positionSide, stopPrice)
+            pass
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.stop_loss(symbol, positionSide, stopPrice)
+            pass
 
         # GATEIO
         if exchange == "GATEIO":
-            gateio.stop_loss(symbol, positionSide, stopPrice)
+            pass
     
     except Exception as e:
         print("ERROR COLOCANDO STOP LOSS")
@@ -506,31 +511,33 @@ def take_profit(exchange, symbol, positionSide, stopPrice, type, tpSize=""):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.take_profit(symbol, positionSide, stopPrice, type, tpSize=tpSize)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.take_profit(symbol, positionSide, stopPrice, type, tpSize=tpSize)
 
         # BITGET (SOLO MARKET POR EL MOMENTO)
         if exchange == "BITGET":
-            return bitget.take_profit(symbol, positionSide, stopPrice, type)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.take_profit(symbol, positionSide, stopPrice, type)
+            return ""
 
         # OKX (SOLO LIMIT POR EL MOMENTO)
         if exchange == "OKX":
-            return okx_.take_profit(symbol, positionSide, stopPrice, type)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.take_profit(symbol, positionSide, stopPrice, type)
+            return ""
 
         # GATEIO
         if exchange == "GATEIO":
-            return gateio.take_profit(symbol, positionSide, stopPrice, type)
+            return ""
     
     except Exception as e:
         print("ERROR COLOCANDO TAKE PROFIT")
@@ -556,31 +563,33 @@ def trailing_stop(exchange, symbol, positionSide, activationPrice, callbackRate)
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+            return ""
 
         # GATEIO
         if exchange == "GATIO":
-            return gateio.trailing_stop(symbol, positionSide, activationPrice, callbackRate)
+            return ""
     
     except Exception as e:
         print("ERROR COLOCANDO TRAILING STOP")
@@ -601,31 +610,33 @@ def apalancamiento_max(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.apalancameinto_max(symbol=symbol)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.apalancameinto_max(symbol=symbol)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.apalancameinto_max(symbol=symbol)
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.apalancameinto_max(symbol=symbol)
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.apalancameinto_max(symbol=symbol)
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.apalancameinto_max(symbol=symbol)
+            return ""
 
         # GATEIO
         if exchange == "GATIO":
-            return gateio.apalancameinto_max(symbol=symbol)
+            return ""
     
     except Exception as e:
         print("ERROR COLOCANDO TRAILING STOP")
@@ -646,31 +657,33 @@ def apalancamiento(exchange, symbol, leverage):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             binance_inverse.apalancameinto(symbol=symbol,leverage=leverage)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             bybit_inverse.apalancameinto(symbol=symbol,leverage=leverage)
 
         # BITGET
         if exchange == "BITGET":
-            bitget.apalancameinto(symbol=symbol,leverage=leverage)
+            pass
 
         # BINGX
         if exchange == "BINGX":
-            bingx.apalancameinto(symbol=symbol,leverage=leverage)
+            pass
 
         # OKX
         if exchange == "OKX":
-            okx_.apalancameinto(symbol=symbol,leverage=leverage)
+            pass
 
         # KUCOIN
         if exchange == "KUCOIN":
-            kucoin.apalancameinto(symbol=symbol,leverage=leverage)
+            pass
 
         # GATEIO
         if exchange == "GATIO":
-            gateio.apalancameinto(symbol=symbol,leverage=leverage)
+            pass
     
     except Exception as e:
         print(f"ERROR CAMBIANDO EL APALANCAMIENTO DE {symbol}")
@@ -690,31 +703,33 @@ def patrimonio(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.patrimonio(symbol)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.patrimonio(symbol)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.patrimonio()
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.patrimonio()
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.patrimonio()
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.patrimonio()
+            return ""
 
         # GATEIO
         if exchange == "GATIO":
-            return gateio.patrimonio()
+            return ""
     
     except Exception as e:
         print("ERROR OBTENIENDO EL PATRIMONIO DE LA CUENTA")
@@ -734,31 +749,33 @@ def margen_disponible(exchange, symbol):
 
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse
             return binance_inverse.margen_disponible(symbol)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.margen_disponible(symbol)
 
         # BITGET
         if exchange == "BITGET":
-            return bitget.margen_disponible()
+            return ""
 
         # BINGX
         if exchange == "BINGX":
-            return bingx.margen_disponible()
+            return ""
 
         # OKX
         if exchange == "OKX":
-            return okx_.margen_disponible()
+            return ""
 
         # KUCOIN
         if exchange == "KUCOIN":
-            return kucoin.margen_disponible()
+            return ""
 
         # GATEIO
         if exchange == "GATIO":
-            return gateio.margen_disponible()
+            return ""
     
     except Exception as e:
         print("ERROR OBTENIENDO EL MARGEN DISPONIBLE")
@@ -782,7 +799,8 @@ def cambiar_modo(exchange, symbol):
 
         # BYBIT
         if exchange == "BYBIT":
-            pass
+            import bybit_inverse
+            return bybit_inverse.cambiar_modo(symbol)
 
         # BITGET
         if exchange == "BITGET":
@@ -826,6 +844,7 @@ def cambiar_margen(exchange, symbol, margin_mode):
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.cambiar_margen(symbol, margin_mode)
 
         # BITGET
@@ -857,16 +876,48 @@ def cambiar_margen(exchange, symbol, margin_mode):
 # FUNCIÓN QUE NORMALIZA LOS PRECIOS
 # ---------------------------------
 def normalizar_precio(exchange, symbol, precio):
-
+    try:
         exchange = exchange.upper()
         
         # Definir el Símbolo segun el exchange
         symbol = definir_symbol(exchange=exchange, symbol=symbol)
 
+        # BINANCE
+        if exchange == "BINANCE":
+            pass
+
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
             return bybit_inverse.normalizar_precio(symbol, precio)
+
+        # BITGET
+        if exchange == "BITGET":
+            pass
+
+        # BINGX
+        if exchange == "BINGX":
+            pass
+
+        # OKX
+        if exchange == "OKX":
+            pass
+
+        # KUCOIN
+        if exchange == "KUCOIN":
+            pass
+
+        # GATEIO
+        if exchange == "GATIO":
+            pass
+    
+    except Exception as e:
+        print("ERROR CAMBIANDO EL TIPO DE MARGEN")
+        print(e)
+        print("")
 # ---------------------------------
+
+#import json
 
 #orden = buscar_ticks("binance")
 #orden = precio_actual_activo(exchange="bybit", symbol="BTC")

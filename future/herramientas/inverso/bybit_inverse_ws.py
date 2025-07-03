@@ -11,7 +11,9 @@ def precio_actual_activo(symbol):
         import bybit_inverse
         
         global precio_actual
+
         precio_actual = bybit_inverse.precio_actual_activo(symbol)
+        
         topic = f"publicTrade.{symbol}"
 
         def on_message(ws, message):
@@ -33,19 +35,20 @@ def precio_actual_activo(symbol):
 
         def on_error(ws, error):
             global precio_actual
-            precio_actual = bybit_inverse.precio_actual_activo(symbol)
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
-            precio_actual = bybit_inverse.precio_actual_activo(symbol)
             print("### WS BYBIT: Precio actual Cerrado ###")
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
+            #print(precio_actual)
 
         def on_open(ws):
             global precio_actual
+            print("### WS BYBIT: Precio Actual Abierto ###")
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
-            print("### WS BYBIT: Precio Actual Abierto ###")
 
         ws = websocket.WebSocketApp(
                                     url="wss://stream.bybit.com/v5/public/inverse",

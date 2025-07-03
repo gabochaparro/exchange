@@ -7,10 +7,9 @@ def precio_actual_activo(symbol):
         import json
         import ssl
         import binance_inverse
-
         global precio_actual
         precio_actual = binance_inverse.precio_actual_activo(symbol)
-
+        
         def on_message(ws, message):
             global precio_actual
             data = json.loads(message)

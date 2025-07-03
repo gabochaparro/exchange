@@ -67,7 +67,7 @@ def precio_actual_activo(exchange, symbol):
             import bybit_ws
             import bybit
             import threading
-            
+
             threading.Thread(target=bybit_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = bybit_ws.precio_actual

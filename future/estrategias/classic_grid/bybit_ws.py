@@ -1,23 +1,18 @@
-import websocket
-import json
-import ssl
-import time
-import threading
-from pybit.unified_trading import HTTP# Definir la session para Bybit
-
-bybit_session = HTTP(
-                    testnet=False,
-                    api_key='',
-                    api_secret='',
-                )
-
-
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #----------------------------------------------
-precio_actual = 0
+precio_actual = None
 def precio_actual_activo(symbol):
     try:
+        import websocket
+        import json
+        import ssl
+        import time
+        import threading
+        from pybit.unified_trading import HTTP# Definir la session para Bybit
+        import bybit
         
+        global precio_actual
+        precio_actual = bybit.precio_actual_activo(symbol)
         topic = f"publicTrade.{symbol}"
 
         def on_message(ws, message):
@@ -39,17 +34,20 @@ def precio_actual_activo(symbol):
                 #print(precio_actual)
 
         def on_error(ws, error):
+            global precio_actual
+            precio_actual = bybit.precio_actual_activo(symbol)
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
+            precio_actual = bybit.precio_actual_activo(symbol)
             print("### WS BYBIT: Precio actual Cerrado ###")
-            precio_actual = 0
-            #print(precio_actual)
 
         def on_open(ws):
-            print("### WS BYBIT: Precio Actual Abierto ###")
+            global precio_actual
+            precio_actual = bybit.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
+            print("### WS BYBIT: Precio Actual Abierto ###")
 
         ws = websocket.WebSocketApp(
                                     url="wss://stream.bybit.com/v5/public/linear",

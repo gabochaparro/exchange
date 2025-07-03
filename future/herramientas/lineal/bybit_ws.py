@@ -8,10 +8,10 @@ def precio_actual_activo(symbol):
         import ssl
         import time
         import threading
-        import bybit_inverse
+        import bybit
         
         global precio_actual
-        precio_actual = bybit_inverse.precio_actual_activo(symbol)
+        precio_actual = bybit.precio_actual_activo(symbol)
         topic = f"publicTrade.{symbol}"
 
         def on_message(ws, message):
@@ -29,26 +29,27 @@ def precio_actual_activo(symbol):
             # Recibir el mensaje del precio actual
             if "data" in data_precio_actual:
                 precio_actual = float(data_precio_actual['data'][0]['p'])
-                #print(precio_actual)
+                #time.sleep(1)
+                print(precio_actual)
 
         def on_error(ws, error):
             global precio_actual
-            precio_actual = bybit_inverse.precio_actual_activo(symbol)
+            precio_actual = bybit.precio_actual_activo(symbol)
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
-            precio_actual = bybit_inverse.precio_actual_activo(symbol)
+            precio_actual = bybit.precio_actual_activo(symbol)
             print("### WS BYBIT: Precio actual Cerrado ###")
 
         def on_open(ws):
             global precio_actual
-            precio_actual = bybit_inverse.precio_actual_activo(symbol)
+            precio_actual = bybit.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
             print("### WS BYBIT: Precio Actual Abierto ###")
 
         ws = websocket.WebSocketApp(
-                                    url="wss://stream.bybit.com/v5/public/inverse",
+                                    url="wss://stream.bybit.com/v5/public/linear",
                                     on_open=on_open,
                                     on_message=on_message,
                                     on_error=on_error,
@@ -60,7 +61,7 @@ def precio_actual_activo(symbol):
                 time.sleep(36)
                 ws.send(json.dumps({'op': 'ping'}))
                 #print("Ping Enviado")
-        
+
         threading.Thread(target=ping).start()
         
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -71,4 +72,4 @@ def precio_actual_activo(symbol):
         print("")
 #----------------------------------------------
 
-#precio_actual_activo("BTCUSD")
+#precio_actual_activo("PAXGUSDT")
