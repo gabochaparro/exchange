@@ -379,7 +379,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar pareja
                             if orden['orderStatus'] == "Filled" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = orden['cumExecValue']
+                                    cantidad = float(pareja['compra']['cantidad'])*(1+(float(orden['avgPrice'])-float(pareja['compra']['price']))/float(pareja['compra']['price']))
                                 else:
                                     cantidad = orden['qty']
                                 pareja['venta']['ejecutada'] = True
@@ -413,7 +413,7 @@ def actualizar_pareja_long(exchange, symbol):
                             # Actualizar pareja
                             if orden['status'] == "FILLED" and pareja['venta']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = orden['cumExecValue']
+                                    cantidad =  float(pareja['compra']['cantidad'])*(1+(float(orden['avgPrice'])-float(pareja['compra']['price']))/float(pareja['compra']['price']))
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['venta']['ejecutada'] = True
@@ -500,7 +500,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Acualizar la pareja
                             if orden['orderStatus'] == "Filled" and not(pareja['compra']['ejecutada']):
                                 if inverso:
-                                    cantidad = orden['cumExecValue']
+                                    cantidad = float(pareja['venta']['cantidad'])*(1+(float(pareja['venta']['price'])-float(orden['avgPrice']))/float(pareja['venta']['price']))
                                 else:
                                     cantidad = orden['qty']
                                 pareja['compra']['ejecutada'] = True
@@ -532,7 +532,7 @@ def actualizar_pareja_short(exchange, symbol):
                             # Actualizar la pareja
                             if orden['status'] == "FILLED" and pareja['compra']['ejecutada'] == False:
                                 if inverso:
-                                    cantidad = orden['cumExecValue']
+                                    cantidad = float(pareja['venta']['cantidad'])*(1+(float(pareja['venta']['price'])-float(orden['avgPrice']))/float(pareja['venta']['price']))
                                 else:
                                     cantidad = orden['origQty']
                                 pareja['compra']['ejecutada'] = True
