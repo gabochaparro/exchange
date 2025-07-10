@@ -30,7 +30,7 @@ def precio_actual_activo(symbol):
             if "data" in data_precio_actual:
                 precio_actual = float(data_precio_actual['data'][0]['p'])
                 #time.sleep(1)
-                print(precio_actual)
+                #print(precio_actual)
 
         def on_error(ws, error):
             global precio_actual
