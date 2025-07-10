@@ -1,11 +1,3 @@
-import binance_inverse
-import binance_inverse_ws
-import bybit_inverse
-import bybit_inverse_ws
-import threading
-import time
-
-
 # FUNCIÓN QUE DEFINE EL SYMBOL SEGUN EL EXCHANGE
 # ----------------------------------------------
 def definir_symbol(exchange, symbol):
@@ -48,7 +40,7 @@ def definir_symbol(exchange, symbol):
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #--------------------------------------------------------
-precio_actual = 0
+precio_actual = None
 def precio_actual_activo(exchange, symbol):
     try:
         # Variables globales
@@ -62,30 +54,30 @@ def precio_actual_activo(exchange, symbol):
         
         # BINANCE
         if exchange == "BINANCE":
+            import binance_inverse_ws
+            import binance_inverse
+            import threading
+            
+            precio_actual = binance_inverse.precio_actual_activo(symbol)
             threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = binance_inverse_ws.precio_actual
-                #print(precio_actual)
-                if precio_actual == 0:
-                    time.sleep(3.6)
-                    precio_actual = binance_inverse_ws.precio_actual
-                    if precio_actual == 0:
-                        precio_actual = binance_inverse.precio_actual_activo(symbol)
-                        threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,)).start()
+                if precio_actual == None:
+                    precio_actual = binance_inverse.precio_actual_activo(symbol)
                 #print(precio_actual)
 
         # BYBIT
         if exchange == "BYBIT":
+            import bybit_inverse
+            import bybit_inverse_ws
+            import threading
+            
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
             threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,)).start()
             while True:
                 precio_actual = bybit_inverse_ws.precio_actual
-                #print(precio_actual)
-                if precio_actual == 0:
-                    time.sleep(9)
-                    precio_actual = bybit_inverse_ws.precio_actual
-                    if precio_actual == 0:
-                        precio_actual = bybit_inverse.precio_actual_activo(symbol)
-                        threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,)).start()
+                if precio_actual == None:
+                    precio_actual = bybit_inverse.precio_actual_activo(symbol)
                 #print(precio_actual)
     
     except Exception as e:
@@ -95,4 +87,4 @@ def precio_actual_activo(exchange, symbol):
         return 0
 #--------------------------------------------------------
 
-#precio_actual_activo("bybit","btc")
+#precio_actual_activo("bybit","op")

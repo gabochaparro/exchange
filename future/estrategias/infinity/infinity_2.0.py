@@ -2471,11 +2471,11 @@ else:
 # Consultar precio actual
 if inverso:
     precio_actual = inverse_ws.precio_actual
-    while precio_actual == 0:
+    while precio_actual == None:
         precio_actual = inverse_ws.precio_actual
 else:
     precio_actual = future_ws.precio_actual
-    while precio_actual == 0:
+    while precio_actual == None:
         precio_actual = future_ws.precio_actual
 
 # Iniciar Hilo de las ordenes compra
@@ -2578,12 +2578,12 @@ while iniciar_estrategia:
         # Consultar precio actual
         if inverso:
             precio_actual = inverse_ws.precio_actual
-            if precio_actual == 0:
+            if precio_actual == None:
                 precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
                 time.sleep(0.9)
         else:
             precio_actual = future_ws.precio_actual
-            if precio_actual == 0:
+            if precio_actual == None:
                 precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
                 time.sleep(0.9)
 
@@ -2600,7 +2600,7 @@ while iniciar_estrategia:
                 hilo_precio_actual.daemon = True
                 hilo_precio_actual.start()
         else:
-            if not(hilo_precio_actual.is_alive()) or future_ws.precio_actual == 0:
+            if not(hilo_precio_actual.is_alive()):
                 hilo_precio_actual = threading.Thread(target=future_ws.precio_actual_activo, args=(exchange, activo))
                 hilo_precio_actual.daemon = True
                 hilo_precio_actual.start()

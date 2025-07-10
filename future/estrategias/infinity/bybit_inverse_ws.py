@@ -1,15 +1,18 @@
-import websocket
-import json
-import ssl
-import time
-import threading
-
-
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #----------------------------------------------
-precio_actual = 0
+precio_actual = None
 def precio_actual_activo(symbol):
     try:
+        import websocket
+        import json
+        import ssl
+        import time
+        import threading
+        import bybit_inverse
+        
+        global precio_actual
+
+        precio_actual = bybit_inverse.precio_actual_activo(symbol)
         
         topic = f"publicTrade.{symbol}"
 
@@ -31,16 +34,20 @@ def precio_actual_activo(symbol):
                 #print(precio_actual)
 
         def on_error(ws, error):
+            global precio_actual
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
             print("### WS BYBIT: Precio actual Cerrado ###")
-            precio_actual = 0
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
             #print(precio_actual)
 
         def on_open(ws):
+            global precio_actual
             print("### WS BYBIT: Precio Actual Abierto ###")
+            precio_actual = bybit_inverse.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
 
         ws = websocket.WebSocketApp(
