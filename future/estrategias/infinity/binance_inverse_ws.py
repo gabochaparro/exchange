@@ -22,16 +22,19 @@ def precio_actual_activo(symbol):
             global precio_actual
             precio_actual = binance_inverse.precio_actual_activo(symbol)
             print("### Error en el WS BINANCE: Precio Actual ###:", error)
+            print("")
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
             precio_actual = binance_inverse.precio_actual_activo(symbol)
             print("### WS BINANCE: Precio actual Cerrado ###")
+            print("")
 
         def on_open(ws):
             global precio_actual
             precio_actual = binance_inverse.precio_actual_activo(symbol)
             print("### WS BINANCE: Precio Actual Abierto ###")
+            print("")
         
         websocket_url = f"wss://dstream.binance.com/ws/{symbol.lower()}@aggTrade"
         

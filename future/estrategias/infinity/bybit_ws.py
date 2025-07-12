@@ -29,7 +29,7 @@ def precio_actual_activo(symbol):
             if "data" in data_precio_actual:
                 precio_actual = float(data_precio_actual['data'][0]['p'])
                 #time.sleep(1)
-                print(precio_actual)
+                #print(precio_actual)
             
             # Verificar el hilo del ping
             if not(hilo_ping.is_alive()):
@@ -45,21 +45,24 @@ def precio_actual_activo(symbol):
                 hilo_ping.daemon = True
                 hilo_ping.start()
             print("### Error en el WS BYBIT: Precio Actual ###:", error)
+            print("")
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
             precio_actual = bybit.precio_actual_activo(symbol)
             print("### WS BYBIT: Precio actual Cerrado ###")
+            print("")
 
         def on_open(ws):
             global precio_actual
             precio_actual = bybit.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
             print("### WS BYBIT: Precio Actual Abierto ###")
+            print("")
         
         def ping():
             while True:
-                time.sleep(36)
+                time.sleep(9)
                 ws.send(json.dumps({'op': 'ping'}))
                 #print("Ping Enviado")
         
@@ -81,7 +84,7 @@ def precio_actual_activo(symbol):
     
     except Exception as e:
         precio_actual = bybit.precio_actual_activo(symbol)
-        print("ERROR BUSCANDO PRECIO ACTUAL EN BYBIT")
+        print("ERROR EN LA FUNCIÓN: bybit_ws.precio_actual_activo()")
         print(e)
         print("")
 #----------------------------------------------
