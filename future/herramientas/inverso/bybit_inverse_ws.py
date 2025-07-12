@@ -11,13 +11,10 @@ def precio_actual_activo(symbol):
         import bybit_inverse
         
         global precio_actual
-
         precio_actual = bybit_inverse.precio_actual_activo(symbol)
-        
-        topic = f"publicTrade.{symbol}"
 
         def on_message(ws, message):
-            global precio_actual, data_precio_actual
+            global precio_actual, data_precio_actual, hilo_ping
             data_precio_actual = json.loads(message)
             #print(json.dumps(data_precio_actual,indent=2))
             
@@ -32,23 +29,40 @@ def precio_actual_activo(symbol):
             if "data" in data_precio_actual:
                 precio_actual = float(data_precio_actual['data'][0]['p'])
                 #print(precio_actual)
+            
+            # Verificar el hilo del ping
+            if not(hilo_ping.is_alive()):
+                hilo_ping = threading.Thread(target=ping)
+                hilo_ping.daemon = True
+                hilo_ping.start()
 
         def on_error(ws, error):
-            global precio_actual
-            print("### Error en el WS BYBIT: Precio Actual ###:", error)
+            global precio_actual, hilo_ping
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
+            if not(hilo_ping.is_alive()):
+                hilo_ping = threading.Thread(target=ping)
+                hilo_ping.daemon = True
+                hilo_ping.start()
+            print("### Error en el WS BYBIT: Precio Actual ###:", error)
 
         def on_close(ws, close_status_code, close_msg):
             global precio_actual
-            print("### WS BYBIT: Precio actual Cerrado ###")
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
-            #print(precio_actual)
+            print("### WS BYBIT: Precio actual Cerrado ###")
 
         def on_open(ws):
             global precio_actual
-            print("### WS BYBIT: Precio Actual Abierto ###")
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
             ws.send(json.dumps({"op": "subscribe", "args": [topic]}))
+            print("### WS BYBIT: Precio Actual Abierto ###")
+        
+        def ping():
+            while True:
+                time.sleep(36)
+                ws.send(json.dumps({'op': 'ping'}))
+                #print("Ping Enviado")
+        
+        topic = f"publicTrade.{symbol}"
 
         ws = websocket.WebSocketApp(
                                     url="wss://stream.bybit.com/v5/public/inverse",
@@ -58,18 +72,15 @@ def precio_actual_activo(symbol):
                                     on_close=on_close
                                     )
         
-        def ping():
-            while True:
-                time.sleep(36)
-                ws.send(json.dumps({'op': 'ping'}))
-                #print("Ping Enviado")
-        
-        threading.Thread(target=ping).start()
+        hilo_ping = threading.Thread(target=ping)
+        hilo_ping.daemon = True
+        hilo_ping.start()
         
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
-    
+
     except Exception as e:
-        print("ERROR BUSCANDO PRECIO ACTUAL EN BYBIT")
+        precio_actual = bybit_inverse.precio_actual_activo(symbol) 
+        print("ERROR EN LA FUNCIÓN: bybit_inverse_ws.precio_actual_activo()")
         print(e)
         print("")
 #----------------------------------------------

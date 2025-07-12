@@ -43,6 +43,9 @@ def definir_symbol(exchange, symbol):
 precio_actual = None
 def precio_actual_activo(exchange, symbol):
     try:
+        print("PRECIO ACTUAL INVERSE_WS ABIERTO")
+        print("")
+
         # Variables globales
         global precio_actual
         
@@ -59,11 +62,19 @@ def precio_actual_activo(exchange, symbol):
             import threading
             
             precio_actual = binance_inverse.precio_actual_activo(symbol)
-            threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,)).start()
+            hilo_precio_actual = threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,))
+            hilo_precio_actual.daemon = True
+            hilo_precio_actual.start()
+            
             while True:
                 precio_actual = binance_inverse_ws.precio_actual
                 if precio_actual == None:
                     precio_actual = binance_inverse.precio_actual_activo(symbol)
+                
+                if not(hilo_precio_actual.is_alive()):
+                    hilo_precio_actual = threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,))
+                    hilo_precio_actual.daemon = True
+                    hilo_precio_actual.start()
                 #print(precio_actual)
 
         # BYBIT
@@ -73,18 +84,27 @@ def precio_actual_activo(exchange, symbol):
             import threading
             
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
-            threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,)).start()
+            hilo_precio_actual = threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,))
+            hilo_precio_actual.daemon = True
+            hilo_precio_actual.start()
+            
             while True:
                 precio_actual = bybit_inverse_ws.precio_actual
                 if precio_actual == None:
                     precio_actual = bybit_inverse.precio_actual_activo(symbol)
+                
+                if not(hilo_precio_actual.is_alive()):
+                    hilo_precio_actual = threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,))
+                    hilo_precio_actual.daemon = True
+                    hilo_precio_actual.start()
                 #print(precio_actual)
     
     except Exception as e:
-        print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol}")
+        print(f"ERROR EN LA FUNCIÓN: inverse_ws.precio_actual_activo()")
         print(e)
+        print("PRECIO ACTUAL FUTURE_WS CERRADO")
         print("")
-        return 0
+        return None
 #--------------------------------------------------------
 
 #precio_actual_activo("bybit","op")

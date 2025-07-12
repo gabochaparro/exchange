@@ -2580,12 +2580,10 @@ while iniciar_estrategia:
             precio_actual = inverse_ws.precio_actual
             if precio_actual == None:
                 precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
-                time.sleep(0.9)
         else:
             precio_actual = future_ws.precio_actual
             if precio_actual == None:
                 precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
-                time.sleep(0.9)
 
         # Verificar que el hilo detener_estrategia este activo
         if not(hilo_detener_estrategia.is_alive()):

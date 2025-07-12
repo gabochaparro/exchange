@@ -7,10 +7,10 @@ def precio_actual_activo(symbol):
         import json
         import ssl
         import binance_
-
+        
         global precio_actual
         precio_actual = binance_.precio_actual_activo(symbol)
-        
+
         def on_message(ws, message):
             global precio_actual
             data = json.loads(message)
@@ -34,6 +34,7 @@ def precio_actual_activo(symbol):
             print("### WS BINANCE: Precio Actual Abierto ###")
         
         websocket_url = f"wss://fstream.binance.com/ws/{symbol.lower()}@aggTrade"
+        
         ws = websocket.WebSocketApp(
                                     websocket_url,
                                     on_open=on_open,
@@ -41,9 +42,11 @@ def precio_actual_activo(symbol):
                                     on_error=on_error,
                                     on_close=on_close
                                     )
+        
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
     
     except Exception as e:
+        precio_actual = binance_.precio_actual_activo(symbol)
         print("ERROR BUSCANDO PRECIO ACTUAL EN BINANCE")
         print(e)
         print("")
