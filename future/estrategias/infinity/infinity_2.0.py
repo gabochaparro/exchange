@@ -2193,7 +2193,7 @@ def auxiliar():
         print("")
 #--------------------------------------------
 
-# # FUNCIÓN QUE CALCULA LA ACUMULACIÓN DE ÓRDENES EN EL LIBRO DE ORDENES DE BINANCE
+# FUNCIÓN QUE CALCULA LA ACUMULACIÓN DE ÓRDENES EN EL LIBRO DE ORDENES DE BINANCE
 # -------------------------------------------------------------------------------
 def order_book(symbol):
     try:
@@ -2364,6 +2364,24 @@ def order_book(symbol):
         print("")
 # -------------------------------------------------------------------------------
 
+# FUNCIÓN QUE VERIFICA EL PRECIO ACTUAL
+# -------------------------------------
+def verificar_precio_actual():
+    try:
+        while True:
+            time.sleep(3)
+            if inverso:
+                if abs(precio_actual-inverse.precio_actual_activo(exchange, activo)) > 0.01*precio_actual:
+                    precio_actual = inverse.precio_actual_activo(exchange, activo)
+            else:
+                if abs(precio_actual-future.precio_actual_activo(exchange, activo)) > 0.01*precio_actual:
+                    precio_actual = future.precio_actual_activo(exchange, activo)
+    
+    except Exception as e:
+        print("ERROR EN LA FUNCIÓN: verificar_precio_actual()")
+        print(e)
+        print("")
+# -------------------------------------
 
 # Inicializar posiciones y ordenes abiertas
 # Obtener posiciones
@@ -2477,6 +2495,11 @@ else:
     precio_actual = future_ws.precio_actual
     while precio_actual == None:
         precio_actual = future_ws.precio_actual
+
+# Iniciar hilo de verificación de precio actual
+hilo_verificar_precio_actual = threading.Thread(target=verificar_precio_actual)
+hilo_verificar_precio_actual.daemon = True
+hilo_verificar_precio_actual.start()
 
 # Iniciar Hilo de las ordenes compra
 hilo_ordenes_compra = threading.Thread(target=ordenes_compra, args=(exchange,activo))
@@ -2602,6 +2625,12 @@ while iniciar_estrategia:
                 hilo_precio_actual = threading.Thread(target=future_ws.precio_actual_activo, args=(exchange, activo))
                 hilo_precio_actual.daemon = True
                 hilo_precio_actual.start()
+
+        # Verificar que el hilo verificar precio actual
+        if not(hilo_verificar_precio_actual.is_alive()):
+            hilo_verificar_precio_actual = threading.Thread(target=verificar_precio_actual)
+            hilo_verificar_precio_actual.daemon = True
+            hilo_verificar_precio_actual.start()
 
         # Verificar que el hilo actualizar grid este activo
         if not(hilo_actualizar_grid.is_alive()):
