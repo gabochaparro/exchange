@@ -2368,6 +2368,7 @@ def order_book(symbol):
 # -------------------------------------
 def verificar_precio_actual():
     try:
+        global precio_actual
         while True:
             time.sleep(3)
             if inverso:
