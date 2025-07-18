@@ -108,7 +108,7 @@ else:
     future.apalancamiento(exchange,activo,apalancamiento)
 
 # Obtener el monto de la cuenta en USDT
-if inverso:
+if inverso and exchange != "BYBIT":
     cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)*inverse.precio_actual_activo(exchange,activo)  
 else:
     cuenta = future.patrimonio(exchange=exchange)                                                   # Inversión de la estrategia
@@ -281,7 +281,7 @@ def parametros():
         print(f"Ganancas del grid short: {ganancia_grid_short}%")
         print("Cuenta:", round(cuenta,2), "USDT")
         print(f"Apalancamiento: {apalancamiento}x")
-        if inverso:
+        if inverso and exchange != "BYBIT":
             print("Inversión inicial:", round(cuenta*apalancamiento,2), activo)
         else:
             print("Inversión inicial:", round(cuenta*apalancamiento,2), "USDT")
@@ -1393,7 +1393,7 @@ def margen():
         global margen_disponible
 
         # Verificar si no hay margen disponible para la compra
-        if inverso:
+        if inverso and exchange != "BYBIT":
             margen_disponible = inverse.margen_disponible(exchange,activo)*apalancamiento*precio_actual
         else:
             margen_disponible = future.margen_disponible(exchange)*apalancamiento
@@ -1586,7 +1586,7 @@ def ganancia_actual():
             else:
                 precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
 
-        if inverso:
+        if inverso and exchange != "BYBIT":
             return 100*((inverse.patrimonio(exchange,activo)-(size/precio_actual)*comision_cierre) - balance_inicial)/balance_inicial
         else:
             return 100*((future.patrimonio(exchange)-size*precio_actual*comision_cierre) - balance_inicial)/balance_inicial
@@ -2402,7 +2402,7 @@ if exchange == "BYBIT":
         future.cambiar_modo(exchange,activo)
 
 # Balance inicial
-if inverso:
+if inverso and exchange != "BYBIT":
     balance_inicial = inverse.patrimonio(exchange=exchange,symbol=activo)
 else:
     balance_inicial = future.patrimonio(exchange=exchange)
@@ -2418,7 +2418,7 @@ else:
     precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
 
 # Margen disponible
-if inverso:
+if inverso and exchange != "BYBIT":
     margen_disponible = future.margen_disponible(exchange)*apalancamiento*precio_actual
 else:
     margen_disponible = future.margen_disponible(exchange)*apalancamiento
