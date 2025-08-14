@@ -46,7 +46,7 @@ def precio_actual_activo(symbol):
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BINANCE")
         print(e)
         print("")
-        return 0
+        return None
 #--------------------------------------------------------
 
 # FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
@@ -470,4 +470,5 @@ def margen_disponible(symbol):
 #prueba = apalancameinto_max("ETHUSD_PERP")
 #prueba = obtener_historial_ordenes("BTCUSD_PERP")
 #prueba = take_profit("ETHUSD_PERP","SHORT",2840,"LIMIT",1)
+#prueba = precio_actual_activo("BTCUSD_PERP")
 #print(json.dumps(prueba,indent=2))

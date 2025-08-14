@@ -18,21 +18,22 @@ session = HTTP(testnet=False)
 #----------------------------------------------
 # ENTRADAS RECOMENDADAS
 iniciar = True            # Iniciar búsqueda
-print("")
-error = 1
-while error == 1:
+dato_correcto = False
+while not dato_correcto:
     try:
-        exchange = input("Introduce el exchange: ").upper()
-        variacion_precio = float(input("Introduce la variación del precio: "))    # Variación en el precio (porcentaje)
-        volumen24h = 1000000*int(input("Introduce el volumen en 24H: "))          # Volumen en 24 horas
-        error = 0
+        exchange = "BINANCE" #input("Introduce el exchange: ").upper()
+        variacion_precio = 1 #float(input("Introduce la variación del precio: "))    # Variación en el precio (porcentaje)
+        volumen24h = 1000000*100 #int(input("Introduce el volumen en 24H (M): "))          # Volumen en 24 horas
+        dato_correcto = True
     
     except Exception as e:
         print("DATO INCORRECTO!")
         print("")
-tiempo_de_espera = 2                                                              # Tiempo de espera para una nueva busqueda
-tiempo_recuperacion = 3                                                           # Tiempo de recuperción después de un error
-tiempo_de_iteracion = 0.1                                                         # Tiempo de iteracción entre cada tick
+tiempo_de_espera = 2                                # Tiempo de espera para una nueva busqueda
+tiempo_recuperacion = 3                             # Tiempo de recuperción después de un error
+tiempo_de_iteracion = 0.1                           # Tiempo de iteracción entre cada tick
+temporalidad = Client.KLINE_INTERVAL_1MINUTE        # Temporalidad
+cantidad_velas = 5                                  # Cantidad de velas a considerar                                 
 #----------------------------------------------
 
 
@@ -124,19 +125,19 @@ def formato_abreviado(numero):
 
 # FUNCIÓN PARA OBTENER LAS ÚLTIMAS X VELAS DEL
 #---------------------------------------------
-def obtener_velas_precio(tick):
+def obtener_velas_precio(tick,temporalidad, cantidad_velas):
     try:
         
         if exchange.upper() == "BINANCE":
-            velas = client.futures_klines(symbol=tick, interval=Client.KLINE_INTERVAL_1MINUTE, limit=9)
+            velas = client.futures_klines(symbol=tick, interval=temporalidad, limit=cantidad_velas)
         
         if exchange.upper() == "BYBIT":
-          velas = session.get_kline(category="linear", symbol=tick, interval=1, limit=9)['result']['list']
+          velas = session.get_kline(category="linear", symbol=tick, interval=1, limit=cantidad_velas)['result']['list']
 
         velas.sort()
         return velas
     except Exception as e:
-        print("ERROR EN LA FUNCIÓN PARA OBTENER LAS ÚLTIMAS X VELAS DEL PRECIO EN 5 MINUTO DE UN PAR. (obtener_velas_precio())")
+        print("ERROR EN LA FUNCIÓN PARA OBTENER LAS ÚLTIMAS X VELAS DEL PRECIO EN 1 MINUTO DE UN PAR. (obtener_velas_precio())")
         print(e)
         print("")
         velas = []
@@ -146,9 +147,9 @@ def obtener_velas_precio(tick):
 
 # FUNCIÓN QUE MIDE EL PORCENTAJE DE DISTANCIA EN EL PRECIO ENTRE LA VELA INICIAL Y FINAL DE UN CONJUNTO DE VELAS
 #-------------------------------------------------------------------------------------------------
-def porcentaje_precio(tick):
+def porcentaje_precio(tick, temporalidad, cantidad_velas):
     try:
-        velas = obtener_velas_precio(tick)
+        velas = obtener_velas_precio(tick, temporalidad, cantidad_velas)
         if len(velas) >= 2:
             vela_final = float(velas[-1][4])
             vela_inicial = float(velas[0][4])
@@ -177,11 +178,8 @@ def texto_audio(texto):
         # Elegir el idioma
         idioma = "es"
         
-        #Escoger el tipo de voz
-        voz = "female"
-        
         # Indicar el texto, idioma y velocidad de lectura
-        tts = gTTS(text=texto, lang=idioma, slow=False)
+        tts = gTTS(text=texto, lang=idioma)
         
         # Generar el archivo de audio
         tts.save("alerta_voz.mp3")
@@ -219,7 +217,7 @@ def reproducir_audio(audio):
 def alertas(tick):
     try:
         
-        porcentaje_precios = porcentaje_precio(tick)
+        porcentaje_precios = porcentaje_precio(tick, temporalidad, cantidad_velas)
         
         if abs(porcentaje_precios) > variacion_precio:
             volumen = volumen_24h(tick)

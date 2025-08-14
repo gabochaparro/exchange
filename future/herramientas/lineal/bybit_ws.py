@@ -5,9 +5,6 @@ def precio_actual_activo(symbol):
     try:
         import websocket
         import json
-        import ssl
-        import time
-        import threading
         import bybit
         
         global precio_actual
@@ -65,7 +62,7 @@ def precio_actual_activo(symbol):
                                     on_close=on_close
                                     )
         
-        ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        ws.run_forever()
     
     except Exception as e:
         precio_actual = bybit.precio_actual_activo(symbol)
@@ -74,4 +71,4 @@ def precio_actual_activo(symbol):
         print("")
 #----------------------------------------------
 
-#precio_actual_activo("PAXGUSDT")
+#precio_actual_activo("BTCUSDT")

@@ -1,0 +1,23 @@
+{
+    "exchange": "BYBIT",
+    "activo": "eth",
+    "direccion": "LONG",
+    "inverso": true,
+    "auto": true,
+    "pausa": true,
+    "apalancamiento": 99,
+    "precio_referencia": 3000,
+    "distancia_grid": 0.5,
+    "ganancia_long": 0.05,
+    "ganancia_short": 0.045,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": true,
+    "umbral_libro": 0,
+    "tp": 0,
+    "precio_tp": 0,
+    "sl": 0,
+    "precio_sl": 0,
+    "reiniciar_parejas": false
+}

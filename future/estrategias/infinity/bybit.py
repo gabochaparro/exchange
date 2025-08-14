@@ -27,7 +27,7 @@ def precio_actual_activo(symbol):
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BYBIT")
         print(e)
         print("")
-        return 0
+        return None
 #--------------------------------------------------------
 
 # FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
@@ -547,12 +547,33 @@ def cambiar_margen(symbol,tradeMode):
         print("")
 # ------------------------------------
 
+# FUNCIÓN QUE OPTIENE EL PASO EN LA CANTIDAD DE UN ACTIVO
+# -------------------------------------------------------
+def qtyStep(symbol):
+    try:
+        return float(bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]['lotSizeFilter']['qtyStep'])
+    
+    except Exception as e:
+        print(f"ERROR EN LA FUNCIÓN: qtyStep()\n{e}") 
+# -------------------------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL VALOR DE LA COMISIÓN POR OPERACION
+# ---------------------------------------------------------
+def comision(symbol):
+    try:
+        return float(bybit_session.get_fee_rates(category="linear", symbol=symbol)['result']['list'][0]['takerFeeRate'])
+    except Exception as e:
+        print(f"ERROR EN comision()\n{e}")
+# ---------------------------------------------------------
+
 #orden = patrimonio()
 #orden = margen_disponible()
 #orden = nueva_orden("MELANIAUSDT","LIMIT",4,1.428,"SELL",9)
-#orden = take_profit("FARTCOINUSDT","LONG",1.55,"LIMIT",1)
+#orden = take_profit("TREEUSDT","SHORT",0.46532,"LIMIT",10.6)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")
 #orden = stop_loss("MELANIAUSDT","SHORT",1.45, "")
-#orden = obtener_ordenes("MELANIAUSDT")
+#orden = obtener_ordenes("ETHUSDT")
 #orden = obtener_historial_ordenes("BROCCOLIUSDT")
+#orden = qtyStep("OPUSDT")
+#orden = obtener_posicion("ETCUSDT")
 #print(json.dumps(orden, indent=2))

@@ -60,44 +60,80 @@ def precio_actual_activo(exchange, symbol):
             import binance_inverse_ws
             import binance_inverse
             import threading
+            import time
             
+            # Iniciar variables e hilo
             precio_actual = binance_inverse.precio_actual_activo(symbol)
             hilo_precio_actual = threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,))
             hilo_precio_actual.daemon = True
             hilo_precio_actual.start()
             
+            ti = time.time()
             while True:
+                # Consultar precioa actual
                 precio_actual = binance_inverse_ws.precio_actual
                 if precio_actual == None:
                     precio_actual = binance_inverse.precio_actual_activo(symbol)
                 
+                # Vrificar que el hilo esta vivo
                 if not(hilo_precio_actual.is_alive()):
+                    precio_actual = binance_inverse.precio_actual_activo(symbol)
                     hilo_precio_actual = threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,))
                     hilo_precio_actual.daemon = True
                     hilo_precio_actual.start()
                 #print(precio_actual)
+
+                # Consultar la api cada cierto tiempo
+                if (time.time() - ti) > 3.6:
+                    precio_ahora = binance_inverse.precio_actual_activo(symbol)
+                    if abs(precio_actual-precio_ahora)/precio_ahora > 0.1/100:
+                        precio_actual = precio_ahora
+                        if not(hilo_precio_actual.is_alive()):
+                            hilo_precio_actual = threading.Thread(target=binance_inverse_ws.precio_actual_activo,args=(symbol,))
+                            hilo_precio_actual.daemon = True
+                            hilo_precio_actual.start()
+                    precio_actual = precio_ahora
+                    ti = time.time()
 
         # BYBIT
         if exchange == "BYBIT":
             import bybit_inverse
             import bybit_inverse_ws
             import threading
+            import time
             
+            # Iniciar variables e hilo
             precio_actual = bybit_inverse.precio_actual_activo(symbol)
             hilo_precio_actual = threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,))
             hilo_precio_actual.daemon = True
             hilo_precio_actual.start()
             
+            ti = time.time()
             while True:
+                # Consultar precio actual
                 precio_actual = bybit_inverse_ws.precio_actual
                 if precio_actual == None:
                     precio_actual = bybit_inverse.precio_actual_activo(symbol)
                 
+                # Verificar que el hilo esta vivo
                 if not(hilo_precio_actual.is_alive()):
+                    precio_actual = bybit_inverse.precio_actual_activo(symbol)
                     hilo_precio_actual = threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,))
                     hilo_precio_actual.daemon = True
                     hilo_precio_actual.start()
                 #print(precio_actual)
+
+                # Consultar la API cada cierto tiempo
+                if (time.time() - ti) > 3.6:
+                    precio_ahora = bybit_inverse.precio_actual_activo(symbol)
+                    if abs(precio_actual-precio_ahora)/precio_ahora > 0.1/100:
+                        precio_actual = precio_ahora
+                        if not(hilo_precio_actual.is_alive()):
+                            hilo_precio_actual = threading.Thread(target=bybit_inverse_ws.precio_actual_activo,args=(symbol,))
+                            hilo_precio_actual.daemon = True
+                            hilo_precio_actual.start()
+                    precio_actual = precio_ahora
+                    ti = time.time()
     
     except Exception as e:
         print(f"ERROR EN LA FUNCIÓN: inverse_ws.precio_actual_activo()")

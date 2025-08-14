@@ -81,9 +81,9 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage, tp=0.0, sl=
 
         # Definir el lado para el modo hedge
         positionSide = 0
-        if side == "BUY":
+        if side.upper() == "BUY":
             positionSide = 1
-        if side == "SELL":
+        if side.upper() == "SELL":
             positionSide = 2
 
         # Definir la cantidad exacta que permite el bybit
@@ -574,13 +574,33 @@ def normalizar_precio(symbol, precio):
     return round(precio, redondear)
 # ---------------------------------
 
+# FUNCIÓN QUE OPTIENE EL PASO EN LA CANTIDAD DE UN ACTIVO
+# -------------------------------------------------------
+def qtyStep(symbol):
+    try:
+        return float(bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]['lotSizeFilter']['qtyStep'])
+    
+    except Exception as e:
+        print(f"ERROR EN LA FUNCIÓN: qtyStep()\n{e}") 
+# -------------------------------------------------------
+
+# FUNCIÓN QUE OBTIENE EL VALOR DE LA COMISIÓN POR OPERACION
+# ---------------------------------------------------------
+def comision(symbol):
+    try:
+        return float(bybit_session.get_fee_rates(category="linear", symbol=symbol)['result']['list'][0]['takerFeeRate'])
+    except Exception as e:
+        print(f"ERROR EN comision()\n{e}")
+# ---------------------------------------------------------
+
 #orden = patrimonio()
 #orden = margen_disponible()
 #orden = nueva_orden("XAUTUSDT","LIMIT", 0.002, 3300, "BUY" , 11, 3334, 3199)
 #orden = take_profit("FARTCOINUSDT","LONG",1.55,"LIMIT",1)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")
 #orden = stop_loss("MELANIAUSDT","SHORT",1.45, "")
-#orden = obtener_ordenes("XAUTUSDT")
+#orden = obtener_ordenes("BIOUSDT")
 #orden = obtener_historial_ordenes("BROCCOLIUSDT")
 #orden = normalizar_precios("XRPUSDT", 3339.123456789)
+#orden = comision("OPUSDT")
 #print(json.dumps(orden, indent=2))

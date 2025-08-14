@@ -28,7 +28,7 @@ def precio_actual_activo(symbol):
         print(f"ERROR BUSCANDO EL PRECIO ACTUAL DE {symbol} EN BYBIT")
         print(e)
         print("")
-        return 0
+        return None
 #--------------------------------------------------------
 
 # FUNCIÓN QUE BUSCA EL APALANCAMIENTO MÁXMIMO DE UN TICK
@@ -519,7 +519,7 @@ def cambiar_margen(symbol,tradeMode):
 #orden = obtener_ordenes("solusd")
 #orden = cancelar_ordenes("BTCUSD")
 #orden = obtener_historial_ordenes("solUSD")
-#orden = nueva_orden(symbol="BTCUSD", order_type="Limit", quantity=1, price=64700, side="BUY", leverage=3)
+#orden = nueva_orden(symbol="BTCUSD", order_type="Conditional", quantity=1, price=99999, side="BUY", leverage=3)
 #orden = cancelar_orden("BTCUSD", orderId="b0cdc9fa-40b9-461b-9dff-e5897d9caac0")
 #orden = obtener_posicion("BTCUSD")
 #orden = cerrar_posicion("BTCUSD", "LONG")

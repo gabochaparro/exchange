@@ -87,6 +87,7 @@ distancia_grid = parametros['distancia_grid']+comision_grid                     
 tp = float(parametros['tp'])                                                                        # Take profit para detener la estrategia por completo
 sl = float(parametros['sl'])                                                                        # Stop Loss para detener la estrategia por completo
 tipo = parametros['direccion'].upper()                                                              # LONG o SHORT. Si se deja en blanco opera en ambas direcciones
+pausa = parametros['pausa']
 ganancia_grid_long = parametros['ganancia_long']                                               # Ganancias por cada grid long
 ganancia_grid_short = parametros['ganancia_short']
 condicional_long = parametros['condicional_long']                                                   # Activar condicional de LONG
@@ -131,7 +132,7 @@ if exchange == "BINANCE":
 def actualizar_grid():
     try:
         # variables globales y locales
-        global grid
+        global grid, pausa
 
         while precio_actual != 0:
             #print(grid)
@@ -174,6 +175,9 @@ def actualizar_grid():
                 grid.append(precio_referencia)
                 print("Generando nuevo grid...")
                 print(grid)
+                
+                # Cancelar todas las ordenes
+                pausa = True
             
             # Generar un nuevo grid
             if not(0.9*distancia_grid <= 100*abs(grid[0]-grid[1])/grid[0] <= 1.09*distancia_grid):
@@ -184,6 +188,9 @@ def actualizar_grid():
                     grid.append(precio_referencia)
                 print("Generando nuevo grid...")
                 print(grid)
+                
+                # Cancelar todas las ordenes
+                pausa = True
             
             time.sleep(0.36)
     
@@ -893,7 +900,7 @@ def ordenes_compra(exchange, symbol):
         
         while iniciar_estrategia:
 
-            if (tipo == "" or tipo == "LONG" or tipo == "RANGO") and not(pausa):
+            if (tipo == "" or tipo == "LONG" or tipo == "RANGO") and ganancia_grid_long > 0 and not(pausa):
                 
                 # Obtener el precio de la proxima compra y la proxima venta
                 prox_compra, prox_venta = prox_compra_venta()
@@ -928,7 +935,7 @@ def ordenes_compra(exchange, symbol):
                             if orden['reduceOnly'] and 0.999*(prox_venta*(1+distancia_grid/100)) < float(orden['price']) < 1.001*(prox_venta*(1+distancia_grid/100)):
                                 orden_condicional_compra_puesta = True
                 
-                if precio_actual == 0:
+                if precio_actual == None:
                     # Consultar precio actual
                     if inverso:
                         precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
@@ -949,7 +956,7 @@ def ordenes_compra(exchange, symbol):
                 
                 # Colocar la orden limite de compra y crear la pareja de compra_veta
                 if not(orden_compra_puesta):
-                    if margen_disponible > cantidad_usdt > 0.9 and precio_actual > prox_compra:
+                    if precio_actual > prox_compra:
                         if inverso:
                             orden_compra = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_compra, side="BUY", leverage=apalancamiento)
                         else:
@@ -987,10 +994,17 @@ def ordenes_compra(exchange, symbol):
                                                                     }
                                                         })
                             actualizar_pareja_long(exchange=exchange, symbol=symbol)
+
+                        else:
+                            # Consultar precio actual por problemas en el websocket
+                            if inverso:
+                                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                            else:
+                                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
                 
                 # Colocar la orden condicional de compra y crear la pareja de compra_veta
                 if not(orden_condicional_compra_puesta) and condicional_long:
-                    if margen_disponible > cantidad_usdt > 0.9 and precio_actual < prox_venta:
+                    if precio_actual < prox_venta:
                         if inverso:
                             orden_compra = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_venta, side="BUY", leverage=apalancamiento)
                         else:
@@ -1028,7 +1042,14 @@ def ordenes_compra(exchange, symbol):
                                                                     }
                                                         })
                             actualizar_pareja_long(exchange=exchange, symbol=symbol)
-            
+
+                        else:
+                            # Consultar precio actual por problemas en el websocket
+                            if inverso:
+                                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                            else:
+                                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+                
                 # Imprimir cambios
                 if orden_compra != None:
                     print("Grid Actual:")
@@ -1099,8 +1120,8 @@ def ordenes_venta(exchange, symbol):
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=compra_venta["venta"]['price'], type="LIMIT", tpSize=cantidad)
                         
                         else:
-                            if precio_actual > float(compra_venta["venta"]['price']) > 1.0011*avgPrice:
-                                prox_compra, prox_venta = prox_compra_venta()
+                            prox_compra, prox_venta = prox_compra_venta()
+                            if precio_actual < prox_venta > 1.0011*avgPrice:
                                 if inverso:
                                     orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="LONG", stopPrice=prox_venta, type="LIMIT", tpSize=cantidad)
                                 else:
@@ -1146,7 +1167,7 @@ def ordenes_venta_short(exchange, symbol):
         
         while iniciar_estrategia:
 
-            if (tipo == "" or tipo == "SHORT" or tipo == "RANGO") and not(pausa):
+            if (tipo == "" or tipo == "SHORT" or tipo == "RANGO") and ganancia_grid_short > 0 and not(pausa):
                 
                 # Obtener el precio de la proxima compra y la proxima venta
                 prox_compra, prox_venta = prox_compra_venta()
@@ -1198,7 +1219,7 @@ def ordenes_venta_short(exchange, symbol):
                 
                 # Colocar la orden limite de compra y crear la pareja de compra_veta
                 if not(orden_venta_puesta):
-                    if margen_disponible > cantidad_usdt_short > 0.9 and precio_actual < prox_venta:
+                    if precio_actual < prox_venta:
                         if inverso:
                             orden_venta = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="LIMIT", quantity=qty, price=prox_venta, side="SELL", leverage=apalancamiento)
                         else:
@@ -1237,9 +1258,16 @@ def ordenes_venta_short(exchange, symbol):
                                                         })
                             actualizar_pareja_short(exchange=exchange, symbol=symbol)
                 
+                        else:
+                            # Consultar precio actual por problemas en el websocket
+                            if inverso:
+                                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                            else:
+                                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+
                 # Colocar la orden condicional de compra y crear la pareja de compra_veta
                 if not(orden_condicional_venta_puesta) and condicional_short:
-                    if margen_disponible > cantidad_usdt_short > 0.9 and precio_actual > prox_compra:
+                    if precio_actual > prox_compra:
                         if inverso:
                             orden_venta = inverse.nueva_orden(exchange=exchange, symbol=symbol, order_type="CONDITIONAL", quantity=qty, price=prox_compra, side="SELL", leverage=apalancamiento)
                         else:
@@ -1278,6 +1306,13 @@ def ordenes_venta_short(exchange, symbol):
                                                         })
                             actualizar_pareja_short(exchange=exchange, symbol=symbol)
                 
+                        else:
+                            # Consultar precio actual por problemas en el websocket
+                            if inverso:
+                                precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+                            else:
+                                precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
+                
                 # Imprimir cambios
                 if orden_venta != None:
                     print("Grid Actual:")
@@ -1287,6 +1322,10 @@ def ordenes_venta_short(exchange, symbol):
                     #print(json.dumps(parejas_compra_venta_short,indent=2))
 
     except Exception as e:
+        if inverso:
+            precio_actual = inverse.precio_actual_activo(exchange=exchange, symbol=activo)
+        else:
+            precio_actual = future.precio_actual_activo(exchange=exchange, symbol=activo)
         print("ERROR EN LA FUNCION ordenes_compra()")
         print(e)
         print("")
@@ -1349,8 +1388,8 @@ def ordenes_compra_short(exchange, symbol):
                                 orden = future.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=compra_venta["compra"]['price'], type="LIMIT",tpSize=cantidad)
                         
                         else:
-                            if precio_actual < float(compra_venta["compra"]['price']) < 0.999*avgPrice:
-                                prox_compra, prox_venta = prox_compra_venta()
+                            prox_compra, prox_venta = prox_compra_venta()
+                            if precio_actual > prox_compra < 0.999*avgPrice:
                                 if inverso:
                                     orden = inverse.take_profit(exchange=exchange, symbol=symbol, positionSide="SHORT", stopPrice=prox_compra, type="LIMIT", tpSize=cantidad)
                                 else:
@@ -1996,120 +2035,6 @@ def direccion():
         print("")
 #----------------------------------
 
-# Función que equilibria las posiciones y los take profit
-# -------------------------------------------------------
-def equilibrio():
-    try:
-
-        # Obtener la posición
-        if inverso:
-            posiciones = inverse.obtener_posicion(exchange, activo)
-        else:
-            posiciones = future.obtener_posicion(exchange, activo)
-    
-    # LONG
-        size = 0
-        for posicion in posiciones:
-
-            if exchange == "BYBIT":
-                if posicion['positionIdx'] == 0:
-                    if posicion['size'] != "0":
-                        size = float(posicion['size'])
-                        avgPrice = float(posicion['avgPrice'])
-                        #print("size long", size)
-                        #print("")
-                if posicion['positionIdx'] == 1:
-                    if posicion['size'] != "0":
-                        size = float(posicion['size'])
-                        avgPrice = float(posicion['avgPrice'])
-                        #print("size long", size)
-                        #print("")
-
-            if exchange == "BINANCE":
-                if posicion['positionSide'] == "LONG":
-                    if posicion['notional'] != "0":
-                        size = float(posicion['positionAmt'])
-                        avgPrice = float(posicion['entryPrice'])
-                        #print("size long", size)
-                        #print("")
-        
-        # Sumar todos los TP
-        size_tp = 0
-        for orden in ordenes_abiertas:
-            
-            if exchange == "BYBIT":
-                if orden['reduceOnly'] and orden['positionIdx'] == 1:
-                    size_tp = size_tp + float(orden['qty'])
-            
-            if exchange == "BINANCE":
-                if orden['reduceOnly'] and orden['positionSide'] == "LONG":
-                    size_tp = size_tp + float(orden['origQty'])
-        #print("tps long", size_tp)
-        #print("")
-
-        # Comparar y equilibrar
-        excedente = size - size_tp
-        excedente = round(excedente-cantidad_usdt/precio_actual,decimales_moneda)
-        #print("Excedente long de", excedente)
-        #print("")
-        if excedente > cantidad_usdt/precio_actual and precio_actual > 1.0027*avgPrice:
-            if inverso:
-                inverse.cerrar_posicion(exchange, activo, "long", size=excedente)
-            else:
-                future.cerrar_posicion(exchange, activo, "long", size=excedente)
-                            
-    # SHORT
-        size = 0
-        for posicion in posiciones:
-
-            if exchange == "BYBIT":
-                if posicion['positionIdx'] == 2:
-                    if posicion['size'] != "0":
-                        size = abs(float(posicion['size']))
-                        avgPrice = float(posicion['avgPrice'])
-                        #print("size short", size)
-                        #print("")
-            
-            if exchange == "BINANCE":
-                if posicion['positionSide'] == "SHORT":
-                    if posicion['notional'] != "0":
-                        size = abs(float(posicion['positionAmt']))
-                        avgPrice = float(posicion['entryPrice'])
-                        #print("size short", size)
-                        #print("")
-        
-        # Sumar todos los TP
-        size_tp = 0
-        for orden in ordenes_abiertas:
-            
-            if exchange == "BYBIT":
-                if orden['reduceOnly'] and orden['positionIdx'] == 2:
-                    size_tp = size_tp + abs(float(orden['qty']))
-            
-            if exchange == "BINANCE":
-                if orden['reduceOnly'] and orden['positionSide'] == "SHORT":
-                    size_tp = size_tp + float(orden['origQty'])
-        #print("tps short", size_tp)
-        #print("")
-
-        # Comparar y equilibrar
-        excedente = size - size_tp
-        excedente = round(excedente-cantidad_usdt_short/precio_actual,decimales_moneda)
-        #print("Excedente short de", excedente)
-        #print("")
-        if excedente > cantidad_usdt_short/precio_actual and precio_actual < 0.9972*avgPrice:
-            if inverso:
-                inverse.cerrar_posicion(exchange, activo, "short", size=excedente)
-            else:
-                future.cerrar_posicion(exchange, activo, "short", size=excedente)
-                    
-
-    except Exception as e:
-        print("ERROR EN LA FUNCIÓN equilibrio()")
-        print(e)
-        print("")
-# -------------------------------------------------------
-
 # Función auxiliar
 #--------------------------------------------
 def auxiliar():
@@ -2145,7 +2070,7 @@ def auxiliar():
                 posiciones = future.obtener_posicion(exchange, activo)
 
             # Patrimonio actual
-            if inverso:
+            if inverso and exchange != "BYBIT":
                 cuenta = inverse.patrimonio(exchange=exchange,symbol=activo)*precio_actual
             else:
                 cuenta = future.patrimonio(exchange=exchange)
@@ -2372,10 +2297,12 @@ def verificar_precio_actual():
         while True:
             time.sleep(3)
             if inverso:
-                if abs(precio_actual-inverse.precio_actual_activo(exchange, activo)) > 0.01*precio_actual:
+                precio_ahora = inverse.precio_actual_activo(exchange, activo)
+                if abs(precio_actual-precio_ahora)/precio_ahora > 0.1:
                     precio_actual = inverse.precio_actual_activo(exchange, activo)
             else:
-                if abs(precio_actual-future.precio_actual_activo(exchange, activo)) > 0.01*precio_actual:
+                precio_ahora = future.precio_actual_activo(exchange, activo)
+                if abs(precio_actual-precio_ahora)/precio_ahora > 0.1:
                     precio_actual = future.precio_actual_activo(exchange, activo)
     
     except Exception as e:
@@ -2560,6 +2487,10 @@ hilo_auxiliar = threading.Thread(target=auxiliar)
 hilo_auxiliar.daemon = True
 hilo_auxiliar.start()
 
+# Chequear ganancias
+ganancia_long = ganancia_grid_long
+ganancia_short = ganancia_grid_short
+
 while iniciar_estrategia:
     try:
         ti = time.time()
@@ -2590,15 +2521,15 @@ while iniciar_estrategia:
         reiniciar_parejas = parametros['reiniciar_parejas']
         # ---------------------------
         
-        # Calcular importes
         try:
+            # Calcular importes
             cantidad_usdt = cuenta*ganancia_grid_long/distancia_grid                              # Importe en USDT para cada long
             cantidad_usdt_short = cuenta*ganancia_grid_short/distancia_grid                       # Importe en USDT para cada short
         except Exception as e:
             print("ERROR CALCULANDO IMPORTES")
             print(e)
             print("")
-            
+
         # Consultar precio actual
         if inverso:
             precio_actual = inverse_ws.precio_actual
@@ -2704,8 +2635,20 @@ while iniciar_estrategia:
                 hilo_ordenes_compra_short = threading.Thread(target=ordenes_compra_short, args=(exchange,activo))
                 hilo_ordenes_compra_short.daemon = True
                 hilo_ordenes_compra_short.start()
-    
 
+        # Cancelar orenes por cambio de ganancias
+        if ganancia_grid_long != ganancia_long:
+            ganancia_long = ganancia_grid_long
+            
+            # Cancelar todas las ordenes
+            pausa = True
+        
+        if ganancia_grid_short != ganancia_short:
+            ganancia_short = ganancia_grid_short
+            
+            # Cancelar todas las ordenes
+            pausa = True
+        
         # Retraso por hiperactividad
         if time.time() - ti < retraso_api:
             time.sleep(retraso_api)

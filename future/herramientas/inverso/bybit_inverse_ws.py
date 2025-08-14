@@ -6,8 +6,6 @@ def precio_actual_activo(symbol):
         import websocket
         import json
         import ssl
-        import time
-        import threading
         import bybit_inverse
         
         global precio_actual
@@ -64,7 +62,7 @@ def precio_actual_activo(symbol):
                                     on_close=on_close
                                     )
         
-        ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        ws.run_forever()
 
     except Exception as e:
         precio_actual = bybit_inverse.precio_actual_activo(symbol) 

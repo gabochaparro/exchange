@@ -1,0 +1,23 @@
+{
+    "exchange": "BYBIT",
+    "activo": "BTC",
+    "direccion": "LONG",
+    "inverso": true,
+    "auto": true,
+    "pausa": false,
+    "apalancamiento": 99,
+    "precio_referencia": 99000,
+    "distancia_grid": 0.63,
+    "ganancia_long": 0.063,
+    "ganancia_short": 0,
+    "descarga_breakeven": false,
+    "invertir_ganancias_grid": false,
+    "condicional_long": true,
+    "condicional_short": true,
+    "umbral_libro": 0,
+    "tp": 0,
+    "precio_tp": 0,
+    "sl": 0,
+    "precio_sl": 0,
+    "reiniciar_parejas": false
+}
