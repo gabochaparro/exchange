@@ -126,9 +126,7 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         else:
             price = float(order[0]["price"])
         
-        print(f"Orden {order_type.upper()}-{side} de {order[0]['qty']} {symbol.split('USDT')[0]}  colocada en {price}. ID:", order[0]["orderId"])
-        print("")
-
+        print(f"\nOrden {order_type.upper()}-{side} de {order[0]['qty']} {symbol.split('USDT')[0]}  colocada en {price}. ID:", order[0]["orderId"])
         
         return {
                 "orderId": order[0]["orderId"],
@@ -160,20 +158,14 @@ def cancelar_orden(symbol, orderId):
     try:
 
         if orderId == "":
-            print("Eliminando todas las ordenes...")
+            print("\nEliminando todas las ordenes...")
             bybit_session.cancel_all_orders(category="linear",symbol=symbol)
-            print("Todas las ordenes eliminadas.")
-            print("")
+            print("\nTodas las ordenes eliminadas.")
         else:
-            print(f"Eliminando orden {orderId}...")
             bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
-            print(f"Eliminada la orden {orderId} de {symbol}.")
-            print("")
     
     except Exception as e:
-        print(f"ERROR CANCELANDO LA ORDEN {id} DE BYBIT")
-        print(e)
-        print("")
+        pass
 # -----------------------------
 
 # FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
@@ -224,9 +216,6 @@ def stop_loss(symbol, positionSide, stopPrice, slSize):
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
             if orden['orderStatus'] == "Untriggered" and 0.99*float(createdTime) <= float(orden['createdTime']) <= 1.01*float(createdTime) and orden['reduceOnly'] == True:
-        
-                print(f"Stop Loss Colocado en {orden['triggerPrice']}.")
-                print("")
                 
                 return {
                 "orderId": orden["orderId"],
@@ -236,7 +225,6 @@ def stop_loss(symbol, positionSide, stopPrice, slSize):
     
     except Exception as e:
         if "10001" in str(e):
-            print(f"\nSL muy bajo. Bybit no puede colocarlo en {stopPrice}")
             return "10001"
         else:
             print(f"\nERROR COLOCANDO STOP LOSS EN BYBIT\n{e}")
@@ -338,18 +326,12 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
         ordenes = obtener_ordenes(symbol=symbol)
         for orden in ordenes:
             if 0.99*float(createdTime) <= float(orden['createdTime']) <= 1.01*float(createdTime) and orden['orderStatus'] == "Untriggered" and orden['reduceOnly'] == True:
-                
-                print(f"Take Profit Colocado en {orden['price']}.")
-                print("")
 
                 return {
                 "orderId": orden["orderId"],
                 "price": orden['price'],
                 "qty": orden['qty']
                 }
-                
-        print(f"Take Profit Colocado en {stopPrice}.")
-        print("")
 
         return {
         "orderId": "-",
@@ -414,9 +396,11 @@ def verificar_conexion_internet():
 # FUNCIÓN STOP AUTOMATICO
 # -----------------------
 async def sl_auto(symbol, tipo, perdida_usdt):
+    global operar
     orderId = ""
+    sl_colocado = False
     sl_100001 = False
-    while True:
+    while operar:
         try:
             if verificar_conexion_internet():
                 # Ordenes abiertas y posiciones
@@ -468,15 +452,21 @@ async def sl_auto(symbol, tipo, perdida_usdt):
                         positionSide = "SHORT"
                         precio_sl = precio_promedio + perdida_usdt/cantidad_total
                     if abs(precio_sl - precio_sl_actual)/precio_sl > 5*comision/100:
-                        if not sl_100001:
-                            sl = stop_loss(symbol=symbol, positionSide=positionSide, stopPrice=precio_sl, slSize="")
-                            if sl == "10001":
-                                sl_100001 = True
+                        sl = stop_loss(symbol=symbol, positionSide=positionSide, stopPrice=precio_sl, slSize="")
+                        if not("error" in sl) and not sl_colocado:
+                            sl_colocado = True
+                            print(f"\nStop Loss colocado en {sl['price']}")
+                        if pos_tamaño == 0:
+                            sl_colocado = False
+                        if sl == "10001" and  not sl_100001:
+                            sl_100001 = True
+                            print(f"\nSL muy bajo para colocarlo en {precio_sl}")
 
                 # Cancelar todas las ordenes pendientes después de tocar el SL
                 # ------------------------------------------------------------
                 if orderId != "":
                     if obtener_ordenes(symbol, orderId)[0]['orderStatus'] == "Filled":
+                        operar = False
                         cancelar_orden(symbol, orderId="")
                         orderId = ""
                         print("\n😖 🔴 💥 STOP LOSS ALCANZADO 💥 🔴 😖")
@@ -492,7 +482,7 @@ async def sl_auto(symbol, tipo, perdida_usdt):
 # -----------------------
 async def tp_auto(symbol, tipo, distancia_porcentual):
     orderId = ""
-    while True:
+    while operar:
         try:
             if verificar_conexion_internet():
                 # Ordenes y posicion
@@ -580,7 +570,7 @@ async def cardiaco(symbol, tipo, precio, monto):
     # ---------------
     conexion = True
     reconectar = False
-    while True:
+    while operar:
         try:
             if verificar_conexion_internet():
                 conexion = True
@@ -606,7 +596,6 @@ async def cardiaco(symbol, tipo, precio, monto):
                         qty = 0
                     else:
                         qty = float(qty_posicion)
-                    await asyncio.sleep(1.8)
                     datos_correctos = False
                     orden = "compra" if tipo == "LONG" else "venta"
                     while not datos_correctos:
@@ -632,7 +621,7 @@ async def cardiaco(symbol, tipo, precio, monto):
                     conexion = False
                     reconectar = True
             
-            await asyncio.sleep(3.6)
+            await asyncio.sleep(0.9)
         
         except Exception as e:
             print(f"\nERROR EN EL CICLO PRINCIPAL\n{e}")
@@ -719,7 +708,7 @@ ppp = 10/100                                        # Porcentaje de la primera p
 primera_posicion = ppp*capital_disponible           # Valr en USD de la primera posicion
 # -------------------
 
-# Verificar si el capital de la cuenta es apato para cardiaco
+# Verificar si el capital de la cuenta es apto para cardiaco
 # -----------------------------------------------------------
 operar = True
 if capital_disponible < capital_minimo:
@@ -754,7 +743,7 @@ while not datos_correctos:
 # Correr ganancias
 datos_correctos = False
 while not datos_correctos:
-    correr_ganancias = input("\n¿Correr ganancias, (Si/No)?\n-> ").upper()
+    correr_ganancias = input("\n¿Correr ganancias? (Si/No)\n-> ").upper()
     if correr_ganancias.upper() == "S" or correr_ganancias == "N" or correr_ganancias == "SI" or correr_ganancias == "NO":
         datos_correctos = True
     else:

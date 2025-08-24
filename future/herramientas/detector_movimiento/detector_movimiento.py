@@ -23,7 +23,7 @@ while not dato_correcto:
     try:
         exchange = "BINANCE" #input("Introduce el exchange: ").upper()
         variacion_precio = 1 #float(input("Introduce la variación del precio: "))    # Variación en el precio (porcentaje)
-        volumen24h = 1000000*100 #int(input("Introduce el volumen en 24H (M): "))          # Volumen en 24 horas
+        volumen24h = 100*1000000 #int(input("Introduce el volumen en 24H (M): "))          # Volumen en 24 horas
         dato_correcto = True
     
     except Exception as e:
@@ -33,7 +33,7 @@ tiempo_de_espera = 2                                # Tiempo de espera para una 
 tiempo_recuperacion = 3                             # Tiempo de recuperción después de un error
 tiempo_de_iteracion = 0.1                           # Tiempo de iteracción entre cada tick
 temporalidad = Client.KLINE_INTERVAL_1MINUTE        # Temporalidad
-cantidad_velas = 5                                  # Cantidad de velas a considerar                                 
+cantidad_velas = 13                                 # Cantidad de velas a considerar                                 
 #----------------------------------------------
 
 

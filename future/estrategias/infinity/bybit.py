@@ -575,5 +575,5 @@ def comision(symbol):
 #orden = obtener_ordenes("ETHUSDT")
 #orden = obtener_historial_ordenes("BROCCOLIUSDT")
 #orden = qtyStep("OPUSDT")
-#orden = obtener_posicion("ETCUSDT")
+#orden = obtener_posicion("MYXUSDT")
 #print(json.dumps(orden, indent=2))

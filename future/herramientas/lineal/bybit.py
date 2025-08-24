@@ -1,5 +1,6 @@
 from pybit.unified_trading import HTTP
 import json
+import numpy as np
 import time
 
 
@@ -592,6 +593,98 @@ def comision(symbol):
     except Exception as e:
         print(f"ERROR EN comision()\n{e}")
 # ---------------------------------------------------------
+
+# FUNCIÓN QUE OBTINE LAS EMAs DE BYBIT
+# ------------------------------------
+def obtener_ema(symbol: str, interval: str = "1", periodo: int = 9, vela: int = 1) -> float:
+    """
+    Obtiene la EMA de un símbolo en Bybit de forma ligera y rápida.
+
+    Parámetros:
+        symbol (str): Ej. "BTCUSDT"
+        interval (str): Intervalo de velas ("1","5","15","60","D", etc.)
+        periodo (int): Periodo de la EMA (ej. 9, 21, 50...)
+        vela (int): Índice de la vela (1 = última, 2 = penúltima, etc.)
+
+    Retorna:
+        float: Valor de la EMA en la vela especificada
+    """
+    try:
+    
+        # warm-up amplio para mayor exactitud
+        need = periodo + vela + 1
+        limit = max(need, 5 * periodo)
+        kl = bybit_session.get_kline(category="linear", symbol=symbol, interval=interval, limit=limit)
+        kl = kl.get("result", {}).get("list", [])
+        kl.sort(key=lambda x: int(x[0]))
+        
+        closes = np.array([float(k[4]) for k in kl], dtype=float)
+
+        if len(closes) < (periodo + vela):
+            raise ValueError(f"Velas insuficientes: {len(closes)} < {periodo + vela}")
+
+        # EMA precisa (semilla = SMA de las primeras N)
+        alpha = 2.0 / (periodo + 1.0)
+        ema = np.empty_like(closes)
+        ema[:] = np.nan
+        first = periodo - 1
+        ema[first] = closes[:periodo].mean()
+        for i in range(first + 1, len(closes)):
+            ema[i] = closes[i] * alpha + ema[i - 1] * (1.0 - alpha)
+
+        return(float(ema[-vela]))
+
+    except Exception as e:
+        print(f"\nError obteniendo EMA: {e}")
+        return None
+# ------------------------------------
+
+# FUNCION QUE MODIFICA UAN ORDEN
+#--------------------------------------------------------
+def modificar_orden(symbol, orderId, order_type="", quantity="", price="", side=""):
+    try:
+
+        # Definir el lado para el modo hedge
+        positionSide = 0
+        if side.upper() == "BUY":
+            positionSide = 1
+            side =side[0] + side[1:].lower()
+        if side.upper() == "SELL":
+            positionSide = 2
+            side =side[0] + side[1:].lower()
+        
+        # Coloca la orden "LIMIT"
+        order = bybit_session.amend_order(
+            category="linear",
+            symbol=symbol,
+            side=side,
+            orderType=order_type,
+            qty=quantity,
+            price=price,
+            timeinforce="GTC",
+            positionIdx=positionSide,
+            orderId = orderId
+            )
+
+        order = obtener_ordenes(symbol, order["result"]["orderId"])
+        #print(json.dumps(order,indent=2))
+        
+        if order_type.upper() == "CONDITIONAL":
+            price = float(order[0]["triggerPrice"])
+        else:
+            price = float(order[0]["price"])
+        
+        print(f"\nOrden {order_type.upper()}-{side} de {order[0]['qty']} {symbol.split('USDT')[0]}  modificada en {price}. ID:", order[0]["orderId"])
+        
+        return {
+                "orderId": order[0]["orderId"],
+                "price": price,
+                "qty": float(order[0]["qty"])
+                }
+    
+    except Exception as e:
+        print(f"\nERROR MODIFICANDO LA ORDEN EN BYBIT\n{e}")
+# ---------------------------------------------------
 
 #orden = patrimonio()
 #orden = margen_disponible()

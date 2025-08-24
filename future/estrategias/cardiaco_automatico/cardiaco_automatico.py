@@ -1,6 +1,8 @@
 from pybit.unified_trading import HTTP
 import asyncio
 import socket
+import numpy as np
+import json
 
 # FUNCION QUE BUSCA EL PRECIO ACTUAL DE UN TICK
 #--------------------------------------------------------
@@ -28,13 +30,36 @@ def apalancameinto_max(symbol):
         return int(float(max_leverage))
     
     except Exception as e:
-        print(f"\nERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT\n{e}")
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
+        print(e)
+        print("")
+# ------------------------------------------------------
+
+# FUNCIÓN QUE CAMBIA EL APALANCAMIENTO DE UN TICK
+# ------------------------------------------------------
+def apalancamiento(symbol,leverage):
+    try:
+        
+        # Cambia el apalancamiento
+        max_leverage = apalancameinto_max(symbol=symbol)
+        if leverage > max_leverage:
+            leverage = max_leverage
+        apalancamiento_actual = float(bybit_session.get_positions(category="linear", symbol=symbol)["result"]["list"][0]["leverage"])
+        #print("apalancamiento actual:", apalancamiento_actual)
+        if round(apalancamiento_actual,2) != round(float(leverage),2):
+            bybit_session.set_leverage(category="linear", symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
+    
+    except Exception as e:
+        print(f"ERROR BUSCANDO EL APALANCAMIENTO MÁXIMO DE {symbol} EN BYBIT")
+        print(e)
+        print("")
 # ------------------------------------------------------
 
 # FUNCIÓN DE BYBIT NUEVA ORDEN 'LIMIT' O 'MARKET'
 # ---------------------------------------------------
 def nueva_orden(symbol, order_type, quantity, price, side, leverage):
     try:
+        
         # Cambia el apalancamiento
         max_leverage = apalancameinto_max(symbol=symbol)
         if leverage > max_leverage:
@@ -44,17 +69,17 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
         if round(apalancamiento_actual,2) != round(float(leverage),2):
             bybit_session.set_leverage(category="linear", symbol=symbol, buyLeverage=str(leverage),sellLeverage=str(leverage))
 
+        # Definir el lado para el modo hedge
+        positionSide = 0
+        if side.upper() == "BUY":
+            positionSide = 1
+        if side.upper() == "SELL":
+            positionSide = 2
+
         # Definir la cantidad exacta que permite el bybit
-        info = bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]
-        cantidad_paso = float(info['lotSizeFilter']['qtyStep'])
-        quantity = round(int(quantity/cantidad_paso)*cantidad_paso, len(str(cantidad_paso).split(".")[-1]))
-        if order_type.upper() == "LIMIT" and quantity*price < 5 and price != 0:
-            quantity = round(int((5.5/price)/cantidad_paso)*cantidad_paso, len(str(cantidad_paso).split(".")[-1]))
-        if order_type.upper() == "MARKET":
-            precio_actual = precio_actual_activo(symbol)
-            if quantity*precio_actual < 5:
-                quantity = round(int((5.5/precio_actual)/cantidad_paso)*cantidad_paso, len(str(cantidad_paso).split(".")[-1]))
-        
+        cantidad_paso = float(bybit_session.get_instruments_info(category="linear", symbol=symbol)['result']['list'][0]['lotSizeFilter']['qtyStep'])
+        quantity = round(round(quantity/cantidad_paso)*cantidad_paso, len(str(cantidad_paso).split(".")[-1]))
+
         # Coloca la orden "LIMIT"
         if order_type.upper() == "LIMIT":
             order = bybit_session.place_order(
@@ -64,7 +89,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 orderType=order_type,
                 qty=quantity,
                 price=price,
-                timeinforce="GTC"
+                timeinforce="GTC",
+                positionIdx=positionSide
             )
         
         # Coloca la orden "MARKET"
@@ -74,7 +100,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 symbol=symbol,
                 side=side[0] + side[1:].lower(),
                 orderType=order_type,
-                qty=quantity
+                qty=quantity,
+                positionIdx=positionSide
             )
 
         # Coloca la orden "CONDITIONAL"
@@ -89,7 +116,8 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 triggerPrice=price,
                 triggerBy="LastPrice",
                 timeinforce="GTC",
-                triggerDirection=0
+                positionIdx=positionSide,
+                triggerDirection=positionSide
             )
 
         order = obtener_ordenes(symbol, order["result"]["orderId"])
@@ -109,26 +137,58 @@ def nueva_orden(symbol, order_type, quantity, price, side, leverage):
                 }
     
     except Exception as e:
-        print(f"\nERROR COLOCANDO LA ORDEN EN BYBIT\n{e}")
-# --------------------------------------------------- 
-# FUNCIÓN QUE CANCELA UNA ORDEN
-# -----------------------------
-def cancelar_orden(symbol, orderId):
+        print("ERROR COLOCANDO LA ORDEN EN BYBIT")
+        print(e)
+        print("")
+# ---------------------------------------------------
+
+# FUNCION QUE MODIFICA UAN ORDEN
+#--------------------------------------------------------
+def modificar_orden(symbol, orderId, order_type="", quantity="", price="", side=""):
     try:
 
-        if orderId == "":
-            print("\nEliminando todas las ordenes...")
-            bybit_session.cancel_all_orders(category="linear",symbol=symbol)
-            print("Todas las ordenes eliminadas.")
-            print("")
+        # Definir el lado para el modo hedge
+        positionSide = 0
+        if side.upper() == "BUY":
+            positionSide = 1
+            side =side[0] + side[1:].lower()
+        if side.upper() == "SELL":
+            positionSide = 2
+            side =side[0] + side[1:].lower()
+        
+        # Coloca la orden "LIMIT"
+        order = bybit_session.amend_order(
+            category="linear",
+            symbol=symbol,
+            side=side,
+            orderType=order_type,
+            qty=quantity,
+            price=price,
+            timeinforce="GTC",
+            positionIdx=positionSide,
+            orderId = orderId
+            )
+
+        order = obtener_ordenes(symbol, order["result"]["orderId"])
+        #print(json.dumps(order,indent=2))
+        
+        if order_type.upper() == "CONDITIONAL":
+            price = float(order[0]["triggerPrice"])
         else:
-            print(f"\nEliminando orden {orderId}...")
-            bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
-            print(f"Eliminada la orden {orderId} de {symbol}.")
+            price = float(order[0]["price"])
+        
+        print(f"\nOrden {order_type.upper()}-{side} de {order[0]['qty']} {symbol.split('USDT')[0]}  modificada en {price}. ID:", order[0]["orderId"])
+        
+        return {
+                "orderId": order[0]["orderId"],
+                "price": price,
+                "qty": float(order[0]["qty"])
+                }
     
     except Exception as e:
-        pass
-# -----------------------------
+        print(f"\nERROR MODIFICANDO LA ORDEN EN BYBIT\n{e}")
+        return None
+# ---------------------------------------------------
 
 # FUNCIÓN PARA OBTENER LA INFO DE LAS ORDENES ABIERTAS
 # ----------------------------------------------------
@@ -141,6 +201,26 @@ def obtener_ordenes(symbol, orderId=""):
         print(e)
         print("")
 # ----------------------------------------------------
+
+# FUNCIÓN QUE CANCELA UNA ORDEN
+# -----------------------------
+def cancelar_orden(symbol, orderId):
+    try:
+
+        if orderId == "":
+            print("\nEliminando todas las ordenes...")
+            bybit_session.cancel_all_orders(category="linear",symbol=symbol)
+            print("\nTodas las ordenes eliminadas.")
+        else:
+            print(f"\nEliminando orden {orderId}...")
+            bybit_session.cancel_order(category="linear",symbol=symbol,orderId=orderId)
+            print("\nOrden eliminada.")
+
+        return True
+    
+    except Exception as e:
+        print(f"\nERROR CANCELANDO ORDEN {orderId}")
+# -----------------------------
 
 # FUNCIÓN QUE OBTIENE LA INFO DE LAS POSICIONES
 # ---------------------------------------------
@@ -157,7 +237,7 @@ def obtener_posicion(symbol):
 
 # FUNCIÓN QUE COLOCA UN STOP LOSS
 # -------------------------------
-def stop_loss(symbol, positionSide, stopPrice, slSize=""):
+def stop_loss(symbol, positionSide, stopPrice, slSize):
     try:
 
         # Definir parametros
@@ -174,7 +254,7 @@ def stop_loss(symbol, positionSide, stopPrice, slSize=""):
                                         symbol=symbol,
                                         stopLoss=str(stopPrice),
                                         tpslMode="Full",
-                                        positionIdx=0
+                                        positionIdx=positionSide
                                     )
         else:
             orden = bybit_session.set_trading_stop(
@@ -183,7 +263,7 @@ def stop_loss(symbol, positionSide, stopPrice, slSize=""):
                                         stopLoss=str(stopPrice),
                                         tpslMode="Partial",
                                         slSize=str(slSize),
-                                        positionIdx=0
+                                        positionIdx=positionSide
                                         )
         
         createdTime = orden['time']
@@ -218,7 +298,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
             if tpSize == "":
                 posiciones = obtener_posicion(symbol=symbol)
                 for posicion in posiciones:
-                    if posicion['positionIdx'] == 0:
+                    if posicion['positionIdx'] == positionSide:
                         tpSize = posicion['size']
         if positionSide == "SHORT":
             positionSide = 2
@@ -226,7 +306,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
             if tpSize == "":
                 posiciones = obtener_posicion(symbol=symbol)
                 for posicion in posiciones:
-                    if posicion['positionIdx'] == 0:
+                    if posicion['positionIdx'] == positionSide:
                         tpSize = posicion['size']
 
         # Obtener ordenes abiertas
@@ -248,7 +328,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                                             tpslMode="Partial",
                                             tpSize=str(tpSize),
                                             tpOrderType=type,
-                                            positionIdx=0
+                                            positionIdx=positionSide
                                             )
             
             if type.upper() == "LIMIT":
@@ -262,7 +342,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                                             tpslMode="Partial",
                                             tpSize=str(tpSize),
                                             tpOrderType=type,
-                                            positionIdx=0
+                                            positionIdx=positionSide
                                             )
         
         else:
@@ -306,7 +386,7 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
                 "price": orden['price'],
                 "qty": orden['qty']
                 }
-            
+
         return {
         "orderId": "-",
         "price": str(stopPrice),
@@ -314,7 +394,9 @@ def take_profit(symbol, positionSide, stopPrice, type, tpSize=""):
         }
     
     except Exception as e:
-        print(f"ERROR COLOCANDO TAKE PROFIT EN BYBIT\n{e}")
+        print("ERROR COLOCANDO TAKE PROFIT EN BYBIT")
+        print(e)
+        print("")
 # ------------------------------------------------
 
 # FUNCIÓN QUE OBTIENE EL MONTO DISPONIBLE DE LA CUENTA
@@ -340,7 +422,7 @@ def patrimonio():
 # --------------------------------------
 def cambiar_modo(symbol):
     try:
-        bybit_session.switch_position_mode(category="linear", symbol=symbol, mode=0)
+        bybit_session.switch_position_mode(category="linear", symbol=symbol, mode=3)
     except Exception as e:
         pass
 # --------------------------------------
@@ -365,31 +447,217 @@ def verificar_conexion_internet():
         return False
 # -------------------------------------------
 
+# FUNCIÓN QUE OBTINE LAS EMAs DE BYBIT
+# ------------------------------------
+def obtener_ema(symbol: str, interval: str = "1", periodo: int = 9, vela: int = 1) -> float:
+    """
+    Obtiene la EMA de un símbolo en Bybit de forma ligera y rápida.
+
+    Parámetros:
+        symbol (str): Ej. "BTCUSDT"
+        interval (str): Intervalo de velas ("1","5","15","60","D", etc.)
+        periodo (int): Periodo de la EMA (ej. 9, 21, 50...)
+        vela (int): Índice de la vela (1 = última, 2 = penúltima, etc.)
+
+    Retorna:
+        float: Valor de la EMA en la vela especificada
+    """
+    try:
+    
+        # warm-up amplio para mayor exactitud
+        need = periodo + vela + 1
+        limit = max(need, 5 * periodo)
+        kl = bybit_session.get_kline(category="linear", symbol=symbol, interval=interval, limit=limit)
+        kl = kl.get("result", {}).get("list", [])
+        kl.sort(key=lambda x: int(x[0]))
+        
+        closes = np.array([float(k[4]) for k in kl], dtype=float)
+
+        if len(closes) < (periodo + vela):
+            print(f"\nVelas insuficientes en la temporalidad {interval}, periodo ({periodo})")
+            return None
+
+        # EMA precisa (semilla = SMA de las primeras N)
+        alpha = 2.0 / (periodo + 1.0)
+        ema = np.empty_like(closes)
+        ema[:] = np.nan
+        first = periodo - 1
+        ema[first] = closes[:periodo].mean()
+        for i in range(first + 1, len(closes)):
+            ema[i] = closes[i] * alpha + ema[i - 1] * (1.0 - alpha)
+
+        return(float(ema[-vela]))
+
+    except Exception as e:
+        print(f"\nError obteniendo EMA: {e}")
+        return None
+# ------------------------------------
+
+# EMA AUTOMATICA
+# --------------
+async def ema_auto(symbol, tipo):
+    global ema_mas_cercana, ema_siguiente, ema_corretear
+    correteando = False
+    ultima_completada = {}
+    ultima_completada['precio'] = 9999999 if tipo.upper() == "LONG" else 0
+    while operar:
+        try:
+            
+            # Obtener la ema mas cercana al precio
+            # ------------------------------------
+            precio_actual = precio_actual_activo(symbol)
+            distancia_mas_cercana = 1
+            distancia_siguiente = 1
+            cercana = {}
+            siguiente = {}
+            for ema in emas:
+                
+                # Actualizar la lista de ema
+                # --------------------------
+                precio_ema_actual = obtener_ema(symbol, ema['temporalidad'], ema['periodo'], 1)
+                if precio_ema_actual != None:
+                    ema['precio'] = precio_ema_actual
+                # --------------------------
+
+                # Buscar la ema mas cercana
+                # -------------------------
+                # Long
+                if tipo.upper() == "LONG" and ema['precio'] < precio_actual:
+                    # Mas cercana
+                    if abs(precio_actual-ema['precio'])/precio_actual < distancia_mas_cercana:
+                        distancia_mas_cercana = abs(precio_actual-ema['precio'])/precio_actual
+                        cercana = ema
+                    
+                    # Mayor a 1%
+                    if  not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and ema['precio'] < ultima_completada['precio']*(1-factor*distancia_tp/100):
+                        distancia_siguiente = abs(pos_precio-ema['precio'])/pos_precio
+                        siguiente = ema
+                    
+                # Short
+                if tipo.upper() == "SHORT" and ema['precio'] > precio_actual:
+                    # Mas cercana
+                    if abs(precio_actual-ema['precio'])/precio_actual < distancia_mas_cercana:
+                        distancia_mas_cercana = abs(precio_actual-ema['precio'])/precio_actual
+                        cercana = ema
+                    
+                    # Mayor a 1%
+                    if not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and  factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and ema['precio'] > ultima_completada['precio']*(1+factor*distancia_tp/100):
+                        distancia_siguiente = abs(pos_precio-ema['precio'])/pos_precio
+                        siguiente = ema
+                # -------------------------            
+                        
+                # Verificar si se ejecuto alguna orden
+                # ------------------------------------
+                if disparos_limit == 0 and ema['orderId'] != "":
+                    if obtener_ordenes(symbol, ema['orderId'])[0]['orderStatus'] == "Filled":
+                        ema['ejecutada'] = True
+                        ultima_completada = ema
+                    else:
+                        ema['orderId'] = ""
+                        ema['orderPrice'] = ""
+                        ema['colocada'] = False
+                        ema['ejecutada'] = False
+                # ------------------------------------
+
+                # Reiniciar la lista de ema
+                # -------------------------
+                if pos_size == 0 and disparos_limit == 0:
+                    ema['orderId'] = ""
+                    ema['orderPrice'] = ""
+                    ema['colocada'] = False
+                    ema['ejecutada'] = False
+                    ultima_completada['precio'] = 9999999 if tipo.upper() == "LONG" else 0
+                # -------------------------
+            # ------------------------------------
+                
+            # Emas cercana y siguiente
+            # ------------------------
+            ema_mas_cercana = cercana
+            if ema_mas_cercana['precio'] == ultima_completada['precio']:
+                 ema_mas_cercana['precio'] = obtener_ema(symbol)
+            ema_siguiente = siguiente
+            # ------------------------
+
+            # Corretear la orden
+            # ------------------
+            if ema_corretear == {}:
+                ema_corretear = ema_mas_cercana if pos_size == 0 else ema_siguiente
+            if disparos_limit == 0:
+                correteando = False
+            if disparos_limit > 0 and ema_corretear != {} and disparo != {}:
+                if not correteando:
+                    print("\nCorreteando orden...")
+                correteando = True
+                ema_precio_actual = obtener_ema(symbol, ema_corretear['temporalidad'], ema_corretear['periodo'], 1)
+                
+                # Long
+                if tipo.upper() == "LONG" and ema_precio_actual > disparo['precio'] and ((pos_size == 0) or (pos_size > 0 and pos_precio > ema_precio_actual and abs(ema_precio_actual-pos_precio)/pos_precio > factor*distancia_tp/100)):
+                    orden = modificar_orden(symbol, disparo["orderId"], price=ema_precio_actual)
+                    if orden != None:
+                        for ema in emas:
+                            if ema['temporalidad'] == ema_corretear['temporalidad'] and ema['periodo'] == ema_corretear['periodo']:
+                                ema['orderId'] = disparo["orderId"]
+                                ema['orderPrice'] = ema_precio_actual
+                                ema['colocada'] = True
+                                ema_corretear = ema
+                                print("\n", json.dumps(ema_corretear, indent=2))
+                                break
+                
+                # Short
+                if tipo.upper() == "SHORT" and ema_precio_actual < disparo['precio'] and ((pos_size == 0) or (pos_size > 0 and pos_precio < ema_precio_actual and abs(ema_precio_actual-pos_precio)/pos_precio > factor*distancia_tp/100)):
+                    orden = modificar_orden(symbol, disparo["orderId"], price=ema_precio_actual)
+                    if orden != None:
+                        for ema in emas:
+                            if ema['temporalidad'] == ema_corretear['temporalidad'] and ema['periodo'] == ema_corretear['periodo']:
+                                ema['orderId'] = disparo["orderId"]
+                                ema['orderPrice'] = ema_precio_actual
+                                ema['colocada'] = True
+                                ema_corretear = ema
+                                print("\n", json.dumps(ema_corretear, indent=2))
+                                break
+            # ------------------
+    
+            await asyncio.sleep(0.018)
+        
+        except Exception as e:
+            print(f"\nERROR EN LA FUNCION ema_auto()\n{e}")
+            await asyncio.sleep(3.6)
+# --------------
+
 # FUNCIÓN STOP AUTOMATICO
 # -----------------------
-async def sl_auto(symbol, perdida_usdt):
+async def sl_auto(symbol, tipo, perdida_usdt):
     global operar
     orderId = ""
-    sl_100001 = False
     sl_colocado = False
+    sl_100001 = False
+    pos_tamaño = 0
+    positionIdx = 0
     while operar:
         try:
             if verificar_conexion_internet():
                 # Ordenes abiertas y posiciones
                 ordenes = obtener_ordenes(symbol)
-                posicion = obtener_posicion(symbol)
+                posiciones = obtener_posicion(symbol)
                 #print(json.dumps(ordenes,indent=2))
 
                 # Precio promedio de la posición y tamaño long
-                if posicion[0]['size'] == "":
-                    pos_tamaño = 0
-                else:
-                    pos_precio = float(posicion[0]['avgPrice'])
-                    pos_tamaño = float(posicion[0]['size'])
+                for posicion in posiciones:
+                    if tipo == "LONG" and posicion['positionIdx'] == 1:
+                        positionIdx = 1
+                        pos_tamaño = float(posicion['size'])
+                        if pos_tamaño > 0:
+                            pos_precio = float(posicion['avgPrice'])
+                        side = posicion['side']
+                    if tipo == "SHORT" and posicion['positionIdx'] == 2:
+                        positionIdx = 2
+                        pos_tamaño = float(posicion['size'])
+                        if pos_tamaño > 0:
+                            pos_precio = float(posicion['avgPrice'])
+                        side = posicion['side']
 
                 # Aplicar SL solo si hay posicion
                 if pos_tamaño > 0:
-                    side = posicion[0]['side']
                     # Precio promedio total
                     valor_total = pos_precio*pos_tamaño
                     cantidad_total = pos_tamaño
@@ -397,12 +665,12 @@ async def sl_auto(symbol, perdida_usdt):
                     if ordenes != []:
                         for orden in ordenes:
                             # SL actual
-                            if orden['stopOrderType'] == "StopLoss":
+                            if orden['stopOrderType'] == "StopLoss" and orden['positionIdx'] == positionIdx:
                                 orderId = orden['orderId']
                                 precio_sl_actual = float(orden['triggerPrice'])
 
                             # Sumatoria
-                            if not(orden['reduceOnly']) and orden['side'] == side:
+                            if not(orden['reduceOnly']) and orden['positionIdx'] == positionIdx:
                                 valor_total = valor_total + float(orden['price'])*float(orden['qty'])
                                 cantidad_total = cantidad_total + float(orden['qty'])
 
@@ -425,7 +693,7 @@ async def sl_auto(symbol, perdida_usdt):
                             print(f"\nStop Loss colocado en {sl['price']}")
                         if pos_tamaño == 0:
                             sl_colocado = False
-                        if sl == "10001":
+                        if sl == "10001" and  not sl_100001:
                             sl_100001 = True
                             print(f"\nSL muy bajo para colocarlo en {precio_sl}")
 
@@ -439,44 +707,48 @@ async def sl_auto(symbol, perdida_usdt):
                         print("\n😖 🔴 💥 STOP LOSS ALCANZADO 💥 🔴 😖")
                 # ------------------------------------------------------------
 
-            await asyncio.sleep(3.6)
+            await asyncio.sleep(0.018)
 
         except Exception as e:
             print(f"ERROR EN LA FUNCION sl_auto()\n{e}")
+            await asyncio.sleep(3.6)
 # -----------------------
 
 # FUNCIÓN STOP AUTOMATICO
 # -----------------------
 async def tp_auto(symbol, tipo, distancia_porcentual):
+    global operar
     orderId = ""
-    if tipo.upper() == "LONG":
-        tp_side = "Buy"
-    if tipo.upper() == "SHORT":
-        tp_side = "Sell"
+    tp_colocado = False
+    tamaño_pos = 0
+    positionIdx = 0
     while operar:
         try:
             if verificar_conexion_internet():
                 # Ordenes y posicion
                 ordenes = obtener_ordenes(symbol)
-                posicion = obtener_posicion(symbol)
-                pos_side = posicion[0]['side']
-                if posicion[0]['avgPrice'] == "":
-                    precio_pos = ""
-                else:
-                    precio_pos = float(posicion[0]['avgPrice'])
-                if posicion[0]['size'] == "":
-                    tamaño_pos = 0
-                else:
-                    tamaño_pos = float(posicion[0]['size'])
+                posiciones = obtener_posicion(symbol)
+                for posicion in posiciones:
+                    if tipo.upper() == "LONG" and posicion['positionIdx'] == 1:
+                        positionIdx = 1
+                        pos_side = posicion['side']
+                        tamaño_pos = float(posicion['size'])
+                        if tamaño_pos > 0:
+                            precio_pos = float(posicion['avgPrice'])
+                    if tipo.upper() == "SHORT" and posicion['positionIdx'] == 2:
+                        positionIdx = 2
+                        pos_side = posicion['side']
+                        tamaño_pos = float(posicion['size'])
+                        if tamaño_pos > 0:
+                            precio_pos = float(posicion['avgPrice'])
                 
                 # Aplicar TP solo si hay posicion
-                if tamaño_pos > 0 and pos_side == tp_side:
+                if tamaño_pos > 0:
                     # Buscar el TP actual
                     precio_tp_actual = 0
-                    qty = 0
                     if ordenes != []:
                         for orden in ordenes:
-                            if orden['stopOrderType'] == "PartialTakeProfit":
+                            if orden['stopOrderType'] == "PartialTakeProfit" and orden['positionIdx'] == positionIdx:
                                 orderId = orden['orderId']
                                 precio_tp_actual = float(orden['triggerPrice'])
 
@@ -489,55 +761,77 @@ async def tp_auto(symbol, tipo, distancia_porcentual):
                         precio_tp = precio_pos*(1 - distancia_porcentual/100)
                     if abs(precio_tp - precio_tp_actual)/precio_tp > 5*comision/100:
                         if orderId != "":
-                            cancelar_orden(symbol, orderId=orderId)
-                        take_profit(symbol=symbol, positionSide=positionSide, stopPrice=precio_tp, type="LIMIT")
+                            cancelar_orden(symbol, orderId)
+                        tp = take_profit(symbol=symbol, positionSide=positionSide, stopPrice=precio_tp, type="LIMIT")
+                        if tp != None and not tp_colocado:
+                            tp_colocado = True
+                            print(f"\nTake Profit colocado en {tp['price']}")
+                        if tamaño_pos == 0:
+                            tp_colocado = False
 
                 # Cancelar todas las ordenes pendientes después de tocar el TP
                 # ------------------------------------------------------------
                 if orderId != "":
                     if obtener_ordenes(symbol, orderId)[0]['orderStatus'] == "Filled":
+                        operar = False
                         cancelar_orden(symbol, orderId="")
                         orderId = ""
                         print("\n🏆 🚀 🔥 TAKE PROFIT ALCANZADO 🔥 🚀 🏆")
+                        seguir_operando = await asyncio.to_thread(input("\n¿Seguir Operando? (SI/NO)\n->"))
+                        if seguir_operando.upper() == "SI" or seguir_operando.upper() == "" or seguir_operando.upper() == "S":
+                            operar = True
+
                 # ------------------------------------------------------------
 
-            await asyncio.sleep(3.6)
+            await asyncio.sleep(0.018)
         
         except Exception as e:
             print(f"ERROR EN LA FUNCION tp_auto()\n{e}")
+            await asyncio.sleep(3.6)
 # -----------------------
 
 # FUNCIÓN CARDIACO
 # -----------------
-async def cardiaco(symbol, tipo, precio, monto):
-    print("\nCardiaco iniciado")
+async def cardiaco(symbol, tipo, monto):
+    try:
+        global pos_size, pos_precio, disparos_limit, disparo, ema_corretear, ordenes_abiertas
+        print("\nCardiaco iniciado")
+        positionIdx = 0
+        side = ""
+        pos_size = 0
+        pos_precio = ""
+        await asyncio.sleep(3.6)
+        
+        # Definir variables
+        # -----------------
+        posiciones = obtener_posicion(symbol)
+        for pos in posiciones:
+            if pos['positionIdx'] == 1:
+                if tipo.upper() == "LONG":
+                    side = "Buy"
+                    pos_size = float(pos['size'])
+                    if pos_size> 0:
+                        pos_precio = float(pos['avgPrice'])
+                    positionIdx = 1
+            if pos['positionIdx'] == 2:
+                if tipo.upper() == "SHORT":
+                    side = "Sell"
+                    pos_size = float(pos['size'])
+                    if pos_size> 0:
+                        pos_precio = float(pos['avgPrice'])
+                    positionIdx = 2
+        # -----------------
+   
+    except Exception as e:
+        print(f"\nERROR EN cardiaco()\n{e}")
     
-    # Definir variables
-    # -----------------
-    if tipo == "LONG":
-        side = "BUY"
-    if tipo == "SHORT":
-        side = "SELL"
-    # -----------------
-
-    # Colocar primera orden
-    # ---------------------
-    if obtener_posicion(symbol)[0]['size'] == "0" and disparos == 0:
-        qty = monto/precio
-        print("\nColocando la primera orden . . .")
-        nueva_orden(symbol, "LIMIT", qty, precio, side, apalancameinto)
-    # ---------------------
-
     # Ciclo principal
     # ---------------
     conexion = True
     reconectar = False
-    if tipo.upper() == "LONG":
-        side = "Buy"
-    if tipo.upper() == "SHORT":
-        side = "Sell"
     while operar:
         try:
+            await asyncio.sleep(0.018)
             if verificar_conexion_internet():
                 conexion = True
                 if reconectar:
@@ -546,37 +840,44 @@ async def cardiaco(symbol, tipo, precio, monto):
                 
                 # Preguntar por la siguiente compra
                 # ---------------------------------
-                ordenes = obtener_ordenes(symbol)
+                ordenes_abiertas = obtener_ordenes(symbol)
                 disparos_limit = 0
-                for orden in ordenes:
+                for orden in ordenes_abiertas:
                     if not orden['reduceOnly'] and orden['side'] == side:
                         disparos_limit = disparos_limit + 1
+                        disparo['orderId'] = orden['orderId']
+                        disparo['precio'] = float(orden['price'])
                 if disparos_limit == 0:
-                    precio = ""
-                    posicion = obtener_posicion(symbol)[0]
-                    qty_posicion = posicion['size']
-                    if qty_posicion == "":
-                        qty = 0
+                    print("\nColocando la próxima orden...")
+                    posiciones = obtener_posicion(symbol)
+                    for posicion in posiciones:
+                        if posicion['positionIdx'] == positionIdx:
+                            pos_size = float(posicion['size'])
+                            if pos_size> 0:
+                                pos_precio = float(posicion['avgPrice'])
+                    ema_cercana = ema_mas_cercana if pos_size == 0 else ema_siguiente
+                    if not operar:
+                        ema_cercana = {}
+                    if ema_cercana != {}:
+                        if not ema_cercana['colocada'] and not ema_cercana['ejecutada']:
+                            qty = pos_size
+                            if qty == 0:
+                                if ema_cercana['precio'] == 0:
+                                    print(ema_cercana)
+                                qty = monto/ema_cercana['precio']
+                            orden = nueva_orden(symbol, "LIMIT", qty, ema_cercana['precio'], side, apalancameinto)
+                            if orden != None:
+                                for ema in emas:
+                                    ema_cercana['colocada'] = True
+                                    if ema['temporalidad'] == ema_cercana['temporalidad'] and ema['periodo'] == ema_cercana['periodo']:
+                                        ema['orderId'] = orden['orderId']
+                                        ema['orderPrice'] = orden['price']
+                                        ema['colocada'] = True
+                                        ema_corretear = ema
+                                        print("\n", json.dumps(ema_corretear, indent=2))
+                                        break
                     else:
-                        qty = float(qty_posicion)
-                    await asyncio.sleep(3.6)
-                    datos_correctos = False
-                    orden = "compra" if tipo == "LONG" else "venta"
-                    while not datos_correctos:
-                        try:
-                            precio = float(await asyncio.to_thread(input, f"\n¿Precio de la siguiente {orden}?\n('0' para disparar a mercado)\n-> "))
-                        except Exception as e:
-                            print("⚠️  Ingresa un número válido ⚠️")
-                            continue
-                        datos_correctos = True
-                    if precio != 0:
-                        if qty == 0:
-                            qty = monto/precio
-                        nueva_orden(symbol, "LIMIT", qty, precio, side, apalancameinto)
-                    if precio == 0:
-                        if qty == 0:
-                            qty = monto/precio_actual_activo(symbol)
-                        nueva_orden(symbol, "MARKET", qty, 1, side, apalancameinto)
+                        print("\nNo encuentro donde colocar la próxima orden")
                 # ---------------------------------
             
             else:
@@ -584,11 +885,10 @@ async def cardiaco(symbol, tipo, precio, monto):
                     print("\n⚠️  🛜 Problemas de conexión 🛜 ⚠️")
                     conexion = False
                     reconectar = True
-            
-            await asyncio.sleep(3.6)
         
         except Exception as e:
-            print(f"\nERROR EN EL CICLO PRINCIPAL\n{e}")
+            print(f"\nERROR EN EL CICLO CARDIACO\n{e}")
+            await asyncio.sleep(0.18)
     # ---------------
 # -----------------
 
@@ -603,14 +903,15 @@ async def main():
         
         # Correr cardiaco y la gestion de riesgo automatica
         # -------------------------------------------------
-        tarea_cardiaco = asyncio.create_task(cardiaco(symbol, tipo, precio, primera_posicion))
-        tarea_sl = asyncio.create_task(sl_auto(symbol, perdida))
+        tarea_cardiaco = asyncio.create_task(cardiaco(symbol, tipo, primera_posicion))
+        tarea_sl = asyncio.create_task(sl_auto(symbol, tipo, perdida))
+        tarea_ema = asyncio.create_task(ema_auto(symbol, tipo))
         
         if correr_ganancias.upper() == "S" or correr_ganancias == "SI":
-            await asyncio.gather(tarea_cardiaco, tarea_sl)
+            await asyncio.gather(tarea_cardiaco, tarea_sl, tarea_ema)
         else:
             tarea_tp = asyncio.create_task(tp_auto(symbol, tipo, distancia_tp))
-            await asyncio.gather(tarea_cardiaco, tarea_sl, tarea_tp)
+            await asyncio.gather(tarea_cardiaco, tarea_sl, tarea_tp, tarea_ema)
         # -------------------------------------------------
     
     except Exception as e:
@@ -668,18 +969,19 @@ comision = comision("BTCUSDT")*100                  # Comision por operacion a m
 perdida = capital_disponible*(10-comision)/100      # Perdida en dinero del Stop Loss (USDT)
 distancia_tp = 1                                    # Distancia porcentual del Take Profit (%)
 capital_minimo = 50                                 # Capital minimo para Cardiaco (Montos menores incurre mayor riesgos)
-ppp = 10/100                                        # Porcentaje de la primera posicion
-primera_posicion = ppp*capital_disponible           # Valr en USD de la primera posicion
+ppp = 10/100                                         # Porcentaje de la primera posicion
+primera_posicion = ppp*capital_disponible           # Valor en USD de la primera posicion
+factor = 2                                          # Factor de distanciamiento 
 # -------------------
 
 # Verificar si el capital de la cuenta es apto para cardiaco
-# ----------------------------------------------------------
+# -----------------------------------------------------------
 operar = True
 if capital_disponible < capital_minimo:
     print("\nLO SIENTO. CAPITAL MUY BAJO PARA OPERAR CARDIACO")
     print("DEBES TENER AL MENOS $50 USDT DISPONIBLES EN TU CUENTA")
     operar = False
-# ----------------------------------------------------------
+# -----------------------------------------------------------
     
 # Solicitar datos
 # ---------------
@@ -714,24 +1016,47 @@ while not datos_correctos:
         print("⚠️. Por favor escribe 'Si' o 'No' ⚠️")
         continue
 
-# Precio
-ordenes = obtener_ordenes(symbol)
-disparos = 0
-datos_correctos = False
-precio = 0
-for orden in ordenes:
-    if not orden['reduceOnly']:
-        disparos = disparos + 1
-orden = "compra" if tipo == "LONG" else "venta"
-if obtener_posicion(symbol)[0]['size'] == "0" and disparos == 0:
-    while not datos_correctos:
-        try:
-            precio = float(input(f"\n¿Precio de la primera {orden}?\n-> "))
-        except Exception as e:
-            print("⚠️  Ingresa un número válido ⚠️")
-            continue
-        datos_correctos = True
 # ---------------
+
+# Inicializar la lista de emas
+# ----------------------------
+emas = []
+for temp in ["1", "5", "15", "60", "240", "D", "W", "M"]:
+    ema9 = obtener_ema(symbol, temp, 9, 1)
+    if ema9 != None:
+        emas.append(
+                {
+                "periodo": 9,
+                "temporalidad": temp,
+                "precio": ema9, 
+                "orderId": "", 
+                "orderPrice": "",
+                "colocada": False, 
+                "ejecutada": False
+                }
+                )
+    ema54 = obtener_ema(symbol, temp, 54, 1)
+    if ema54 != None:
+        emas.append(
+                {
+                "periodo": 54,
+                "temporalidad": temp,
+                "precio": ema54, 
+                "orderId": "", 
+                "orderPrice": "",
+                "colocada": False, 
+                "ejecutada": False
+                }
+                )
+# --------------------------
+ema_mas_cercana = {}
+ema_siguiente = {}
+disparo = {}
+ema_corretear = {}
+pos_size = 0
+pos_precio = ""
+disparos_limit = 1
+ordenes_abiertas = 0
 
 # Correr programa
 # --------------- 
