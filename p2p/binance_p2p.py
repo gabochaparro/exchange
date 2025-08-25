@@ -1,0 +1,79 @@
+import requests
+import json
+
+def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False):
+    try:
+        anuncios = []
+        pagina = 0
+        while len(anuncios) < 3:
+            pagina = pagina + 1
+            url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
+
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+
+            payload = {
+                "asset": symbol.upper(),        # Cripto: USDT, BTC, BUSD, etc.
+                "fiat": fiat.upper(),           # Moneda local: COP, ARS, USD, MXN, etc.
+                "tradeType": tipo.upper(),      # SELL = vendedores, BUY = compradores
+                "page": pagina,                      # Pagina
+                "rows": 20                      # Número de anuncios a devolver
+            }
+
+            response = requests.post(url, headers=headers, json=payload)
+
+            # Obtener los anuncios deseados
+            if response.ok:
+                data = response.json()['data']
+                #print(json.dumps(data[0], indent=2, ensure_ascii=False))
+                for dato in data:
+                    anuncio = dato['adv']
+                    metodos_pagos = anuncio['tradeMethods']
+                    anunciante = dato['advertiser']
+                    if verificado:
+                        for metodo in metodos_pagos:
+                            if metodo['payType'] in bancos:
+                                if anunciante['vipLevel'] != None and anunciante['vipLevel'] >= 1 and float(anuncio['minSingleTransAmount']) <= float(monto) and float(anuncio['maxSingleTransAmount']) >= float(monto):
+                                    #print(json.dumps(dato, indent=2, ensure_ascii=False))
+                                    metodos = []
+                                    for metodo in metodos_pagos:
+                                        metodos.append(metodo['payType'])
+                                    anuncios.append({
+                                        "nickName": anunciante['nickName'],
+                                        "precio":anuncio['price'],
+                                        "minimo": anuncio['minSingleTransAmount'],
+                                        "maximo": anuncio['maxSingleTransAmount'],
+                                        "disponible": f"{anuncio['tradableQuantity']} {symbol.upper()}",
+                                        "bancos": metodos
+                                        })
+                                    break
+                    else:
+                        for metodo in metodos_pagos:
+                            if metodo['payType'] in bancos:
+                                if float(anuncio['minSingleTransAmount']) <= float(monto) and float(anuncio['maxSingleTransAmount']) >= float(monto):
+                                    #print(json.dumps(dato, indent=2, ensure_ascii=False))
+                                    metodos = []
+                                    for metodo in metodos_pagos:
+                                        metodos.append(metodo['payType'])
+                                    anuncios.append({
+                                        "nickName": anunciante['nickName'],
+                                        "precio":anuncio['price'],
+                                        "minimo": anuncio['minSingleTransAmount'],
+                                        "maximo": anuncio['maxSingleTransAmount'],
+                                        "disponible": f"{anuncio['tradableQuantity']} {symbol.upper()}",
+                                        "bancos": metodos
+                                        })
+                                    break
+            
+            else:
+                print("Error:", response.status_code, response.text)
+
+        return anuncios
+
+    except Exception as e:
+        print(f"\nERROR EN LA FUNCION: obtener_anuncios()\n{e}")
+
+anuncios = obtener_anuncios("USDT", "usd", "buy", 30, ["Zelle"], True)
+print(json.dumps(anuncios, indent=2))

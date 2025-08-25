@@ -773,13 +773,12 @@ async def tp_auto(symbol, tipo, distancia_porcentual):
                 # ------------------------------------------------------------
                 if orderId != "":
                     if obtener_ordenes(symbol, orderId)[0]['orderStatus'] == "Filled":
-                        operar = False
                         cancelar_orden(symbol, orderId="")
                         orderId = ""
                         print("\n🏆 🚀 🔥 TAKE PROFIT ALCANZADO 🔥 🚀 🏆")
-                        seguir_operando = await asyncio.to_thread(input("\n¿Seguir Operando? (SI/NO)\n->"))
-                        if seguir_operando.upper() == "SI" or seguir_operando.upper() == "" or seguir_operando.upper() == "S":
-                            operar = True
+                        seguir_operando = input("\n¿Seguir Operando? (SI/NO)\n->")
+                        if seguir_operando.upper() == "NO" or seguir_operando.upper() == "N":
+                            operar = False
 
                 # ------------------------------------------------------------
 
@@ -800,7 +799,7 @@ async def cardiaco(symbol, tipo, monto):
         side = ""
         pos_size = 0
         pos_precio = ""
-        await asyncio.sleep(3.6)
+        await asyncio.sleep(1)
         
         # Definir variables
         # -----------------

@@ -39,12 +39,12 @@ def promedio_grid(precio_actual, inversion, intervalo, monto_por_compra, apalanc
 continuar = True
 while continuar:
     try:
-        comision = 0.02         #float(input("Comisión del broker: "))
-        inversion = 99999        #float(input("Introduce el monto de la inversión: "))
-        apalancamiento = 99      #float(input("Introduce el apalancamiento: "))
-        precio_actual = 3455    #float(input("Introduce el precio actual: "))
-        distancia_grid = 0.666    #float(input("Introduce la distancia del grid: "))
-        ganancia_grid = 1       #float(input("Introduce la ganancia por grid: "))
+        comision = 0         #float(input("Comisión del broker: "))
+        inversion = 10000        #float(input("Introduce el monto de la inversión: "))
+        apalancamiento = 5      #float(input("Introduce el apalancamiento: "))
+        precio_actual = 23539    #float(input("Introduce el precio actual: "))
+        distancia_grid = 0.18    #float(input("Introduce la distancia del grid: "))
+        ganancia_grid = 0.018       #float(input("Introduce la ganancia por grid: "))
 
         promedio_grid( 
                         apalancamiento=apalancamiento,
