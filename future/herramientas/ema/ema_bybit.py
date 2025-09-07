@@ -2,13 +2,12 @@ from pybit.unified_trading import HTTP
 import numpy as np
 import asyncio
 import json
-import time
 
 # Sesión pública
 bybit_session = HTTP(
                     testnet=False,
-                    api_key="1XJt60yrfh4sSwU45Q",
-                    api_secret="GyQyHOe8SRKje2g4WN7JxEZrfIqy0sOqtjdP",
+                    api_key="",
+                    api_secret="",
                     )
 
 # FUNCIÓN QUE OBTINE LAS EMAs DE BYBIT
@@ -229,32 +228,3 @@ async def ema_auto(symbol, tipo):
             print(f"\nERROR EN LA FUNCION ema_auto()\n{e}")
             await asyncio.sleep(0.1)
 # --------------
-
-# --- Ejemplo ---
-#print("EMA9 última vela:", obtener_ema("XNYUSDT", "M", 9, 1))
-#symbol = "BTCUSDT"
-#asyncio.run(ema_auto("MYXUSDT", "SHORT"))
-#modificar_orden("CTSIUSDT", "796db398-6a05-41ca-a883-a3f37d750923", price=0.1)
-
-async def tarea1():
-    print("Tarea 1 iniciada")
-    await asyncio.sleep(2)
-    print("Tarea 1 terminda")
-
-async def tarea2():
-    print("Tarea 2 iniciada")
-    await asyncio.sleep(3)
-    print("Tarea 2 terminada")
-
-async def tarea3():
-    print("Tarea 3 iniciada")
-    await asyncio.sleep(5)
-    print("Tarea 3 terminada")
-
-async def main():
-    task1 = asyncio.create_task(tarea1())
-    task2 = asyncio.create_task(tarea2())
-    task3 = asyncio.create_task(tarea3())
-    await asyncio.gather(task1, task2, task3)
-
-asyncio.run(main())

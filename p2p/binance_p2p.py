@@ -1,11 +1,11 @@
 import requests
 import json
 
-def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False):
+def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False, cantidad=1):
     try:
         anuncios = []
         pagina = 0
-        while len(anuncios) < 3:
+        while len(anuncios) < cantidad:
             pagina = pagina + 1
             url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
 
@@ -25,13 +25,14 @@ def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False):
             response = requests.post(url, headers=headers, json=payload)
 
             # Obtener los anuncios deseados
-            if response.ok:
+            if response.ok or str(response.status_code) == "200":
                 data = response.json()['data']
                 #print(json.dumps(data[0], indent=2, ensure_ascii=False))
                 for dato in data:
                     anuncio = dato['adv']
                     metodos_pagos = anuncio['tradeMethods']
                     anunciante = dato['advertiser']
+                    
                     if verificado:
                         for metodo in metodos_pagos:
                             if metodo['payType'] in bancos:
@@ -66,14 +67,20 @@ def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False):
                                         "bancos": metodos
                                         })
                                     break
+                    
+                    if len(anuncios) == cantidad:
+                        break
+
+                if len(anuncios) == cantidad:
+                    break
             
             else:
-                print("Error:", response.status_code, response.text)
+                print("Error:", response.status_code)
 
         return anuncios
 
     except Exception as e:
         print(f"\nERROR EN LA FUNCION: obtener_anuncios()\n{e}")
 
-anuncios = obtener_anuncios("USDT", "usd", "buy", 30, ["Zelle"], True)
+anuncios = obtener_anuncios("usdt", "ves", "sell", 2000, ["PagoMovil"], False, 3)
 print(json.dumps(anuncios, indent=2))

@@ -678,8 +678,8 @@ print("  1. Cambia a margen cruzado\n  2. Fondea al menos $50 USDT en la cuenta\
 credenciales = False
 while not credenciales:
     try:
-        api_key = "1XJt60yrfh4sSwU45Q" #input("\nIntroduce tu Api Key de Bybit: \n-> ")
-        api_secret = "GyQyHOe8SRKje2g4WN7JxEZrfIqy0sOqtjdP" #input("\nIntroduce tu Api Secret de Bybit: \n-> ")
+        api_key = input("\nIntroduce tu Api Key de Bybit: \n-> ")
+        api_secret = input("\nIntroduce tu Api Secret de Bybit: \n-> ")
         # ----------------------
 
         # Definir la session para Bybit

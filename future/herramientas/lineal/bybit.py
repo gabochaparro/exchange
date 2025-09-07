@@ -641,40 +641,28 @@ def obtener_ema(symbol: str, interval: str = "1", periodo: int = 9, vela: int = 
 
 # FUNCION QUE MODIFICA UAN ORDEN
 #--------------------------------------------------------
-def modificar_orden(symbol, orderId, order_type="", quantity="", price="", side=""):
+def modificar_orden(symbol, orderId, quantity="", price="", tp="", sl=""):
     try:
-
-        # Definir el lado para el modo hedge
-        positionSide = 0
-        if side.upper() == "BUY":
-            positionSide = 1
-            side =side[0] + side[1:].lower()
-        if side.upper() == "SELL":
-            positionSide = 2
-            side =side[0] + side[1:].lower()
         
         # Coloca la orden "LIMIT"
         order = bybit_session.amend_order(
             category="linear",
             symbol=symbol,
-            side=side,
-            orderType=order_type,
             qty=quantity,
             price=price,
             timeinforce="GTC",
-            positionIdx=positionSide,
-            orderId = orderId
+            orderId = orderId,
+            takeProfit = str(tp),
+            tpLimitPrice = str(tp),
+            stopLoss = str(sl)
             )
 
         order = obtener_ordenes(symbol, order["result"]["orderId"])
         #print(json.dumps(order,indent=2))
         
-        if order_type.upper() == "CONDITIONAL":
-            price = float(order[0]["triggerPrice"])
-        else:
-            price = float(order[0]["price"])
+        price = float(order[0]["price"])
         
-        print(f"\nOrden {order_type.upper()}-{side} de {order[0]['qty']} {symbol.split('USDT')[0]}  modificada en {price}. ID:", order[0]["orderId"])
+        print(f"\nOrden de {order[0]['qty']} {symbol.split('USDT')[0]}  modificada en {price}. ID:", order[0]["orderId"])
         
         return {
                 "orderId": order[0]["orderId"],
@@ -688,11 +676,11 @@ def modificar_orden(symbol, orderId, order_type="", quantity="", price="", side=
 
 #orden = patrimonio()
 #orden = margen_disponible()
-#orden = nueva_orden("XAUTUSDT","LIMIT", 0.002, 3300, "BUY" , 11, 3334, 3199)
+#orden = nueva_orden("NEIROETHUSDT", "LIMIT", 100, 0.07105, "SELL", 10, 0.06, 0.08)
 #orden = take_profit("FARTCOINUSDT","LONG",1.55,"LIMIT",1)
 #orden = cambiar_margen("XVGUSDT", "ISOLATED")
 #orden = stop_loss("MELANIAUSDT","SHORT",1.45, "")
-#orden = obtener_ordenes("BIOUSDT")
+#orden = obtener_ordenes("PTBUSDT")
 #orden = obtener_historial_ordenes("BROCCOLIUSDT")
 #orden = normalizar_precios("XRPUSDT", 3339.123456789)
 #orden = comision("OPUSDT")

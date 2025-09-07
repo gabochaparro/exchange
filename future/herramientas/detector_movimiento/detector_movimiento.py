@@ -6,8 +6,7 @@ from gtts import gTTS
 from mutagen.mp3 import MP3
 from datetime import datetime
 from colorama import init, Fore
-import asyncio
-import pandas as pd
+from collections import Counter
 
 
 client = Client(api_key="", api_secret="", tld="com")
@@ -24,6 +23,7 @@ while not dato_correcto:
         exchange = "BINANCE" #input("Introduce el exchange: ").upper()
         variacion_precio = 1 #float(input("Introduce la variación del precio: "))    # Variación en el precio (porcentaje)
         volumen24h = 100*1000000 #int(input("Introduce el volumen en 24H (M): "))          # Volumen en 24 horas
+        coinalyzecom = True
         dato_correcto = True
     
     except Exception as e:
@@ -31,7 +31,7 @@ while not dato_correcto:
         print("")
 tiempo_de_espera = 2                                # Tiempo de espera para una nueva busqueda
 tiempo_recuperacion = 3                             # Tiempo de recuperción después de un error
-tiempo_de_iteracion = 0.1                           # Tiempo de iteracción entre cada tick
+tiempo_de_iteracion = 1                             # Tiempo de iteracción entre cada tick
 temporalidad = Client.KLINE_INTERVAL_1MINUTE        # Temporalidad
 cantidad_velas = 13                                 # Cantidad de velas a considerar                                 
 #----------------------------------------------
@@ -211,6 +211,69 @@ def reproducir_audio(audio):
         print(e)
 # -------------------------------
 
+# FUNCIÓN QUE BUSCA MONEDAS EN COINALYZE
+# --------------------------------------
+def coinalyze():
+    from playwright.sync_api import sync_playwright
+    import pandas as pd
+    try:
+        with sync_playwright() as p:
+            # Inicia navegador (abre Chrome/Chromium)
+            navegador = p.firefox.launch(headless=True)  # headless=False para ver lo que hace
+            pagina = navegador.new_page()
+
+            for i in range(2):
+                if i == 0:
+                    tipo = "desc"
+                if i == 1:
+                    tipo = "asc"
+                # Abre tu página
+                pagina.goto(f"https://es.coinalyze.net/?order_by=oi_24h_pchange&order_dir={tipo}", wait_until="load")
+
+                # Imprimir texto
+                texto = pagina.locator("div.table-wrapper").locator("tbody").inner_text()
+                #print(texto)
+                
+                # Organizar los datos
+                datos = []
+                for linea in texto.splitlines():
+                    if linea != "":
+                        linea_lista = []
+                        for dato in linea.split('\t'):
+                            if dato != "":
+                                linea_lista.append(dato)
+                        datos.append(linea_lista)
+                #print(datos)
+
+                # Definir las columnas
+                cols = [
+                "MONEDA", "PRECIO", "CHG 24H", "MKT CAP", "VOL 24H", "OPEN INTEREST",
+                "OI CHG 24H", "OI SHARE", "OI/VOL24H", "FR AVG", "PFR AVG", "LIQS. 24H"
+                ]
+                        
+                # Crear DataFrame
+                df = pd.DataFrame(datos, columns=cols)
+                if i == 0:
+                    df_desc = df
+                if i == 1:
+                    df_asc = df
+            
+            # Cerrar el navegador
+            #navegador.close()
+            
+            # Buscar monedas
+            df_oi_desc = df_desc[((df_desc["OPEN INTEREST"].str.contains("m")) | (df_desc["OPEN INTEREST"].str.contains("b"))) &
+                            ((df_desc["OPEN INTEREST"].str.extract(r"\$([\d\.]+)m").astype(float)[0] > 10) | (df_desc["OPEN INTEREST"].str.contains("b"))) &
+                            ((df_desc["VOL 24H"].str.extract(r"\$([\d\.]+)m").astype(float)[0] > 100) | (df_desc["VOL 24H"].str.contains("b")))]
+            df_oi_asc = df_asc[((df_asc["OPEN INTEREST"].str.contains("m")) | (df_asc["OPEN INTEREST"].str.contains("b"))) &
+                            ((df_asc["OPEN INTEREST"].str.extract(r"\$([\d\.]+)m").astype(float)[0] > 10) | (df_asc["OPEN INTEREST"].str.contains("b"))) &
+                            ((df_asc["VOL 24H"].str.extract(r"\$([\d\.]+)m").astype(float)[0] > 100) | (df_asc["VOL 24H"].str.contains("b")))]
+
+            return(df_oi_desc,df_oi_asc)
+        
+    except Exception as e:
+        print(f"\nERROR EN LA FUNCION coinalyze()\n{e}")
+# --------------------------------------
 
 #FUNCIÓN QUE ENVIA LAS ALERTAS
 #------------------------------------------------
@@ -223,7 +286,7 @@ def alertas(tick):
             volumen = volumen_24h(tick)
             if volumen >= volumen24h:
                 
-                # SHORT
+                # BAJISTA
                 if porcentaje_precios < 0:
                     print(Fore.RED + "MOVIMIENTO BAJISTA" + Fore.RESET + ": ", tick)
                     print("Variación del precio:", str(porcentaje_precios) + "%")
@@ -232,9 +295,10 @@ def alertas(tick):
                     print("")
                     texto_audio("Movimiento bajista en " + str(tick))
                     reproducir_audio('alerta_voz.mp3')
+                    return True
 
                 
-                # LONG
+                # ALCISTA
                 if porcentaje_precios > 0:
                     print(Fore.GREEN + "MOVIMIENTO ALCISTA" + Fore.RESET + ": ", tick)
                     print("Variación del precio:", str(porcentaje_precios) + "%")
@@ -243,6 +307,7 @@ def alertas(tick):
                     print("")
                     texto_audio("Movimiento alcista en " + str(tick))
                     reproducir_audio('alerta_voz.mp3')
+                    return True
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE ENVIA LAS ALERTAS. (alertas())")
@@ -253,33 +318,47 @@ def alertas(tick):
 
 # PROGRAMA PRINCIPAL
 #'''
+calientes = []
+mas_calientes = [{"apariciones"}]
 while iniciar:
         try:
-            i = 0
-            ii = 0
+            ticks = buscar_ticks()
             print("")
             print("PARÁMETROS DE BÚSQUEDA:")
             print("Exchange:", exchange)
             print("Variación del precio:", str(variacion_precio)+"%")
             print("Volumen mínimo en 24H:", formato_abreviado(volumen24h))
             print("")
-            ticks = buscar_ticks()
             print("Buscando en", len(ticks), "monedas disponibles...")
             print("")
+            oi = coinalyze()
             for tick in ticks:
-                i = i + 1
-                #print (i, tick)
-                alertas(tick)
-                time.sleep(tiempo_de_iteracion)
+                if coinalyzecom and tick.split("USDT")[0] in str(oi[0]['MONEDA'].values).upper() or tick.split("USDT")[0] in str(oi[1]['MONEDA'].values).upper():
+                    alerta = alertas(tick)
+                    if alerta:
+                        calientes.append(tick.split("USDT")[0])
+                        print(Counter(calientes).most_common(5))
+                        print("")
+                    time.sleep(tiempo_de_iteracion)
+                if not coinalyzecom:
+                    alerta = alertas(tick)
+                    if alerta:
+                        calientes.append(tick.split("USDT")[0])
+                        print(Counter(calientes).most_common(5))
+                        print("")
+                    time.sleep(tiempo_de_iteracion)
             print("Siguiente búsqueda en", tiempo_de_espera, "Segundos...")
             time.sleep(tiempo_de_espera)
         
         except Exception as e:
-            texto_audio("Error en la búsqueda, esperando " + str(tiempo_recuperacion) + " Segundos...")
-            print("ERROR EN LA BUSQUEDA")
-            print(e)
-            print("Esperando tiempo de recuperación.", tiempo_recuperacion, "Segundos...")
-            print("")
-            asyncio.run(reproducir_audio('alerta_voz.mp3'))
-            time.sleep(tiempo_recuperacion)
+            try:
+                texto_audio("Error en la búsqueda, esperando " + str(tiempo_recuperacion) + " Segundos...")
+                print("ERROR EN LA BUSQUEDA")
+                print(e)
+                print("Esperando tiempo de recuperación.", tiempo_recuperacion, "Segundos...")
+                print("")
+                reproducir_audio('alerta_voz.mp3')
+                time.sleep(tiempo_recuperacion)
+            except Exception as e:
+                pass
 #'''
