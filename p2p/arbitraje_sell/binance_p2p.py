@@ -18,7 +18,7 @@ def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False, c
                 "asset": symbol.upper(),        # Cripto: USDT, BTC, BUSD, etc.
                 "fiat": fiat.upper(),           # Moneda local: COP, ARS, USD, MXN, etc.
                 "tradeType": tipo.upper(),      # SELL = vendedores, BUY = compradores
-                "page": pagina,                 # Pagina
+                "page": pagina,                      # Pagina
                 "rows": 20                      # Número de anuncios a devolver
             }
 
@@ -75,7 +75,7 @@ def obtener_anuncios(symbol, fiat, tipo, monto, bancos=[], verificado = False, c
                     break
             
             else:
-                print("Error:", response.status_code)
+                print("ERROR DE REQUEST:", response.status_code)
                 return response.status_code
 
         return anuncios

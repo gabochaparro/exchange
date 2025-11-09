@@ -345,17 +345,20 @@ def obtener_ema_bybit(symbol: str, interval: str = "1", periodo: int = 9, vela: 
 
 # FUNCIÓN QUE DETERMINA DONDE COLOCAR LA ORDEN CON CON TP Y SL
 # ------------------------------------------------------------
-def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distancia_sl: float, riesgo_sl: float, debug: bool = True):
+def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distancia_sl: float, riesgo_sl: float, debug: bool = False):
         
         try:
             import time
 
             # Variables iniciales
             # -------------------
+            factor = 2.055
             side = "BUY" if direccion == "LONG" else "SELL"
             posicion_detectada = False
             precio_ema = obtener_ema_bybit(symbol=symbol, interval=temporalidad, periodo=periodo, vela=1)
             esperando_entrada = False
+            operar = True
+            primera_vez = True
             # -------------------
                 
             # Capital de la cuenta
@@ -368,7 +371,7 @@ def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distanc
             if debug:
                 print(f"\nERROR EN LA FUNCION ema954()\n{e}")
         
-        while True:
+        while operar:
             try:
                 # Obtener posicion
                 # ----------------
@@ -379,15 +382,27 @@ def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distanc
                         pos_size = float(pos['size'])
                 # ----------------
 
+                # Obtener ordenes
+                # ---------------
+                ordenes = obtener_ordenes(symbol)
+                # ---------------
+
+                # Preguntar por una nueva operación
+                # ---------------------------------
+                if pos_size == 0 and len(ordenes) == 0 and not primera_vez and not esperando_entrada and input("\n¿Seguir Operando? (SI/NO)\n->").upper() != "SI":
+                    operar = False
+                    break
+                primera_vez = False
+                # ---------------------------------
+
                 # Precio actual ema
                 # -----------------
                 precio_ema_actual = obtener_ema_bybit(symbol=symbol, interval=temporalidad, periodo=periodo, vela=1)
-                precio_ema_actual = precio_ema_actual*1.0018 if direccion == "LONG" else precio_ema_actual*0.9982
+                precio_ema_actual = precio_ema_actual*1.0027 if direccion == "LONG" else precio_ema_actual*0.9973
                 # -----------------
                 
                 # Gestion Long
                 # ------------
-                factor = 2.01
                 if direccion.upper() == "LONG":
                     precio_sl = precio_ema_actual*(1-distancia_sl/100)
                     precio_tp = precio_ema_actual*(1+factor*distancia_sl/100)
@@ -405,7 +420,7 @@ def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distanc
                 precio_actual = precio_actual_activo(symbol)
                 if pos_size == 0:
                     posicion_detectada = False
-                    if len(obtener_ordenes(symbol)) == 0:
+                    if len(ordenes) == 0:
                         if (direccion == "LONG" and precio_actual > precio_ema_actual) or (direccion == "SHORT" and precio_actual < precio_ema_actual):
                             nueva_orden(symbol, "LIMIT", qty, precio_ema_actual, side, 10, precio_tp, precio_sl)
                             esperando_entrada = False
@@ -414,7 +429,7 @@ def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distanc
                                 esperando_entrada = True
                                 print("\nEsperando nueva entrada...")
                     else:
-                        orderId = obtener_ordenes(symbol)[0]['orderId']
+                        orderId = ordenes[0]['orderId']
                         if (direccion == "LONG" and precio_ema_actual > precio_ema) or (direccion == "SHORT" and precio_ema_actual < precio_ema):
                             modificar_orden(symbol, orderId, price=precio_ema_actual, tp=precio_tp, sl=precio_sl)
                             precio_ema = precio_ema_actual
@@ -439,7 +454,21 @@ def ema954(symbol: str, direccion: str, periodo: int, temporalidad: int, distanc
 # -----------------
 def main(debug=False):
     try:
+        print("\n--------------------------------------------\n")
+        print(r"""           █████╗ ███████╗██╗  ██╗          
+          ██╔══██╗██╔════╝██║  ██║          
+█████╗    ╚██████║███████╗███████║    █████╗
+╚════╝     ╚═══██║╚════██║╚════██║    ╚════╝
+           █████╔╝███████║     ██║          
+           ╚════╝ ╚══════╝     ╚═╝          
+""")
+        print("--------------------------------------------")
+        print("\n🚀 BIENVENID@ AL 954 🚀")
+        
+        # Variables globales
+        # ------------------
         global bybit_session
+        # ------------------
         
         # Solicitar credenciales
         # ----------------------
@@ -478,7 +507,7 @@ def main(debug=False):
                     dato_correcto = True
                 else:
                     1/0
-                temporalidad = int(input("\n¿Temporalidad? (1 = 1min, 5 = 5min, 15 = 15 min)\n-> "))
+                temporalidad = int(input("\n¿Temporalidad? (1 = 1 min, 5 = 5 min, 15 = 15 min)\n-> "))
             except Exception as e:
                 print("\n⚠️  Introduce el número 1, 5 o 15 ⚠️")
 
@@ -502,7 +531,7 @@ def main(debug=False):
         # --------------------
 
         cambiar_modo(symbol)
-        ema954(symbol, direccion, periodo, temporalidad, distancia_sl, riesgo_sl, debug=True)
+        ema954(symbol, direccion, periodo, temporalidad, distancia_sl, riesgo_sl, debug=debug)
 
     except Exception as e:
         if debug:
@@ -511,5 +540,7 @@ def main(debug=False):
 
 # Correr el programa principal
 # ----------------------------
-main(debug=True)
+if __name__ == "__main__":
+    main(debug=True)
+input("")
 # ----------------------------

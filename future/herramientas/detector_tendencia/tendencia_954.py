@@ -7,6 +7,9 @@ from mutagen.mp3 import MP3
 from datetime import datetime
 from colorama import init, Fore
 from collections import Counter
+import json
+import pandas as pd
+import numpy as np
 
 
 client = Client(api_key="", api_secret="", tld="com")
@@ -131,7 +134,7 @@ def obtener_velas_precio(tick,temporalidad, cantidad_velas):
             velas = client.futures_klines(symbol=tick, interval=temporalidad, limit=cantidad_velas)
         
         if exchange.upper() == "BYBIT":
-          velas = session.get_kline(category="linear", symbol=tick, interval=1, limit=cantidad_velas)['result']['list']
+            velas = session.get_kline(category="linear", symbol=tick, interval=1, limit=cantidad_velas)['result']['list']
 
         velas.sort()
         return velas
@@ -214,7 +217,6 @@ def reproducir_audio(audio):
 # --------------------------------------
 def coinalyze():
     from playwright.sync_api import sync_playwright
-    import pandas as pd
     try:
         with sync_playwright() as p:
             # Inicia navegador (abre Chrome/Chromium)
@@ -274,6 +276,53 @@ def coinalyze():
         print(f"\nERROR EN LA FUNCION coinalyze()\n{e}")
 # --------------------------------------
 
+# FUNCIÓN QUE BUSCA UNA TENDENCIA 954 EN UN SYMBOL
+# ------------------------------------------------
+def tendencia_954(exchange, symbol, temporalidad, cantidad_velas, periodo = 9, unbral=80):
+    try:
+        # Obtener las velas
+        if exchange.upper() == "BYBIT":
+            velas = session.get_kline(category="linear", symbol=symbol, interval=temporalidad, limit=cantidad_velas)['result']['list']
+            velas.sort()
+        if exchange.upper() == "BINANCE":
+            velas = client.futures_klines(symbol=symbol, interval=temporalidad, limit=cantidad_velas)
+            velas.sort()
+        
+        # Definir las columnas
+        if exchange.upper() == "BYBIT":
+            columnas = ["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
+        if exchange.upper() == "BINANCE":
+            columnas = ["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "", "", "", "", "", "", ""]
+        
+        # Crear el DataFrame
+        df = pd.DataFrame(velas, columns=columnas)
+        
+        # Calcular las Emas
+        df["ema"] = df["closePrice"].astype(float).ewm(span=periodo, adjust=False).mean()
+
+        # Poner NaN en las primeras N-1 filas
+        df.loc[:periodo-1, "ema"] = np.nan
+        #print(df)
+        
+        # Calcular cuántas velas cierran arriba y abajo de la EMA9
+        total = len(df) - periodo
+
+        # Velas por encima de la EMA9
+        arriba = (df["closePrice"].astype(float) > df["ema"]).sum()
+
+        # Velas por debajo de la EMA9
+        abajo = (df["closePrice"].astype(float) < df["ema"]).sum()
+
+        # Porcentajes
+        pct_arriba = arriba / total * 100
+        pct_abajo  = abajo / total * 100
+        return pct_arriba > unbral or pct_abajo > unbral
+
+    
+    except Exception as e:
+        print(f"\nERROR EN LA FUNCIÓN tendencia_954()\n{e}")
+# ------------------------------------------------
+
 #FUNCIÓN QUE ENVIA LAS ALERTAS
 #------------------------------------------------
 def alertas(tick):
@@ -284,29 +333,37 @@ def alertas(tick):
         if abs(porcentaje_precios) > variacion_precio:
             volumen = volumen_24h(tick)
             if volumen >= volumen24h:
-                
-                # BAJISTA
-                if porcentaje_precios < 0:
-                    print(Fore.RED + "MOVIMIENTO BAJISTA" + Fore.RESET + ": ", tick)
-                    print("Variación del precio:", str(porcentaje_precios) + "%")
-                    print("Volumen en 24H:", formato_abreviado(volumen))
-                    print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
-                    print("")
-                    texto_audio("Movimiento bajista en " + str(tick))
-                    reproducir_audio('alerta_voz.mp3')
-                    return True
+                if exchange == "BYBIT" and (tendencia_954(exchange=exchange, symbol=tick, temporalidad="1", cantidad_velas=200, periodo=9, unbral=80) or 
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad="1", cantidad_velas=200, periodo=54, unbral=80) or
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad="5", cantidad_velas=200, periodo=9, unbral=80) or
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad="5", cantidad_velas=200, periodo=54, unbral=80)) or (
+                exchange == "BINANCE" and (tendencia_954(exchange=exchange, symbol=tick, temporalidad=client.KLINE_INTERVAL_1MINUTE, cantidad_velas=200, periodo=9, unbral=80) or 
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad=client.KLINE_INTERVAL_1MINUTE, cantidad_velas=200, periodo=54, unbral=80) or
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad=client.KLINE_INTERVAL_5MINUTE, cantidad_velas=200, periodo=9, unbral=80) or
+                                            tendencia_954(exchange=exchange, symbol=tick, temporalidad=client.KLINE_INTERVAL_5MINUTE, cantidad_velas=200, periodo=54, unbral=80))):
+                    
+                    # BAJISTA
+                    if porcentaje_precios < 0:
+                        texto_audio("Movimiento bajista en " + str(tick))
+                        reproducir_audio('alerta_voz.mp3')
+                        print(Fore.RED + "MOVIMIENTO BAJISTA" + Fore.RESET + ": ", tick)
+                        print("Variación del precio:", str(porcentaje_precios) + "%")
+                        print("Volumen en 24H:", formato_abreviado(volumen))
+                        print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
+                        print("")
+                        return True
 
-                
-                # ALCISTA
-                if porcentaje_precios > 0:
-                    print(Fore.GREEN + "MOVIMIENTO ALCISTA" + Fore.RESET + ": ", tick)
-                    print("Variación del precio:", str(porcentaje_precios) + "%")
-                    print("Volumen en 24H:", formato_abreviado(volumen))
-                    print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
-                    print("")
-                    texto_audio("Movimiento alcista en " + str(tick))
-                    reproducir_audio('alerta_voz.mp3')
-                    return True
+                    
+                    # ALCISTA
+                    if porcentaje_precios > 0:
+                        texto_audio("Movimiento alcista en " + str(tick))
+                        reproducir_audio('alerta_voz.mp3')
+                        print(Fore.GREEN + "MOVIMIENTO ALCISTA" + Fore.RESET + ": ", tick)
+                        print("Variación del precio:", str(porcentaje_precios) + "%")
+                        print("Volumen en 24H:", formato_abreviado(volumen))
+                        print(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
+                        print("")
+                        return True
 
     except Exception as e:
         print("ERROR EN LA FUNCIÓN QUE ENVIA LAS ALERTAS. (alertas())")
@@ -329,6 +386,8 @@ while iniciar:
             print("Volumen mínimo en 24H:", formato_abreviado(volumen24h))
             print("")
             print("Buscando en", len(ticks), "monedas disponibles...")
+            print("")
+            print(Counter(calientes).most_common(5))
             print("")
             oi = coinalyze()
             for tick in ticks:

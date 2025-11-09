@@ -466,10 +466,15 @@ async def sl_auto(symbol, tipo, perdida_usdt):
                 # ------------------------------------------------------------
                 if orderId != "":
                     if obtener_ordenes(symbol, orderId)[0]['orderStatus'] == "Filled":
+                        ordenes = obtener_ordenes(symbol)
+                        for orden in ordenes:
+                            if orden['positionIdx'] == positionIdx:
+                                cancelar_orden(symbol, orden['orderId'])
                         operar = False
-                        cancelar_orden(symbol, orderId="")
                         orderId = ""
                         print("\n😖 🔴 💥 STOP LOSS ALCANZADO 💥 🔴 😖")
+                        input("")
+                        exit()
                 # ------------------------------------------------------------
 
             await asyncio.sleep(3.6)
@@ -715,6 +720,8 @@ if capital_disponible < capital_minimo:
     print("\nLO SIENTO. CAPITAL MUY BAJO PARA OPERAR CARDIACO")
     print("DEBES TENER AL MENOS $50 USDT DISPONIBLES EN TU CUENTA")
     operar = False
+    input("")
+    exit()
 # -----------------------------------------------------------
     
 # Solicitar datos
@@ -785,4 +792,5 @@ if qty == 0 and disparos == 0:
 # --------------- 
 if operar:
     asyncio.run(main())
+input("")
 # ---------------

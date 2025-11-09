@@ -502,6 +502,7 @@ async def ema_auto(symbol, tipo):
     correteando = False
     ultima_completada = {}
     ultima_completada['precio'] = 9999999 if tipo.upper() == "LONG" else 0
+    ultima_completada['tiempo'] = 0
     while operar:
         try:
             
@@ -531,7 +532,7 @@ async def ema_auto(symbol, tipo):
                         cercana = ema
                     
                     # Mayor a 1%
-                    if  not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and ema['precio'] < ultima_completada['precio']*(1-factor*distancia_tp/100):
+                    if  not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and pos_precio > ema['precio'] < ultima_completada['precio']*(1-factor*distancia_tp/100):
                         distancia_siguiente = abs(pos_precio-ema['precio'])/pos_precio
                         siguiente = ema
                     
@@ -543,7 +544,7 @@ async def ema_auto(symbol, tipo):
                         cercana = ema
                     
                     # Mayor a 1%
-                    if not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and  factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and ema['precio'] > ultima_completada['precio']*(1+factor*distancia_tp/100):
+                    if not ema['colocada'] and not ema['ejecutada'] and pos_size > 0 and  factor*distancia_tp/100 < abs(pos_precio-ema['precio'])/pos_precio < distancia_siguiente and pos_precio < ema['precio'] > ultima_completada['precio']*(1+factor*distancia_tp/100):
                         distancia_siguiente = abs(pos_precio-ema['precio'])/pos_precio
                         siguiente = ema
                 # -------------------------            
@@ -551,9 +552,12 @@ async def ema_auto(symbol, tipo):
                 # Verificar si se ejecuto alguna orden
                 # ------------------------------------
                 if disparos_limit == 0 and ema['orderId'] != "":
-                    if obtener_ordenes(symbol, ema['orderId'])[0]['orderStatus'] == "Filled":
+                    orden = obtener_ordenes(symbol, ema['orderId'])[0]
+                    if orden['orderStatus'] == "Filled":
                         ema['ejecutada'] = True
-                        ultima_completada = ema
+                        ema['tiempo'] = int(orden['updatedTime'])
+                        if ema['tiempo'] > ultima_completada['tiempo']:
+                            ultima_completada = ema
                     else:
                         ema['orderId'] = ""
                         ema['orderPrice'] = ""
@@ -569,6 +573,7 @@ async def ema_auto(symbol, tipo):
                     ema['colocada'] = False
                     ema['ejecutada'] = False
                     ultima_completada['precio'] = 9999999 if tipo.upper() == "LONG" else 0
+                    ultima_completada['tiempo'] = 0
                 # -------------------------
             # ------------------------------------
                 
@@ -637,6 +642,7 @@ async def sl_auto(symbol, tipo, perdida_usdt):
     pos_tamaño = 0
     positionIdx = 0
     corriendo_ganancias = False
+    
     while operar:
         try:
             if verificar_conexion_internet():
@@ -724,14 +730,19 @@ async def sl_auto(symbol, tipo, perdida_usdt):
                             corriendo_ganancias = False
                             orderId = ""
                             cancelar_orden(symbol, orderId="")
+                            print("\n🏆 🚀 🔥 STOP PROFIT ALCANZADO 🔥 🚀 🏆")
                             seguir_operando = input("\n¿Seguir Operando? (SI/NO)\n->")
                             if seguir_operando.upper() != "SI":
                                 operar = False
                         else:
+                            ordenes = obtener_ordenes(symbol)
+                            for orden in ordenes:
+                                if orden['positionIdx'] == positionIdx:
+                                    cancelar_orden(symbol, orden['orderId'])
                             operar = False
-                            cancelar_orden(symbol, orderId="")
                             orderId = ""
                             print("\n😖 🔴 💥 STOP LOSS ALCANZADO 💥 🔴 😖")
+                            input("")
                 # ------------------------------------------------------------
 
             await asyncio.sleep(0.18)
@@ -749,6 +760,7 @@ async def tp_auto(symbol, tipo, distancia_porcentual):
     tp_colocado = False
     tamaño_pos = 0
     positionIdx = 0
+    
     while operar:
         try:
             if verificar_conexion_internet():
@@ -856,7 +868,6 @@ async def cardiaco(symbol, tipo, monto):
     reconectar = False
     while operar:
         try:
-            await asyncio.sleep(0.018)
             if verificar_conexion_internet():
                 conexion = True
                 if reconectar:
@@ -874,7 +885,6 @@ async def cardiaco(symbol, tipo, monto):
                         disparo['precio'] = float(orden['price'])
                 
                 if disparos_limit == 0 and not corriendo_ganancias:
-                    print("\nColocando la próxima orden...")
                     posiciones = obtener_posicion(symbol)
                     for posicion in posiciones:
                         if posicion['positionIdx'] == positionIdx:
@@ -885,6 +895,7 @@ async def cardiaco(symbol, tipo, monto):
                     ema_cercana = ema_mas_cercana if pos_size == 0 else ema_siguiente
                     if not operar:
                         ema_cercana = {}
+                    print("\nColocando la próxima orden...")
                     if ema_cercana != {}:
                         if not ema_cercana['colocada'] and not ema_cercana['ejecutada']:
                             qty = pos_size
@@ -910,6 +921,8 @@ async def cardiaco(symbol, tipo, monto):
                     print("\n⚠️  🛜 Problemas de conexión 🛜 ⚠️")
                     conexion = False
                     reconectar = True
+
+            await asyncio.sleep(0.018)
         
         except Exception as e:
             print(f"\nERROR EN EL CICLO CARDIACO\n{e}")
@@ -942,8 +955,6 @@ async def main():
     except Exception as e:
         print(f"\nERROR EN main()\n{e}")
 # -----------------
-
-
 
 
 
@@ -991,9 +1002,10 @@ while not credenciales:
 capital_disponible = patrimonio()                   # Cappital de la cuenta
 apalancameinto = 10                                 # Apalancamiento
 comision = comision("BTCUSDT")*100                  # Comision por operacion a mercado (Suele ser la misma para cualquier par)
-perdida = capital_disponible*(10-comision)/100      # Perdida en dinero del Stop Loss (USDT)
+perdida = 10                                        # Perdida en porcentaje del Stop Loss (%)
+perdida = capital_disponible*(perdida-comision)/100 
 distancia_tp = 1                                    # Distancia porcentual del Take Profit (%)
-capital_minimo = 50                                 # Capital minimo para Cardiaco (Montos menores incurre mayor riesgos)
+capital_minimo = 30                                 # Capital minimo para Cardiaco (Montos menores incurre mayor riesgos)
 ppp = 25/100                                        # Porcentaje de la primera posicion
 primera_posicion = ppp*capital_disponible           # Valor en USD de la primera posicion
 factor = 2                                          # Factor de distanciamiento 
@@ -1006,6 +1018,8 @@ if capital_disponible < capital_minimo:
     print("\nLO SIENTO. CAPITAL MUY BAJO PARA OPERAR CARDIACO")
     print("DEBES TENER AL MENOS $50 USDT DISPONIBLES EN TU CUENTA")
     operar = False
+    input("")
+    exit()
 # -----------------------------------------------------------
     
 # Solicitar datos
@@ -1057,7 +1071,8 @@ for temp in ["1", "5", "15", "60", "240", "D", "W", "M"]:
                 "orderId": "", 
                 "orderPrice": "",
                 "colocada": False, 
-                "ejecutada": False
+                "ejecutada": False,
+                "tiempo": ""
                 }
                 )
     ema54 = obtener_ema(symbol, temp, 54, 1)
@@ -1070,7 +1085,8 @@ for temp in ["1", "5", "15", "60", "240", "D", "W", "M"]:
                 "orderId": "", 
                 "orderPrice": "",
                 "colocada": False, 
-                "ejecutada": False
+                "ejecutada": False,
+                "tiempo": ""
                 }
                 )
 # --------------------------
@@ -1086,10 +1102,12 @@ pos_precio = ""
 disparos_limit = 0
 ordenes_abiertas = 0
 precio_sl = ""
+corriendo_ganancias = False
 # -------------------
 
 # Correr programa
 # --------------- 
 if operar:
     asyncio.run(main())
+input("")
 # ---------------
