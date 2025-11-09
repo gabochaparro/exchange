@@ -1,0 +1,20 @@
+{
+    "symbol": "BTC",
+    "inverso": true,
+    "apalancamiento": 99.99,
+    "direccion": "rango",
+    "porcLong": 9,
+    "porcShort": 3,
+    "distanciaGrid": 0.126,
+    "precioReferencia": 101792.68,
+    "precioObjetivo": 0,
+    "precioParada": 0,
+    "gananciaEsperada": 0,
+    "maxPerdida": 0,
+    "maxRetroceso": 36,
+    "proteccionEma954": true,
+    "condicionalLong": true,
+    "condicionalShort": true,
+    "pausa": true,
+    "reiniciar": false
+}
